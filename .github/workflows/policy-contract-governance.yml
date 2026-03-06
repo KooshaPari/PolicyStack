@@ -71,6 +71,7 @@ jobs:
         run: |
           set -euo pipefail
           audit_json="/tmp/policy-contract-stack-pr-audit.json"
+          # Apply mode is reserved for manual workflow dispatch so PR-triggered runs stay read-only.
           apply_mode="false"
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && \
              [ "${{ github.event.inputs.apply_stacked_pr_remediation }}" = "true" ]; then
