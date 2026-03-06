@@ -40,7 +40,7 @@ on:
 permissions:
   contents: read
   pull-requests: write
-  issues: read
+  issues: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -101,9 +101,29 @@ jobs:
           print(payload["summary"]["commentScanErrors"])
           PY
           )"
-          if [ "$missing_count" -ne 0 ] || [ "$comment_scan_errors" -ne 0 ]; then
-            echo "Blocked: ${missing_count} stacked PR(s) missing approval tokens."
+          failed_actions="$(python - <<'PY'
+          import json
+
+          with open("/tmp/policy-contract-stack-pr-audit.json", "r", encoding="utf-8") as handle:
+              payload = json.load(handle)
+
+          failures = [
+              action for action in payload.get("actions", [])
+              if not action.get("applied", False)
+          ]
+          print(len(failures))
+          PY
+          )"
+          if [ "$comment_scan_errors" -ne 0 ]; then
             echo "Blocked: ${comment_scan_errors} comment scan error(s) while checking stacked PRs."
+            exit 1
+          fi
+          if [ "$apply_mode" = "true" ] && [ "$failed_actions" -ne 0 ]; then
+            echo "Blocked: ${failed_actions} remediation action(s) failed."
+            exit 1
+          fi
+          if [ "$apply_mode" != "true" ] && [ "$missing_count" -ne 0 ]; then
+            echo "Blocked: ${missing_count} stacked PR(s) missing approval tokens."
             exit 1
           fi
 
