@@ -1,0 +1,38 @@
+policy_version: v1
+scope: system
+required_checks:
+  - cli_first
+  - lint
+  - typecheck
+commands:
+  deny:
+    - "git reset --hard"
+    - "git checkout --"
+    - "rm -rf .git"
+  require:
+    - "policy_merge"
+tooling:
+  cli_required: true
+  fallback_allowed: false
+  max_parallel_tasks: 4
+approval:
+  needs_confirmation_for:
+    - external_network
+    - production_release
+  allow_destructive: false
+observability:
+  trace_enabled: true
+  telemetry_targets:
+    - langsmith
+  audit_events:
+    - policy_merge
+    - scope_conflict
+security:
+  guardrails:
+    - policy_contract_only
+  secret_backends:
+    - vault
+    - aws_secrets_manager
+  pii_policy: strict
+notes: "Global baseline policy for all repos and harnesses."
+

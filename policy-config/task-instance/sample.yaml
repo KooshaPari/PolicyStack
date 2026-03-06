@@ -1,0 +1,13 @@
+policy_version: v1
+scope: task_instance
+tooling:
+  max_parallel_tasks: 2
+approval:
+  allow_destructive: true
+  needs_confirmation_for:
+    - production_deploy
+commands:
+  allow:
+    - "python cli.py deploy --target canary"
+  deny:
+    - "python cli.py db migrate --all"

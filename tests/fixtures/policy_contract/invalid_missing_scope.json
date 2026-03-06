@@ -1,0 +1,8 @@
+{
+  "policy_version": "v1",
+  "commands": {
+    "allow": [
+      "git status"
+    ]
+  }
+}

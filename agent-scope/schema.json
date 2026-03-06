@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/agent-scope-policy.schema.json",
+  "title": "AgentScopePolicy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "policy_version",
+    "scope"
+  ],
+  "properties": {
+    "policy_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+$"
+    },
+    "scope": {
+      "type": "string",
+      "enum": ["system", "user", "repo", "harness", "task_domain", "task_instance"]
+    },
+    "extends": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "required_checks": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "cli_first",
+          "lint",
+          "typecheck",
+          "tests_unit",
+          "tests_integration",
+          "session_docs",
+          "no_backwards_compat"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "commands": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allow": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "deny": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "require": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "command_rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "action",
+          "match"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "enum": ["allow", "request", "deny"]
+          },
+          "match": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "exact": { "type": "string" },
+                  "glob": { "type": "string" },
+                  "prefix": { "type": "string" }
+                },
+                "minProperties": 1,
+                "maxProperties": 1
+              }
+            ]
+          },
+          "conditions": {
+            "oneOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "all": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  },
+                  "any": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  }
+                },
+                "additionalProperties": false
+              }
+            ]
+          },
+          "on_mismatch": {
+            "type": "string",
+            "enum": ["allow", "request", "deny"]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "needs_confirmation_for": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "allow_destructive": {
+          "type": "boolean"
+        }
+      }
+    },
+    "tooling": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cli_required": { "type": "boolean" },
+        "fallback_allowed": { "type": "boolean" },
+        "max_parallel_tasks": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "harness": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "observability": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "trace_enabled": { "type": "boolean" },
+        "telemetry_targets": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["langfuse", "langsmith", "phoenix", "none"]
+          },
+          "uniqueItems": true
+        },
+        "audit_events": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "guardrails": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "secret_backends": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "pii_policy": {
+          "type": "string",
+          "enum": ["strict", "warn", "off"]
+        }
+      }
+    },
+    "notes": { "type": "string" }
+  }
+}

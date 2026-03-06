@@ -1,0 +1,190 @@
+name: policy-contract-governance
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+      - edited
+    paths:
+      - "policy-config/**"
+      - "scripts/**"
+      - "wrappers/**"
+      - "tests/**"
+      - "policy_lib.py"
+      - "resolve.py"
+      - ".github/workflows/policy-contract-governance.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "policy-config/**"
+      - "scripts/**"
+      - "wrappers/**"
+      - "tests/**"
+      - "policy_lib.py"
+      - "resolve.py"
+      - ".github/workflows/policy-contract-governance.yml"
+  workflow_dispatch:
+    inputs:
+      apply_stacked_pr_remediation:
+        description: "If true, post remediation comments for missing stacked-PR tokens."
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  governance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.ref || github.head_ref }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          uv-version: "0.8.15"
+
+      - name: Audit open stacked PRs
+        if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+        run: |
+          set -euo pipefail
+          audit_json="/tmp/policy-contract-stack-pr-audit.json"
+          apply_mode="false"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && \
+             [ "${{ github.event.inputs.apply_stacked_pr_remediation }}" = "true" ]; then
+            apply_mode="true"
+          fi
+          uv run --with pyyaml python scripts/lane4_policy_contract_pr_stack_audit.py \
+            --repo "${{ github.repository }}" \
+            $( [ "$apply_mode" = "true" ] && echo "--apply" ) \
+            --pretty-json \
+            > "$audit_json"
+          cat "$audit_json"
+          missing_count="$(python - <<'PY'
+          import json
+
+          with open("/tmp/policy-contract-stack-pr-audit.json", "r", encoding="utf-8") as handle:
+              payload = json.load(handle)
+
+          print(payload["summary"]["missingTokenFindings"])
+          PY
+          )"
+          comment_scan_errors="$(python - <<'PY'
+          import json
+
+          with open("/tmp/policy-contract-stack-pr-audit.json", "r", encoding="utf-8") as handle:
+              payload = json.load(handle)
+
+          print(payload["summary"]["commentScanErrors"])
+          PY
+          )"
+          if [ "$missing_count" -ne 0 ] || [ "$comment_scan_errors" -ne 0 ]; then
+            echo "Blocked: ${missing_count} stacked PR(s) missing approval tokens."
+            echo "Blocked: ${comment_scan_errors} comment scan error(s) while checking stacked PRs."
+            exit 1
+          fi
+
+      - name: Validate policy contract
+        run: uv run --with pyyaml --with jsonschema python scripts/validate_policy_contract.py --root .
+
+      - name: Check policy versions
+        run: uv run --with pyyaml python scripts/check_policy_versions.py --root .
+
+      - name: Validate machine-readable governance outputs
+        run: |
+          set -euo pipefail
+          uv run --with pyyaml --with jsonschema python scripts/validate_policy_contract.py --root . --json
+          uv run --with pyyaml python scripts/check_policy_versions.py --root . --json
+          uv run --with pyyaml python scripts/generate_policy_snapshot.py \
+            --root . \
+            --harness codex \
+            --task-domain deployment \
+            --output policy-config/snapshots/policy_snapshot_codex_deployment.json \
+            --check-existing \
+            --json
+          uv run --with pyyaml python resolve.py \
+            --root . \
+            --harness codex \
+            --task-domain deployment \
+            --emit /tmp/effective-policy-codex-deployment.json \
+            --emit-host-rules \
+            --host-out-dir /tmp/policy-host-codex-deployment \
+            --include-conditional
+          uv run --with pyyaml python scripts/sync_host_rules.py \
+            --policy-json /tmp/effective-policy-codex-deployment.json \
+            --out-dir /tmp/policy-host-sync-json \
+            --include-conditional \
+            --json
+
+      - name: Check canonical snapshot drift
+        run: |
+          set -euo pipefail
+          for pair in "codex:deployment" "codex:query"; do
+            harness="${pair%%:*}"
+            task_domain="${pair##*:}"
+            uv run --with pyyaml python scripts/generate_policy_snapshot.py \
+              --root . \
+              --harness "${harness}" \
+              --task-domain "${task_domain}" \
+              --output "policy-config/snapshots/policy_snapshot_${harness}_${task_domain}.json" \
+              --check-existing
+          done
+
+      - name: Smoke host-hook dispatch flow
+        run: bash scripts/smoke_dispatch_host_hook.sh
+
+      - name: Run resolve CLI governance tests
+        run: uv run --with pytest --with pyyaml --with jsonschema pytest tests/test_resolve_cli_governance.py -q
+
+      - name: Run policy common governance tests
+        run: uv run --with pytest --with pyyaml pytest tests/test_policy_common.py -q
+
+      - name: Run smoke-script pytest tests
+        run: uv run --with pytest --with pyyaml pytest tests/test_smoke_dispatch_host_hook.py -q
+
+      - name: Run targeted governance tests
+        run: |
+          PYTHONPATH=. uv run --with pytest --with pyyaml --with jsonschema pytest tests/test_policy_contract.py -k TestPolicyContractSchemaGovernance -q
+          PYTHONPATH=. uv run --with pytest --with pyyaml --with jsonschema pytest \
+            tests/test_policy_contract.py::TestResolveCLIRegressions::test_ResolveCLI_repo_root_policy_config_layout \
+            tests/test_policy_contract.py::TestResolveCLIRegressions::test_missing_required_scope_file_returns_missing_exit_code_and_error_text \
+            tests/test_policy_contract.py::TestResolveCLIRegressions::test_policy_version_must_be_v1 -q
+          uv run --with pytest --with pyyaml --with jsonschema pytest tests/test_policy_contract_validation_governance.py -q
+          uv run --with pytest --with pyyaml pytest tests/test_sync_host_rules_governance.py -q
+          uv run --with pytest --with pyyaml pytest tests/test_policy_version_governance.py -q
+          uv run --with pytest --with pyyaml pytest tests/test_policy_snapshot_governance.py -q
+
+      - name: Upload governance failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: policy-contract-governance-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: ignore
+          path: |
+            policy-config/snapshots/policy_snapshot_codex_deployment.json
+            policy-config/snapshots/policy_snapshot_codex_query.json
+            /tmp/effective-policy-codex-deployment.json
+            /tmp/policy-host-codex-deployment
+            /tmp/policy-host-sync-json

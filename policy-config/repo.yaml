@@ -1,0 +1,32 @@
+policy_version: v1
+scope: repo
+required_checks:
+  - session_docs
+  - no_backwards_compat
+tooling:
+  cli_required: true
+  max_parallel_tasks: 3
+  fallback_allowed: false
+  harness:
+    - codex
+    - cursor-agent
+    - claude
+    - factory-droid
+commands:
+  allow:
+    - "python cli.py test run"
+    - "python cli.py lint check"
+  deny:
+    - "python cli.py db migrate"
+  require:
+    - "docs/sessions/*"
+command_rules:
+  - id: git_checkout_safe_sync
+    action: allow
+    match: "git checkout*"
+    on_mismatch: request
+    conditions:
+      all:
+        - git_is_worktree
+        - git_clean_worktree
+        - git_synced_to_upstream

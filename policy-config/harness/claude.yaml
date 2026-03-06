@@ -1,0 +1,16 @@
+policy_version: v1
+scope: harness
+commands:
+  allow:
+    - "git status"
+  deny:
+    - "terraform destroy"
+tooling:
+  fallback_allowed: false
+  max_parallel_tasks: 2
+  harness:
+    - claude
+approval:
+  needs_confirmation_for:
+    - destructive_filesystem_op
+  allow_destructive: false

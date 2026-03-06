@@ -1,0 +1,12 @@
+policy_version: v1
+scope: user
+commands:
+  allow:
+    - "source .venv/bin/activate"
+    - "python cli.py lint check"
+    - "python cli.py test run --scope unit"
+  deny:
+    - "curl -X POST http://127.0.0.1:8080/admin"
+approval:
+  allow_destructive: false
+notes: "User/operator preference overrides."

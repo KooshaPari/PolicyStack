@@ -1,0 +1,13 @@
+policy_version: v1
+scope: harness
+tooling:
+  fallback_allowed: true
+  max_parallel_tasks: 8
+  harness:
+    - factory-droid
+security:
+  guardrails:
+    - output_pii_filter
+    - tool_call_acl
+approval:
+  allow_destructive: false

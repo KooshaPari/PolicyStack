@@ -1,0 +1,11 @@
+policy_version: v1
+scope: task_domain
+required_checks:
+  - tests_unit
+commands:
+  allow:
+    - "python cli.py test run --scope unit"
+  require:
+    - "docs/sessions/*/01_RESEARCH.md"
+security:
+  pii_policy: warn

@@ -1,0 +1,14 @@
+policy_version: v1
+scope: harness
+commands:
+  allow:
+    - "python cli.py lint check"
+  deny:
+    - "git commit --amend"
+tooling:
+  fallback_allowed: false
+  max_parallel_tasks: 1
+  harness:
+    - cursor-agent
+security:
+  pii_policy: strict

@@ -1,0 +1,22 @@
+policy_version: v1
+scope: harness
+commands:
+  allow:
+    - "python cli.py test run --scope unit"
+    - "python cli.py lint check"
+  deny:
+    - "docker system prune -a"
+  require:
+    - "effective_policy_hash"
+tooling:
+  fallback_allowed: false
+  max_parallel_tasks: 4
+  harness:
+    - codex
+observability:
+  audit_events:
+    - codex_tool_dispatch
+approval:
+  needs_confirmation_for:
+    - worktree_delete
+  allow_destructive: false

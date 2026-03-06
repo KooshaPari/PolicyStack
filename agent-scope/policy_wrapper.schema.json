@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/policy-wrapper-commands.schema.json",
+  "title": "PolicyWrapperCommandBundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "required_conditions",
+    "commands"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "required_conditions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "git_is_worktree",
+          "git_clean_worktree",
+          "git_synced_to_upstream"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "source",
+          "action",
+          "on_mismatch",
+          "matcher",
+          "pattern",
+          "normalized_pattern",
+          "conditions",
+          "platform_action",
+          "shell_entry",
+          "bash_entry"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "allow",
+              "request",
+              "deny"
+            ]
+          },
+          "on_mismatch": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "allow",
+              "request",
+              "deny",
+              null
+            ]
+          },
+          "matcher": {
+            "type": "string",
+            "enum": [
+              "exact",
+              "glob",
+              "prefix"
+            ]
+          },
+          "pattern": {
+            "type": "string"
+          },
+          "normalized_pattern": {
+            "type": "string"
+          },
+          "conditions": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "mode",
+              "conditions"
+            ],
+            "properties": {
+              "mode": {
+                "type": "string",
+                "enum": ["all", "any"]
+              },
+              "conditions": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/condition_node"
+                }
+              }
+            }
+          },
+          "platform_action": {
+            "type": "string",
+            "enum": [
+              "allow",
+              "request",
+              "deny"
+            ]
+          },
+          "shell_entry": {
+            "type": "string"
+          },
+          "bash_entry": {
+            "type": "string"
+          }
+        }
+      },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "condition_node": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "required": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "$ref": "#/$defs/condition_group"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/condition_node"
+          }
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "condition_group": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "conditions"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["all", "any"]
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/condition_node"
+          }
+        }
+      }
+    }
+  }
+}

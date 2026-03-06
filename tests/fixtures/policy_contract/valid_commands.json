@@ -1,0 +1,33 @@
+{
+  "policy_version": "v2",
+  "scope": "harness",
+  "commands": {
+    "allow": [
+      "git status",
+      "git diff"
+    ],
+    "deny": [
+      "git reset --hard"
+    ],
+    "require": [
+      "python cli.py lint check"
+    ]
+  },
+  "command_rules": [
+    {
+      "id": "safe-checkout",
+      "action": "allow",
+      "match": {
+        "prefix": "git checkout"
+      },
+      "on_mismatch": "request"
+    }
+  ],
+  "tooling": {
+    "cli_required": true,
+    "fallback_allowed": false
+  },
+  "security": {
+    "pii_policy": "strict"
+  }
+}

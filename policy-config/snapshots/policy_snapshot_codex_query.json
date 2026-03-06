@@ -1,0 +1,25 @@
+{
+  "policy_hash": "a73b9755ebd083fdf7b5d1f6234a5691987eb6097e42828fdea9b72fef6cdda5",
+  "scopes": [
+    {
+      "path": "policy-config/system.yaml",
+      "scope": "system"
+    },
+    {
+      "path": "policy-config/user.yaml",
+      "scope": "user"
+    },
+    {
+      "path": "policy-config/repo.yaml",
+      "scope": "repo"
+    },
+    {
+      "path": "policy-config/harness/codex.yaml",
+      "scope": "harness"
+    },
+    {
+      "path": "policy-config/task-domain/query.yaml",
+      "scope": "task_domain"
+    }
+  ]
+}

@@ -1,0 +1,252 @@
+{
+  "case_set": "condition-evaluator-parity-recursive-v1",
+  "notes": "Shared fixture input for Phase 1.1 recursive condition semantics parity checks across wrappers",
+  "cases": [
+    {
+      "id": "all-empty",
+      "title": "all([]) returns pass and has_required false",
+      "conditions": {
+        "all": []
+      },
+      "expect": {
+        "passed": true,
+        "has_required": false,
+        "has_error": false,
+        "reason_count": 0
+      }
+    },
+    {
+      "id": "any-empty",
+      "title": "any([]) returns pass and has_required false",
+      "conditions": {
+        "any": []
+      },
+      "expect": {
+        "passed": true,
+        "has_required": false,
+        "has_error": false,
+        "reason_count": 0
+      }
+    },
+    {
+      "id": "array-root-all",
+      "title": "root array defaults to all semantics",
+      "conditions": [
+        { "all": [] },
+        { "all": [] }
+      ],
+      "expect": {
+        "passed": true,
+        "has_required": true,
+        "has_error": false,
+        "reason_count": 0
+      }
+    },
+    {
+      "id": "array-root-optional-only",
+      "title": "array root with optional-only leafs can fail without required conditions",
+      "conditions": {
+        "all": [
+          { "name": "unsupported_optional", "required": false },
+          { "name": "unsupported_optional_2", "required": false }
+        ]
+      },
+      "expect": {
+        "passed": false,
+        "has_required": false,
+        "has_error": true,
+        "error_contains": "unsupported condition",
+        "reason_count": 2
+      }
+    },
+    {
+      "id": "mode-nested-optional-short-circuit-safe",
+      "title": "nested optional mode nodes do not force required propagation",
+      "conditions": {
+        "mode": "any",
+        "conditions": [
+          { "name": "unsupported_optional_mixed", "required": false },
+          {
+            "mode": "all",
+            "conditions": [
+              { "name": "unsupported_optional_nested", "required": false }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "passed": false,
+        "has_required": false,
+        "has_error": true,
+        "error_contains": "unsupported condition",
+        "reason_count": 2
+      }
+    },
+    {
+      "id": "nested-container-required-propagation",
+      "title": "nested mode containers are required containers for parents",
+      "conditions": {
+        "all": [
+          { "all": [] },
+          { "mode": "any", "conditions": [] },
+          { "all": [] }
+        ]
+      },
+      "expect": {
+        "passed": true,
+        "has_required": true,
+        "has_error": false,
+        "reason_count": 0
+      }
+    },
+    {
+      "id": "any-with-optional-empty-groups",
+      "title": "any mode with empty optional-like groups still passes",
+      "conditions": {
+        "any": [
+          { "all": [] },
+          { "any": [] }
+        ]
+      },
+      "expect": {
+        "passed": true,
+        "has_required": true,
+        "has_error": false,
+        "reason_count": 0
+      }
+    },
+    {
+      "id": "unsupported-condition-leaf-required",
+      "title": "unsupported named leaf is treated as error and required",
+      "conditions": {
+        "all": ["unsupported_condition_required"]
+      },
+      "expect": {
+        "passed": false,
+        "has_required": true,
+        "has_error": true,
+        "error_contains": "unsupported condition",
+        "reason_count": 1
+      }
+    },
+    {
+      "id": "unsupported-condition-root-string",
+      "title": "root bare string unsupported condition is treated as error and required",
+      "conditions": "unsupported_condition_required",
+      "expect": {
+        "passed": false,
+        "has_required": true,
+        "has_error": true,
+        "error_contains": "unsupported condition",
+        "reason_count": 1
+      }
+    },
+    {
+      "id": "unsupported-condition-boolean-node",
+      "title": "unsupported condition node type boolean is an error",
+      "conditions": true,
+      "expect": {
+        "passed": false,
+        "has_required": false,
+        "has_error": true,
+        "error_contains": "unsupported condition",
+        "reason_count": 1
+      }
+    },
+    {
+      "id": "unsupported-condition-null-node",
+      "title": "unsupported condition node type null is an error",
+      "conditions": null,
+      "expect": {
+        "passed": false,
+        "has_required": false,
+        "has_error": true,
+        "error_contains": "unsupported condition",
+        "reason_count": 1
+      }
+    },
+    {
+      "id": "unsupported-condition-object-node-without-name",
+      "title": "unsupported condition object without name is an error",
+      "conditions": {
+        "required": false
+      },
+      "expect": {
+        "passed": false,
+        "has_required": false,
+        "has_error": true,
+        "error_contains": "unsupported condition",
+        "reason_count": 1
+      }
+    },
+    {
+      "id": "unsupported-condition-leaf-optional",
+      "title": "optional named leaf preserves has_required false on unsupported leaf",
+      "conditions": {
+        "all": [
+          { "name": "unsupported_condition_optional", "required": false }
+        ]
+      },
+      "expect": {
+        "passed": false,
+        "has_required": false,
+        "has_error": true,
+        "error_contains": "unsupported condition",
+        "reason_count": 1
+      }
+    },
+    {
+      "id": "mode-invalid-value",
+      "title": "invalid mode returns error",
+      "conditions": {
+        "mode": "maybe",
+        "conditions": []
+      },
+      "expect": {
+        "passed": false,
+        "has_required": false,
+        "has_error": true,
+        "reason_count": 1
+      }
+    },
+    {
+      "id": "mode-missing-conditions",
+      "title": "mode node without conditions returns error",
+      "conditions": {
+        "mode": "all"
+      },
+      "expect": {
+        "passed": false,
+        "has_required": false,
+        "has_error": true,
+        "reason_count": 1
+      }
+    },
+    {
+      "id": "name-required-type-invalid",
+      "title": "non-boolean required flag is an error",
+      "conditions": {
+        "name": "git_is_worktree",
+        "required": "not_bool"
+      },
+      "expect": {
+        "passed": false,
+        "has_required": false,
+        "has_error": true,
+        "error_contains": "condition.required must be boolean",
+        "reason_count": 1
+      }
+    },
+    {
+      "id": "unsupported-type",
+      "title": "unsupported condition node type is an error",
+      "conditions": 123,
+      "expect": {
+        "passed": false,
+        "has_required": false,
+        "has_error": true,
+        "reason_count": 1
+      }
+    }
+  ]
+}
