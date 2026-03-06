@@ -79,6 +79,8 @@ policy-wrapper-dispatch.sh \
 
 If you do not have `jq`, parse JSON with your host language of choice or run without
 `--json` for a single decision token.
+This smoke-style dispatch usage is a narrow wiring check and does not replace the
+full governance validation matrix.
 
 ### Platform support and migration model
 
