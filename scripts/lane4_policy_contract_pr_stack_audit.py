@@ -236,6 +236,7 @@ def list_pr_comments_all(
         else:
             return False, None, issue_err or review_err
 
+    # Surface partial API failures so remediation can avoid acting on incomplete scans.
     errors: list[str] = []
     if not ok_issue and issue_err:
         errors.append(f"issue_comments: {issue_err}")
