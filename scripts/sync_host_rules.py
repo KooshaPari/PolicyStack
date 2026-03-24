@@ -148,6 +148,7 @@ def render_platform_payload(
     codex_rules = []
     cursor_allow = []
     cursor_deny = []
+    cursor_ask = []
     claude_allow = []
     claude_deny = []
     claude_ask = []
@@ -177,7 +178,7 @@ def render_platform_payload(
             claude_allow.append(_bash_entry(command))
             droid_allow.append(command)
         elif platform_decision == "request":
-            cursor_deny.append(_shell_entry(command))
+            cursor_ask.append(_shell_entry(command))
             claude_ask.append(_bash_entry(command))
             droid_request.append(command)
         else:
@@ -187,7 +188,11 @@ def render_platform_payload(
 
     return {
         "policy": {
-            "cursor": {"allow": cursor_allow, "deny": cursor_deny},
+            "cursor": {
+                "allow": cursor_allow,
+                "deny": cursor_deny,
+                "ask": cursor_ask,
+            },
             "claude": {
                 "allow": claude_allow,
                 "deny": claude_deny,
@@ -334,12 +339,19 @@ def _apply_cursor_rules(path: Path, payload: dict[str, Any]) -> tuple[int, int]:
         raise ValueError(f"{path}: field 'permissions' must be a JSON object")
     old_allow = _read_list_field(permissions, "allow", path)
     old_deny = _read_list_field(permissions, "deny", path)
+    old_ask = _read_list_field(permissions, "ask", path)
     permissions["allow"] = replace_managed_entries(old_allow, payload["allow"], path, "allow")
     permissions["deny"] = replace_managed_entries(old_deny, payload["deny"], path, "deny")
+    permissions["ask"] = replace_managed_entries(old_ask, payload["ask"], path, "ask")
     data["permissions"] = permissions
     _write_json(path, data)
-    return count_policy_entries(old_allow) + count_policy_entries(old_deny), (
-        count_policy_entries(permissions["allow"]) + count_policy_entries(permissions["deny"])
+    return (
+        count_policy_entries(old_allow)
+        + count_policy_entries(old_deny)
+        + count_policy_entries(old_ask),
+        count_policy_entries(permissions["allow"])
+        + count_policy_entries(permissions["deny"])
+        + count_policy_entries(permissions["ask"]),
     )
 
 
@@ -487,7 +499,10 @@ def _count_platform_rules(policy: dict[str, Any], platform: str) -> int:
     if platform == "codex":
         return len(policy["codex"]["rules"])
     if platform == "cursor":
-        return len(policy["cursor"]["allow"]) + len(policy["cursor"]["deny"])
+        cursor_policy = policy["cursor"]
+        return (
+            len(cursor_policy["allow"]) + len(cursor_policy["deny"]) + len(cursor_policy["ask"])
+        )
     if platform == "claude":
         claude_policy = policy["claude"]
         return len(claude_policy["allow"]) + len(claude_policy["deny"]) + len(claude_policy["ask"])
@@ -532,7 +547,10 @@ def _managed_segment_length_after(policy: dict[str, Any], platform: str) -> int:
     if platform == "codex":
         return len(policy["codex"]["rules"])
     if platform == "cursor":
-        return len(policy["cursor"]["allow"]) + len(policy["cursor"]["deny"])
+        cursor_policy = policy["cursor"]
+        return (
+            len(cursor_policy["allow"]) + len(cursor_policy["deny"]) + len(cursor_policy["ask"])
+        )
     if platform == "claude":
         claude_policy = policy["claude"]
         return len(claude_policy["allow"]) + len(claude_policy["deny"]) + len(claude_policy["ask"])
@@ -583,8 +601,11 @@ def _had_managed_segment_before(platform: str, path: Path) -> bool:
             raise ValueError(f"{path}: field 'permissions' must be a JSON object")
         allow = _read_list_field(permissions, "allow", path)
         deny = _read_list_field(permissions, "deny", path)
-        return _has_json_managed_segment(allow, path=path, key="allow") or _has_json_managed_segment(
-            deny, path=path, key="deny"
+        ask = _read_list_field(permissions, "ask", path)
+        return (
+            _has_json_managed_segment(allow, path=path, key="allow")
+            or _has_json_managed_segment(deny, path=path, key="deny")
+            or _has_json_managed_segment(ask, path=path, key="ask")
         )
     if platform == "claude":
         permissions = data.get("permissions", {})
