@@ -29,6 +29,12 @@ CANONICAL_SNAPSHOT_PAIRS: tuple[tuple[str, str], ...] = (
 )
 
 
+def _normalize_build_snapshot_error(message: str) -> str:
+    if "file is empty or missing payload" in message:
+        return "resolved policy is empty"
+    return message
+
+
 def _normalize_scope_path(path_value: str | Path, root: Path) -> str:
     path = Path(path_value).expanduser()
     if not path.is_absolute():
@@ -262,7 +268,12 @@ def main() -> int:
             try:
                 snapshot = build_snapshot(canonical_args)
             except (TypeError, ValueError) as exc:
-                return _print_failure(args, "error", str(exc), EXIT_INVALID)
+                return _print_failure(
+                    args,
+                    "error",
+                    _normalize_build_snapshot_error(str(exc)),
+                    EXIT_INVALID,
+                )
             except Exception as exc:  # pragma: no cover - defensive guard
                 return _print_failure(args, "error", str(exc), EXIT_INTERNAL)
             output = canonical_dir / f"policy_snapshot_{harness}_{task_domain}.json"
@@ -302,7 +313,12 @@ def main() -> int:
             try:
                 snapshot = build_snapshot(canonical_args)
             except (TypeError, ValueError) as exc:
-                return _print_failure(args, "error", str(exc), EXIT_INVALID)
+                return _print_failure(
+                    args,
+                    "error",
+                    _normalize_build_snapshot_error(str(exc)),
+                    EXIT_INVALID,
+                )
             except Exception as exc:  # pragma: no cover - defensive guard
                 return _print_failure(args, "error", str(exc), EXIT_INTERNAL)
 
@@ -372,7 +388,12 @@ def main() -> int:
     try:
         snapshot = build_snapshot(args)
     except (TypeError, ValueError) as exc:
-        return _print_failure(args, "error", str(exc), EXIT_INVALID)
+        return _print_failure(
+            args,
+            "error",
+            _normalize_build_snapshot_error(str(exc)),
+            EXIT_INVALID,
+        )
     except Exception as exc:  # pragma: no cover - defensive guard
         return _print_failure(args, "error", str(exc), EXIT_INTERNAL)
 

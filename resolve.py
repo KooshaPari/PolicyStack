@@ -132,7 +132,10 @@ def _get_nested_value(data: dict[str, Any], dotted_key: str) -> Any:
 
 def _validate_policy_payload_types(data: dict[str, Any], path: Path) -> None:
     for dotted_key in APPEND_LIST_PATHS:
-        value = _get_nested_value(data, dotted_key)
+        try:
+            value = _get_nested_value(data, dotted_key)
+        except TypeError as exc:
+            raise TypeError(f"{path}: {exc}") from exc
         if value is not None and not isinstance(value, list):
             raise TypeError(f"{path}: {dotted_key} must be a list")
 
@@ -335,8 +338,15 @@ def resolve(policies: list[tuple[str, Path]], output: Path | None = None) -> dic
                 )
             continue
         _validate_policy_payload_types(policy, path)
-        validate_policy(policy, path, expected_scope=scope)
+        validate_policy(policy, path)
         scope_name = policy["scope"]
+        if scope_name in seen_scopes and scope in {"task_domain", "task_instance"}:
+            raise ValueError(f"duplicate scope in chain: {scope_name}")
+        if scope_name != scope:
+            raise ValueError(
+                f"{path}: scope mismatch in chain: expected "
+                f"{scope}, got {scope_name}"
+            )
         if scope_name in seen_scopes:
             raise ValueError(f"duplicate scope in chain: {scope_name}")
         seen_scopes.add(scope_name)

@@ -316,7 +316,7 @@ def normalize_payload(payload: dict[str, Any], cwd: Path | None = None) -> list[
         raise ValueError("'policy' must be a mapping")
 
     def _as_command_list(name: str) -> list[str]:
-        rules = policy.get(name, [])
+        rules = commands.get(name, [])
         if not isinstance(rules, list):
             raise ValueError(f"policy.commands.{name} must be a list")
         normalized_patterns: list[str] = []

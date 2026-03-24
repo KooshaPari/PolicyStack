@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections import Counter
 import re
 import subprocess
 from dataclasses import dataclass
@@ -32,6 +33,7 @@ class FindingsSummary:
     stacked_prs: int
     missing_token_count: int
     comment_scan_errors: int
+    missing_token_findings_by_source: dict[str, int]
 
 
 def run_gh(args: list[str]) -> tuple[int, str, str]:
@@ -261,6 +263,29 @@ def list_pr_comments_all(
     return True, merged, partial_error
 
 
+def _classify_missing_token_sources(
+    signal_sources: list[str],
+    comment_error: str | None,
+) -> set[str]:
+    sources: set[str] = set()
+    for signal in signal_sources:
+        if signal.startswith("label:"):
+            sources.add("label")
+        elif signal.startswith("title:"):
+            sources.add("title")
+        elif signal.startswith("body:"):
+            sources.add("body")
+        elif signal.startswith("comment["):
+            sources.add("comments")
+        elif signal.strip():
+            sources.add("unknown")
+    if not sources and not comment_error:
+        sources.add("none")
+    if comment_error:
+        sources.add("comment_scan_error")
+    return sources
+
+
 def has_approval_token(
     pr: dict[str, Any],
     repo: str,
@@ -325,6 +350,7 @@ def find_stacked_and_token_findings(
     stacked_records: list[dict[str, Any]] = []
     missing_records: list[dict[str, Any]] = []
     comment_scan_errors = 0
+    missing_sources = Counter()
 
     for pr in prs:
         if not _looks_like_stacked(pr, head_to_pr):
@@ -378,6 +404,12 @@ def find_stacked_and_token_findings(
         stacked_records.append(record)
 
         if not has_token:
+            missing_token_signal_sources = _classify_missing_token_sources(
+                sorted(set(signals)),
+                comment_error,
+            )
+            for source in sorted(missing_token_signal_sources):
+                missing_sources[source] += 1
             missing_records.append(
                 {
                     **record,
@@ -388,9 +420,28 @@ def find_stacked_and_token_findings(
                         ),
                         "candidates": token_patterns,
                         "commentCheckError": comment_error,
+                        "tokenSignals": sorted(set(signals)),
+                        "tokenSignalSources": sorted(missing_token_signal_sources),
                     },
                 }
             )
+
+    stacked_records = sorted(
+        stacked_records,
+        key=lambda item: (
+            int(item.get("number", 0)) if isinstance(item.get("number"), int) else 0,
+            str(item.get("source", "")),
+            str(item.get("target", "")),
+        ),
+    )
+    missing_records = sorted(
+        missing_records,
+        key=lambda item: (
+            int(item.get("number", 0)) if isinstance(item.get("number"), int) else 0,
+            str(item.get("source", "")),
+            str(item.get("target", "")),
+        ),
+    )
 
     return stacked_records, missing_records, FindingsSummary(
         repo=repo,
@@ -398,6 +449,7 @@ def find_stacked_and_token_findings(
         stacked_prs=len(stacked_records),
         missing_token_count=len(missing_records),
         comment_scan_errors=comment_scan_errors,
+        missing_token_findings_by_source=dict(missing_sources),
     )
 
 
@@ -503,6 +555,7 @@ def main() -> int:
         "stackedCandidates": summary.stacked_prs,
         "missingTokenFindings": summary.missing_token_count,
         "commentScanErrors": summary.comment_scan_errors,
+        "missingTokenFindingsBySource": summary.missing_token_findings_by_source,
         "commentScanEnabled": bool(args.check_comments),
         "applyMode": bool(args.apply),
     }
@@ -516,6 +569,20 @@ def main() -> int:
     }
 
     print(json.dumps(result, indent=2 if args.pretty_json else None, sort_keys=True))
+
+    if summary.comment_scan_errors:
+        return 2
+    if args.apply:
+        failed_actions = [a for a in actions if not a.get("applied", False)]
+        if missing_records and any(
+            item.get("commentCheckError") for item in missing_records
+        ):
+            return 2
+        if failed_actions:
+            return 3
+        return 0
+    if summary.missing_token_count:
+        return 4
     return 0
 
 

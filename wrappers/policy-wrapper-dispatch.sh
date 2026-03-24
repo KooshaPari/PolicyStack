@@ -286,11 +286,13 @@ if (not condition_passed) and error:
     data["condition_passed"] = False
     decision = str(data["decision"]).strip()
 
-print(f"{decision}\0{json.dumps(data)}")
+print(decision)
+print(json.dumps(data, separators=(",", ":")))
 PY
     ) || parse_status=$?
     if [[ $parse_status -eq 0 ]]; then
-      IFS=$'\0' read -r decision parsed_output <<< "$parsed"
+      decision="$(printf '%s\n' "$parsed" | sed -n '1p')"
+      parsed_output="$(printf '%s\n' "$parsed" | sed -n '2p')"
       echo "$parsed_output"
       exit_code="$(normalize_exit "$decision")"
       exit "$exit_code"

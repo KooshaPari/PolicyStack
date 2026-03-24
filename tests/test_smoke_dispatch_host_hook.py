@@ -79,12 +79,46 @@ def _setup_synthetic_root(tmp_path: Path, include_snapshots: bool) -> Path:
         encoding="utf-8",
     )
 
+    (root / "wrappers" / "go").mkdir(exist_ok=True)
+    _write_executable(
+        root / "wrappers" / "go" / "policy-wrapper",
+        """
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        command_str=""
+        while [[ $# -gt 0 ]]; do
+          case "$1" in
+            --command)
+              command_str="$2"
+              shift 2
+              ;;
+            *)
+              shift
+              ;;
+          esac
+        done
+
+        if [[ "$command_str" == *"smoke-block"* ]]; then
+          command_payload='{"command":"'"$command_str"'","decision":"deny","matched":true,"condition_passed":false,"error":"","fallback":"deny","fallback_reason":"blocked-for-smoke-test","rule_id":"r-deny"}'
+          echo "$command_payload"
+          exit 2
+        fi
+
+        command_payload='{"command":"'"$command_str"'","decision":"allow","matched":true,"condition_passed":true,"error":"","rule_id":"r-allow"}'
+        echo "$command_payload"
+        exit 0
+        """,
+    )
+
     _write_executable(
         root / "wrappers" / "policy-wrapper-dispatch.sh",
         """
         #!/usr/bin/env bash
         set -euo pipefail
-        exit 0
+
+        script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        exec "${script_dir}/go/policy-wrapper" "$@"
         """,
     )
 
@@ -174,6 +208,38 @@ def test_success_banner_and_output_contract(tmp_path: Path) -> None:
     assert result.returncode == 0
     assert "[smoke] checking canonical snapshot drift pairs" in result.stdout
     assert "[smoke] emitting policy wrapper bundle for host dispatch" in result.stdout
-    assert "[smoke] running wrapper dispatch check" in result.stdout
+    assert "[smoke] running allow dispatch check" in result.stdout
+    assert "[smoke] allow dispatch decision: allow (rc=0)" in result.stdout
+    assert "[smoke] running blocked dispatch check" in result.stdout
+    assert "[smoke] blocked dispatch decision: deny (rc=2)" in result.stdout
     assert "[smoke] host-hook dispatch smoke passed" in result.stdout
     assert "[smoke] ===== RESULT: PASS =====" in result.stdout
+
+
+def test_non_json_dispatch_output_fails_fast(tmp_path: Path) -> None:
+    root = _setup_synthetic_root(tmp_path, include_snapshots=True)
+    tool_bin = _make_tool_bin(tmp_path)
+    script_path = root / "scripts" / "smoke_dispatch_host_hook.sh"
+
+    _write_executable(
+        root / "wrappers" / "policy-wrapper-dispatch.sh",
+        """
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        if [[ "${1:-}" == "--json" ]]; then
+          shift
+        fi
+        echo "not-json-output"
+        exit 0
+        """,
+    )
+
+    result = _run_smoke(script_path, f"{tool_bin}:/usr/bin:/bin")
+
+    assert result.returncode != 0
+    assert (
+        "[smoke] ERROR: allow-path output was not valid JSON" in result.stdout
+        or "[smoke] ERROR: allow-path output was not valid JSON" in result.stderr
+    )
+    assert "[smoke] ===== RESULT: FAIL =====" in result.stdout

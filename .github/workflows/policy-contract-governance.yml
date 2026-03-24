@@ -77,55 +77,49 @@ jobs:
              [ "${{ github.event.inputs.apply_stacked_pr_remediation }}" = "true" ]; then
             apply_mode="true"
           fi
+
+          set +e
           uv run --with pyyaml python scripts/lane4_policy_contract_pr_stack_audit.py \
             --repo "${{ github.repository }}" \
             $( [ "$apply_mode" = "true" ] && echo "--apply" ) \
             --pretty-json \
             > "$audit_json"
-          cat "$audit_json"
-          missing_count="$(python - <<'PY'
-          import json
+          audit_rc=$?
+          set -e
 
-          with open("/tmp/policy-contract-stack-pr-audit.json", "r", encoding="utf-8") as handle:
-              payload = json.load(handle)
-
-          print(payload["summary"]["missingTokenFindings"])
-          PY
-          )"
-          comment_scan_errors="$(python - <<'PY'
-          import json
-
-          with open("/tmp/policy-contract-stack-pr-audit.json", "r", encoding="utf-8") as handle:
-              payload = json.load(handle)
-
-          print(payload["summary"]["commentScanErrors"])
-          PY
-          )"
-          failed_actions="$(python - <<'PY'
-          import json
-
-          with open("/tmp/policy-contract-stack-pr-audit.json", "r", encoding="utf-8") as handle:
-              payload = json.load(handle)
-
-          failures = [
-              action for action in payload.get("actions", [])
-              if not action.get("applied", False)
-          ]
-          print(len(failures))
-          PY
-          )"
-          if [ "$comment_scan_errors" -ne 0 ]; then
-            echo "Blocked: ${comment_scan_errors} comment scan error(s) while checking stacked PRs."
-            exit 1
+          if [[ -f "$audit_json" ]]; then
+            cat "$audit_json"
           fi
-          if [ "$apply_mode" = "true" ] && [ "$failed_actions" -ne 0 ]; then
-            echo "Blocked: ${failed_actions} remediation action(s) failed."
-            exit 1
+
+          if [ "$audit_rc" -ne 0 ]; then
+            if [[ -f "${audit_json}" ]]; then
+              comment_scan_errors="$(python -c 'import json; from pathlib import Path; payload = json.loads(Path("/tmp/policy-contract-stack-pr-audit.json").read_text(encoding="utf-8")); print(payload.get("summary", {}).get("commentScanErrors", 0))')"
+              if [ "${comment_scan_errors}" -gt 0 ]; then
+                echo "::error::Lane4 comment_scan_errors=${comment_scan_errors}; review docs/sessions/2026-03-03-policy-wrapper-standardization/03_DAG_WBS.md#phase-b--ci--governance for next steps."
+              fi
+            fi
+
+            case "$audit_rc" in
+              2)
+                echo "Blocked: comment scan errors occurred while checking stacked PRs. See docs/sessions/2026-03-03-policy-wrapper-standardization/06_DISPATCH_HOST_HOOK_SMOKE_TEST_SPEC.md and 03_DAG_WBS.md."
+                ;;
+              3)
+                echo "Blocked: remediation actions failed during apply mode. See docs/sessions/2026-03-03-policy-wrapper-standardization/03_DAG_WBS.md."
+                ;;
+              4)
+                echo "Blocked: stacked PRs missing approval tokens. See docs/sessions/2026-03-03-policy-wrapper-standardization/03_DAG_WBS.md."
+                ;;
+            esac
+            exit "$audit_rc"
           fi
-          if [ "$apply_mode" != "true" ] && [ "$missing_count" -ne 0 ]; then
-            echo "Blocked: ${missing_count} stacked PR(s) missing approval tokens."
-            exit 1
-          fi
+
+      - name: Upload stacked-PR audit output
+        if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: policy-contract-stack-pr-audit-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: ignore
+          path: /tmp/policy-contract-stack-pr-audit.json
 
       - name: Validate policy contract
         run: uv run --with pyyaml --with jsonschema python scripts/validate_policy_contract.py --root .
@@ -209,3 +203,31 @@ jobs:
             /tmp/effective-policy-codex-deployment.json
             /tmp/policy-host-codex-deployment
             /tmp/policy-host-sync-json
+
+  smoke-dispatch-host-hook:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: script
+            command: bash scripts/smoke_dispatch_host_hook.sh
+          - name: pytest
+            command: uv run --with pytest --with pyyaml pytest tests/test_smoke_dispatch_host_hook.py -q
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          uv-version: "0.8.15"
+      - name: Run ${{ matrix.name }} smoke-check
+        run: |
+          ${{ matrix.command }}

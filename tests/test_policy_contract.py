@@ -2158,7 +2158,7 @@ class TestHostRendering(TestCase):
                         "id": "cond-request",
                         "action": "request",
                         "match": {"prefix": "git checkout"},
-                        "conditions": {"all": ["git_is_clean_worktree"]},
+                        "conditions": {"all": ["git_clean_worktree"]},
                     },
                     {
                         "id": "uncond-ask",
@@ -2184,8 +2184,8 @@ class TestHostRendering(TestCase):
         for rule in base["claude"]["allow"]:
             self.assertIn(rule, with_conditional["claude"]["allow"])
         self.assertEqual(
-            with_conditional["claude"]["ask"],
-            base["claude"]["ask"] + ["Bash(git checkout *)"],
+            sorted(with_conditional["claude"]["ask"]),
+            sorted(base["claude"]["ask"] + ["Bash(git checkout *)"]),
         )
         self.assertEqual(
             with_conditional["claude"]["deny"],
@@ -2205,6 +2205,86 @@ class TestHostRendering(TestCase):
             self.assertIn(rule, with_conditional["codex"]["rules"])
         self.assertIn(
             'prefix_rule(pattern=["git", "checkout", "*"], decision="prompt")',
+            with_conditional["codex"]["rules"],
+        )
+
+    def test_conditional_allow_request_deny_export_preserves_host_parity(self) -> None:
+        payload = {
+            "policy": {
+                "commands": {"allow": ["git status"], "deny": ["git reset --hard"], "require": []},
+                "command_rules": [
+                    {
+                        "id": "cond-allow",
+                        "action": "allow",
+                        "match": {"prefix": "git checkout"},
+                        "conditions": {"all": ["git_is_worktree"]},
+                    },
+                    {
+                        "id": "cond-request",
+                        "action": "request",
+                        "match": {"prefix": "git push"},
+                        "conditions": {"all": ["git_clean_worktree"]},
+                    },
+                    {
+                        "id": "cond-deny",
+                        "action": "deny",
+                        "match": {"prefix": "git log"},
+                        "conditions": {"all": ["git_synced_to_upstream"]},
+                    },
+                ],
+            }
+        }
+
+        base = render_platform_payload(payload, include_conditional=False)["policy"]
+        with_conditional = render_platform_payload(payload, include_conditional=True)["policy"]
+
+        self.assertEqual(
+            sorted(with_conditional["cursor"]["allow"]),
+            sorted(base["cursor"]["allow"] + ["Shell(git checkout *)"]),
+        )
+        self.assertEqual(
+            sorted(with_conditional["cursor"]["deny"]),
+            sorted(base["cursor"]["deny"] + ["Shell(git push *)", "Shell(git log *)"]),
+        )
+
+        self.assertEqual(
+            sorted(with_conditional["claude"]["allow"]),
+            sorted(base["claude"]["allow"] + ["Bash(git checkout *)"]),
+        )
+        self.assertEqual(
+            sorted(with_conditional["claude"]["ask"]),
+            sorted(base["claude"]["ask"] + ["Bash(git push *)"]),
+        )
+        self.assertEqual(
+            sorted(with_conditional["claude"]["deny"]),
+            sorted(base["claude"]["deny"] + ["Bash(git log *)"]),
+        )
+
+        self.assertEqual(
+            sorted(with_conditional["droid"]["commandAllowlist"]),
+            sorted(base["droid"]["commandAllowlist"] + ["git checkout *"]),
+        )
+        self.assertEqual(
+            sorted(with_conditional["droid"]["commandRequestlist"]),
+            sorted(base["droid"]["commandRequestlist"] + ["git push *"]),
+        )
+        self.assertEqual(
+            sorted(with_conditional["droid"]["commandDenylist"]),
+            sorted(base["droid"]["commandDenylist"] + ["git log *"]),
+        )
+
+        for rule in base["codex"]["rules"]:
+            self.assertIn(rule, with_conditional["codex"]["rules"])
+        self.assertIn(
+            'prefix_rule(pattern=["git", "checkout", "*"], decision="allow")',
+            with_conditional["codex"]["rules"],
+        )
+        self.assertIn(
+            'prefix_rule(pattern=["git", "push", "*"], decision="prompt")',
+            with_conditional["codex"]["rules"],
+        )
+        self.assertIn(
+            'prefix_rule(pattern=["git", "log", "*"], decision="forbidden")',
             with_conditional["codex"]["rules"],
         )
 

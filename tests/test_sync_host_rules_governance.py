@@ -838,7 +838,7 @@ def test_codex_clear_apply_cycle_preserves_unmanaged_text_before_and_after(tmp_p
     assert "# unmanaged after" in updated
     assert updated.count(MANAGED_MARKER_START) == 1
     assert updated.count(MANAGED_MARKER_END) == 1
-    assert 'prefix_rule(pattern=["git", "status", "*"], decision="allow")' in updated
+    assert 'prefix_rule(pattern=["git", "status"], decision="allow")' in updated
     assert 'prefix_rule(pattern=["rm", "-rf", "/"], decision="forbidden")' in updated
     assert 'prefix_rule(pattern=["stale"], decision="allow")' not in updated
 

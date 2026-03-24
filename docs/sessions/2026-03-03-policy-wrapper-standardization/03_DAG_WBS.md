@@ -44,6 +44,8 @@ conditional logic (`on_mismatch`, required/optional conditions, nested condition
 14. [done] Add explicit failure mode output for `--require-binary` with clearer stderr and exit code.
 15. [done] Add request/deny fallback policy knobs in wrapper manifest generator and docs.
 16. [done] Add host-hook integration smoke test spec for dispatch script with one positive and one blocked command.
+17. [done] Extend smoke-script execution to validate allow + blocked transport outputs in one run.
+18. [done] Add workflow-gated stacked-PR audit invocation using explicit lane4 exit codes.
 
 ### Lane 5: Host surface adapters
 17. [done] Confirm Cursor/Claude/Codex/Droid payload parity for static + conditional command exports.
@@ -56,3 +58,23 @@ conditional logic (`on_mismatch`, required/optional conditions, nested condition
 22. [done] Draft `docs/sessions/.../00_SESSION_OVERVIEW.md` and `03_DAG_WBS.md` index updates.
 23. [done] Add `status` ledger with acceptance checkpoints and dependencies for each lane.
 24. [done] Run final dependency verification pass and mark all lane dependencies green/blocked.
+
+## E2E Phased Work Plan (Next Execution Window)
+
+### Phase A — E2E Validation (in progress)
+- [done] Run lane4 stack-audit + smoke tests locally with synthetic fixtures.
+- [done] Verify allow/blocked dispatch contract assertions in `scripts/smoke_dispatch_host_hook.sh`.
+- [done] Verify exit-code mapping for comment scan/remediation/failures.
+- [done] Capture regression test for malformed dispatch output.
+
+### Phase B — CI & Governance (next, by child agents)
+- [done] Add CI-only matrix entry for `scripts/smoke_dispatch_host_hook.sh` (if not already enabled).
+- [done] Add e2e workflow acceptance log artifact upload for audit JSON.
+- [done] Add alert annotation for `comment_scan_errors` trend.
+- [done] Add doc cross-link from `policy-contract-governance.yml` failure message to session spec.
+
+### Phase C — Policy quality hardening (next)
+- [done] Add explicit documentation for partial comment scan behavior in session artifacts.
+- [done] Add remediation metrics (missing token counts by source) to audit JSON consumers.
+- [done] Add deterministic fixture for mixed comment errors + partial data in `find_stacked_and_token_findings`.
+- [done] Expand lane5 host parity matrix to full allow/request/deny permutations.
