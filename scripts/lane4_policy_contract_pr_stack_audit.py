@@ -22,6 +22,11 @@ DEFAULT_APPROVAL_TOKEN_PATTERNS = (
     r"approval token",
     r"approval-token",
     r"approval_token",
+    r"stack-ok\b",
+    r"stack-ready\b",
+    r"approve-stack\b",
+    r"merge-stack\b",
+    r"stack-approve\b",
 )
 STACK_TARGET_BRANCHES = {"main", "master"}
 
@@ -93,8 +98,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--comment-template",
         default=(
-            "[policy-contract lane4] Stacked PR detection: this PR appears to be stacked and "
-            "is missing an approval-token marker. Add an approval-token label or comment token."
+            "[policy-contract lane4] Stacked PR Audit: this PR appears to be part of a stack "
+            "and requires an explicit approval-token marker. To approve the stack, add "
+            "the 'approval-token' label or a comment like '/stack-approve' or 'stack-ok'. "
+            "Documentation-only PRs are exempt."
         ),
         help="Comment text used only with --apply.",
     )
@@ -286,6 +293,32 @@ def _classify_missing_token_sources(
     return sources
 
 
+def _is_low_risk_pr(repo: str, pr_number: int) -> bool:
+    """Check if the PR is considered low risk (e.g., docs only)."""
+    cmd = ["gh", "pr", "diff", str(pr_number), "--repo", repo, "--name-only"]
+    rc, out, _ = run_gh(cmd)
+    if rc != 0 or not out:
+        return False
+
+    files = out.splitlines()
+    if not files:
+        return False
+
+    # Define low-risk patterns (docs, markdown, etc.)
+    low_risk_patterns = [
+        re.compile(r".*\.md$"),
+        re.compile(r"^docs/.*"),
+        re.compile(r"^LICENSE$"),
+        re.compile(r"^\.github/.*\.md$"),
+    ]
+
+    for file in files:
+        if not any(pattern.match(file) for pattern in low_risk_patterns):
+            return False
+
+    return True
+
+
 def has_approval_token(
     pr: dict[str, Any],
     repo: str,
@@ -315,6 +348,14 @@ def has_approval_token(
     if found:
         return True, sorted(set(found)), sorted(set(signals)), None
 
+    number = pr.get("number")
+    if number is not None:
+        if _is_low_risk_pr(repo, int(number)):
+            signal = "low-risk-exemption:docs-only"
+            found.append(signal)
+            signals.append(signal)
+            return True, sorted(set(found)), sorted(set(signals)), None
+
     if check_comments:
         number = pr.get("number")
         if number is not None:
@@ -323,6 +364,14 @@ def has_approval_token(
                 return False, sorted(set(found)), sorted(set(signals)), err
             for idx, comment in enumerate(comments or []):
                 comment_text = str(comment.get("body", ""))
+                author = (comment.get("user") or {}).get("login")
+                # Skip comments from common bots or if it looks like our own template
+                if author and "[bot]" in author:
+                    continue
+                # Simple check for our signature (lane4_policy_contract_pr_stack_audit)
+                if "[policy-contract lane4]" in comment_text:
+                    continue
+
                 for pattern, raw_pattern in compiled_patterns:
                     if not pattern.search(comment_text):
                         continue
