@@ -496,7 +496,7 @@ When multiple agents or actors share a dev environment:
 
 # Plugin Ecosystem Awareness
 
-Documentation and workflow frameworks (BMAD, OpenSpec, GSD, etc.) may be available as plugins or slash commands.
+Documentation and workflow frameworks (BMAD, AgilePlus, GSD, etc.) may be available as plugins or slash commands.
 
 - Check available slash commands (`/`) for documentation workflows
 - These complement the auto-detection system -- invoke explicitly for deeper workflows
