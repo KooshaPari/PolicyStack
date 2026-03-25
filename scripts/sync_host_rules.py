@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Emit host-policy artifacts from a resolved policy payload."""
+# noqa: E402 -- sys.path manipulation for module discovery
 
 from __future__ import annotations
 
@@ -37,7 +38,13 @@ except ModuleNotFoundError:
         find_managed_segment,
         replace_managed_entries,
     )
-from policy_lib import Condition, ConditionGroup, CommandRule, _normalized_command, normalize_payload
+from policy_lib import (  # noqa: E402
+    Condition,
+    ConditionGroup,
+    CommandRule,
+    _normalized_command,
+    normalize_payload,
+)
 
 
 COD_EX_DECISION = {"allow": "allow", "request": "prompt", "deny": "forbidden"}
@@ -163,9 +170,7 @@ def render_platform_payload(
         if rule.conditions is not None:
             conditional_rules.append(_summarize_rule(rule))
             wrapper_rules.append(_normalize_for_wrapper(rule, _cursor_pattern(rule)))
-            wrapper_conditions.update(
-                _collect_required_conditions(rule.conditions)
-            )
+            wrapper_conditions.update(_collect_required_conditions(rule.conditions))
             if not include_conditional:
                 continue
 
@@ -265,9 +270,7 @@ def _write_wrapper_manifest(out_dir: Path, wrapper_payload: dict[str, Any]) -> N
         "schema_version": wrapper_payload.get("schema_version"),
         "bundle_path": str(out_dir / "policy-wrapper-rules.json"),
         "bundle_relative": "policy-wrapper-rules.json",
-        "dispatch_script": str(
-            repo_root / "wrappers" / "policy-wrapper-dispatch.sh"
-        ),
+        "dispatch_script": str(repo_root / "wrappers" / "policy-wrapper-dispatch.sh"),
         "dispatch_command": [
             str(repo_root / "wrappers" / "policy-wrapper-dispatch.sh"),
             "--json",
@@ -340,8 +343,12 @@ def _apply_cursor_rules(path: Path, payload: dict[str, Any]) -> tuple[int, int]:
     old_allow = _read_list_field(permissions, "allow", path)
     old_deny = _read_list_field(permissions, "deny", path)
     old_ask = _read_list_field(permissions, "ask", path)
-    permissions["allow"] = replace_managed_entries(old_allow, payload["allow"], path, "allow")
-    permissions["deny"] = replace_managed_entries(old_deny, payload["deny"], path, "deny")
+    permissions["allow"] = replace_managed_entries(
+        old_allow, payload["allow"], path, "allow"
+    )
+    permissions["deny"] = replace_managed_entries(
+        old_deny, payload["deny"], path, "deny"
+    )
     permissions["ask"] = replace_managed_entries(old_ask, payload["ask"], path, "ask")
     data["permissions"] = permissions
     _write_json(path, data)
@@ -368,8 +375,12 @@ def _apply_claude_rules(path: Path, payload: dict[str, Any]) -> tuple[int, int]:
     old_allow = _read_list_field(permissions, "allow", path)
     old_deny = _read_list_field(permissions, "deny", path)
     old_ask = _read_list_field(permissions, "ask", path)
-    permissions["allow"] = replace_managed_entries(old_allow, payload["allow"], path, "allow")
-    permissions["deny"] = replace_managed_entries(old_deny, payload["deny"], path, "deny")
+    permissions["allow"] = replace_managed_entries(
+        old_allow, payload["allow"], path, "allow"
+    )
+    permissions["deny"] = replace_managed_entries(
+        old_deny, payload["deny"], path, "deny"
+    )
     permissions["ask"] = replace_managed_entries(old_ask, payload["ask"], path, "ask")
     data["permissions"] = permissions
     _write_json(path, data)
@@ -428,19 +439,35 @@ def apply_host_artifacts(
 
     if codex_path is not None:
         before, after = _apply_codex_rules(codex_path, policy["codex"]["rules"])
-        result["applied"]["codex"] = {"path": str(codex_path), "before": before, "after": after}
+        result["applied"]["codex"] = {
+            "path": str(codex_path),
+            "before": before,
+            "after": after,
+        }
 
     if cursor_path is not None:
         before, after = _apply_cursor_rules(cursor_path, policy["cursor"])
-        result["applied"]["cursor"] = {"path": str(cursor_path), "before": before, "after": after}
+        result["applied"]["cursor"] = {
+            "path": str(cursor_path),
+            "before": before,
+            "after": after,
+        }
 
     if claude_path is not None:
         before, after = _apply_claude_rules(claude_path, policy["claude"])
-        result["applied"]["claude"] = {"path": str(claude_path), "before": before, "after": after}
+        result["applied"]["claude"] = {
+            "path": str(claude_path),
+            "before": before,
+            "after": after,
+        }
 
     if droid_path is not None:
         before, after = _apply_droid_rules(droid_path, policy["droid"])
-        result["applied"]["droid"] = {"path": str(droid_path), "before": before, "after": after}
+        result["applied"]["droid"] = {
+            "path": str(droid_path),
+            "before": before,
+            "after": after,
+        }
 
     return result
 
@@ -501,11 +528,17 @@ def _count_platform_rules(policy: dict[str, Any], platform: str) -> int:
     if platform == "cursor":
         cursor_policy = policy["cursor"]
         return (
-            len(cursor_policy["allow"]) + len(cursor_policy["deny"]) + len(cursor_policy["ask"])
+            len(cursor_policy["allow"])
+            + len(cursor_policy["deny"])
+            + len(cursor_policy["ask"])
         )
     if platform == "claude":
         claude_policy = policy["claude"]
-        return len(claude_policy["allow"]) + len(claude_policy["deny"]) + len(claude_policy["ask"])
+        return (
+            len(claude_policy["allow"])
+            + len(claude_policy["deny"])
+            + len(claude_policy["ask"])
+        )
     if platform == "droid":
         droid_policy = policy["droid"]
         return (
@@ -537,7 +570,9 @@ def _build_success_entries(
             "rule_count": _count_platform_rules(policy, platform),
             "mode": mode,
             "had_managed_segment_before": _had_managed_segment_before(platform, path),
-            "managed_segment_length_after": _managed_segment_length_after(policy, platform),
+            "managed_segment_length_after": _managed_segment_length_after(
+                policy, platform
+            ),
         }
         for platform, path in entries
     ]
@@ -549,11 +584,17 @@ def _managed_segment_length_after(policy: dict[str, Any], platform: str) -> int:
     if platform == "cursor":
         cursor_policy = policy["cursor"]
         return (
-            len(cursor_policy["allow"]) + len(cursor_policy["deny"]) + len(cursor_policy["ask"])
+            len(cursor_policy["allow"])
+            + len(cursor_policy["deny"])
+            + len(cursor_policy["ask"])
         )
     if platform == "claude":
         claude_policy = policy["claude"]
-        return len(claude_policy["allow"]) + len(claude_policy["deny"]) + len(claude_policy["ask"])
+        return (
+            len(claude_policy["allow"])
+            + len(claude_policy["deny"])
+            + len(claude_policy["ask"])
+        )
     if platform == "droid":
         droid_policy = policy["droid"]
         return (
@@ -657,7 +698,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description="Emit host-specific command policy snippets from a resolved policy JSON."
     )
-    parser.add_argument("--policy-json", required=True, help="Resolved policy JSON file")
+    parser.add_argument(
+        "--policy-json", required=True, help="Resolved policy JSON file"
+    )
     parser.add_argument(
         "--cwd",
         default=None,
