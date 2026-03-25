@@ -419,24 +419,24 @@ fn evaluate(bundle: &PolicyWrapper, command: &str, cwd: Option<&PathBuf>) -> Eva
         if let Some(err) = cond_error {
             condition_passed = false;
             error = format!("condition evaluation error: {err}");
-            if let Some(fallback) = rule.on_mismatch.as_deref() {
-                if !fallback.is_empty() {
-                    decision = fallback.to_string();
-                }
-            }
+            decision = "request".to_string();
         } else if cond_ok {
             decision = rule.action.clone();
         } else if let Some(fallback) = rule.on_mismatch.as_deref() {
             if !fallback.is_empty() {
                 decision = fallback.to_string();
+            } else {
+                decision = "request".to_string();
             }
+        } else {
+            decision = "request".to_string();
         }
         if decision.is_empty() {
             continue;
         }
 
         let rank = decision_rank(&decision);
-        if rank > best_rank {
+        if rank >= best_rank {
             best_rank = rank;
             best_decision = decision;
             best_rule = Some(rule);

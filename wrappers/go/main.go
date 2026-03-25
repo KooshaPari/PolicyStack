@@ -327,8 +327,9 @@ func evaluate(bundle PolicyWrapper, command string, cwd string) EvalResult {
 		errText := ""
 		switch {
 		case evalErrs != nil && len(evalErrs) > 0:
-			// Condition evaluation error - skip to next rule
-			continue
+			// Condition evaluation error - default to "request"
+			decision = "request"
+			conditionPassed = false
 		case passed:
 			decision = rule.Action
 		case rule.OnMismatch != nil && *rule.OnMismatch != "":

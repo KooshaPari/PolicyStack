@@ -630,12 +630,15 @@ pub fn main() !void {
     const normalized = try normalizeCommand(allocator, opts.command);
     defer allocator.free(normalized);
 
-    const bundle_bytes = try std.fs.cwd().readFileAlloc(allocator, opts.bundle, 4 * 1024 * 1024);
+    const bundle_bytes = std.fs.cwd().readFileAlloc(allocator, opts.bundle, 4 * 1024 * 1024) catch {
+        std.debug.print("failed to read bundle\n", .{});
+        std.process.exit(1);
+    };
     defer allocator.free(bundle_bytes);
 
-    const parsed = std.json.parseFromSliceLeaky(PolicyWrapper, allocator, bundle_bytes, .{}) catch {
-        std.log.err("invalid bundle JSON: {s}", .{opts.bundle});
-        return;
+    const parsed = std.json.parseFromSliceLeaky(PolicyWrapper, allocator, bundle_bytes, .{}) catch |err| {
+        std.debug.print("invalid bundle JSON: {}\n", .{err});
+        std.process.exit(1);
     };
     const policy = parsed;
 
@@ -683,10 +686,10 @@ pub fn main() !void {
             if (fallback.len > 0) {
                 decision = fallback;
             } else {
-                continue;
+                decision = "request";
             }
         } else {
-            continue;
+            decision = "request";
         }
 
         const rank = decisionRank(decision);
@@ -700,9 +703,7 @@ pub fn main() !void {
         best_has_required = has_required;
         best_condition_passed = condition_passed;
         best_condition_reasons = reasons;
-        if (error_text.len > 0) {
-            best_error = error_text;
-        }
+        best_error = error_text;
     }
 
     if (!matched) {

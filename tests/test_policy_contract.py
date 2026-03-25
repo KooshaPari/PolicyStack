@@ -1135,7 +1135,7 @@ exit 1
             )
             handle.flush()
             results = {
-                name: self._run_wrapper(binary, Path(handle.name))
+                name: self._run_wrapper_with_command(binary, Path(handle.name), command, None)
                 for name, binary in wrappers.items()
             }
 
@@ -1531,7 +1531,7 @@ exit 1
             )
             handle.flush()
             results = {
-                name: self._run_wrapper(binary, Path(handle.name))
+                name: self._run_wrapper_with_command(binary, Path(handle.name), command, None)
                 for name, binary in wrappers.items()
             }
 
@@ -1557,7 +1557,7 @@ exit 1
             )
             handle.flush()
             results = {
-                name: self._run_wrapper(binary, Path(handle.name))
+                name: self._run_wrapper_with_command(binary, Path(handle.name), command, None)
                 for name, binary in wrappers.items()
             }
 
