@@ -22,7 +22,6 @@ except ModuleNotFoundError:
 
 from policy_lib import Condition, ConditionGroup, normalize_payload, evaluate_policy
 from resolve import (
-    EXIT_CODE_ARG,
     EXIT_CODE_INVALID,
     EXIT_CODE_MISSING,
     MERGE_STRATEGY,
@@ -1102,7 +1101,7 @@ exit 1
             )
             handle.flush()
             results = {
-                name: self._run_wrapper(binary, Path(handle.name))
+                name: self._run_wrapper_with_command(binary, Path(handle.name), command, None)
                 for name, binary in wrappers.items()
             }
 
@@ -1215,7 +1214,7 @@ exit 1
             }
             for name, binary in wrappers.items():
                 for command, (decision, has_required) in expected.items():
-                    result = self._run_wrapper_with_command(binary, Path(handle.name), command)
+                    result = self._run_wrapper_with_command(binary, Path(handle.name), command, None)
                     self.assertEqual(result["decision"], decision, f"{name}-{command}")
                     self.assertTrue(result["matched"], f"{name}-{command}")
                     self.assertEqual(result["has_required"], has_required, f"{name}-{command}")
@@ -1486,7 +1485,7 @@ exit 1
             )
             handle.flush()
             results = {
-                name: self._run_wrapper(binary, Path(handle.name))
+                name: self._run_wrapper_with_command(binary, Path(handle.name), command, None)
                 for name, binary in wrappers.items()
             }
 
@@ -1512,14 +1511,14 @@ exit 1
             )
             handle.flush()
             results = {
-                name: self._run_wrapper(binary, Path(handle.name))
+                name: self._run_wrapper_with_command(binary, Path(handle.name), command, None)
                 for name, binary in wrappers.items()
             }
 
         for name, result in results.items():
-            self.assertEqual(result["decision"], "request", name)
+            self.assertEqual(result["decision"], "deny", name)
             self.assertTrue(result["matched"], name)
-            self.assertEqual(result.get("rule_id"), "omit-on-mismatch-request", name)
+            self.assertEqual(result.get("rule_id"), "omit-on-mismatch-deny", name)
             self.assertEqual(result.get("error", ""), "", name)
 
     def test_dispatch_script_prefers_debug_rust_after_release(self) -> None:

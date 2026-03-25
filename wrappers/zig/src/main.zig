@@ -624,7 +624,7 @@ pub fn main() !void {
 
     const opts = parseArgs(allocator) catch {
         std.log.err("usage: --bundle <path> --command <text> [--cwd <path>] [--json]", .{});
-        return;
+        std.process.exit(1);
     };
 
     const normalized = try normalizeCommand(allocator, opts.command);
@@ -635,7 +635,7 @@ pub fn main() !void {
 
     const parsed = std.json.parseFromSliceLeaky(PolicyWrapper, allocator, bundle_bytes, .{}) catch {
         std.log.err("invalid bundle JSON: {s}", .{opts.bundle});
-        return;
+        std.process.exit(1);
     };
     const policy = parsed;
 
@@ -700,9 +700,7 @@ pub fn main() !void {
         best_has_required = has_required;
         best_condition_passed = condition_passed;
         best_condition_reasons = reasons;
-        if (error_text.len > 0) {
-            best_error = error_text;
-        }
+        best_error = error_text;
     }
 
     if (!matched) {
