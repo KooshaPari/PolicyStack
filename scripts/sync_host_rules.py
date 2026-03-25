@@ -7,6 +7,7 @@ import argparse
 import json
 import shlex
 import sys
+import yaml
 from pathlib import Path
 from typing import Any
 
@@ -155,6 +156,9 @@ def render_platform_payload(
     droid_allow = []
     droid_request = []
     droid_deny = []
+    forge_allow = []
+    forge_request = []
+    forge_deny = []
     conditional_rules: list[dict[str, Any]] = []
     wrapper_rules: list[dict[str, Any]] = []
     wrapper_conditions: set[str] = set()
@@ -181,10 +185,13 @@ def render_platform_payload(
             cursor_ask.append(_shell_entry(command))
             claude_ask.append(_bash_entry(command))
             droid_request.append(command)
+            forge_request.append(command)
         else:
             cursor_deny.append(_shell_entry(command))
             claude_deny.append(_bash_entry(command))
             droid_deny.append(command)
+            forge_deny.append(command)
+            forge_allow.append(command)
 
     return {
         "policy": {
@@ -202,6 +209,11 @@ def render_platform_payload(
                 "commandAllowlist": droid_allow,
                 "commandRequestlist": droid_request,
                 "commandDenylist": droid_deny,
+            },
+            "forge": {
+                "commandAllowlist": forge_allow,
+                "commandRequestlist": forge_request,
+                "commandDenylist": forge_deny,
             },
             "codex": {
                 "rules": codex_rules,
@@ -237,6 +249,10 @@ def write_host_artifacts(payload: dict[str, Any], out_dir: Path | None) -> None:
     )
     (out_dir / "claude.settings.json").write_text(
         json.dumps({"permissions": policy["claude"]}, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    (out_dir / "forge.settings.yaml").write_text(
+        yaml.safe_dump(policy["forge"], default_flow_style=False, sort_keys=False) + "\n",
         encoding="utf-8",
     )
     (out_dir / "factory-droid.settings.json").write_text(
@@ -415,6 +431,7 @@ def apply_host_artifacts(
     cursor_path: Path | None = None,
     claude_path: Path | None = None,
     droid_path: Path | None = None,
+    forge_path: Path | None = None,
 ) -> dict[str, Any]:
     policy = payload["policy"]
     result: dict[str, Any] = {
@@ -423,6 +440,7 @@ def apply_host_artifacts(
             "cursor": None,
             "claude": None,
             "droid": None,
+            "forge": None,
         }
     }
 
@@ -441,6 +459,10 @@ def apply_host_artifacts(
     if droid_path is not None:
         before, after = _apply_droid_rules(droid_path, policy["droid"])
         result["applied"]["droid"] = {"path": str(droid_path), "before": before, "after": after}
+
+    if forge_path is not None:
+        before, after = _apply_forge_rules(forge_path, policy["forge"])
+        result["applied"]["forge"] = {"path": str(forge_path), "before": before, "after": after}
 
     return result
 
@@ -506,6 +528,13 @@ def _count_platform_rules(policy: dict[str, Any], platform: str) -> int:
     if platform == "claude":
         claude_policy = policy["claude"]
         return len(claude_policy["allow"]) + len(claude_policy["deny"]) + len(claude_policy["ask"])
+    if platform == "forge":
+        forge_policy = policy["forge"]
+        return (
+            len(forge_policy["commandAllowlist"])
+            + len(forge_policy["commandRequestlist"])
+            + len(forge_policy["commandDenylist"])
+        )
     if platform == "droid":
         droid_policy = policy["droid"]
         return (
@@ -523,12 +552,14 @@ def _build_success_entries(
     cursor_path: Path,
     claude_path: Path,
     droid_path: Path,
+    forge_path: Path,
 ) -> list[dict[str, Any]]:
     entries = [
         ("codex", codex_path),
         ("cursor", cursor_path),
         ("claude", claude_path),
         ("droid", droid_path),
+        ("forge", forge_path),
     ]
     return [
         {
@@ -554,6 +585,13 @@ def _managed_segment_length_after(policy: dict[str, Any], platform: str) -> int:
     if platform == "claude":
         claude_policy = policy["claude"]
         return len(claude_policy["allow"]) + len(claude_policy["deny"]) + len(claude_policy["ask"])
+    if platform == "forge":
+        forge_policy = policy["forge"]
+        return (
+            len(forge_policy["commandAllowlist"])
+            + len(forge_policy["commandRequestlist"])
+            + len(forge_policy["commandDenylist"])
+        )
     if platform == "droid":
         droid_policy = policy["droid"]
         return (
@@ -618,6 +656,13 @@ def _had_managed_segment_before(platform: str, path: Path) -> bool:
             _has_json_managed_segment(allow, path=path, key="allow")
             or _has_json_managed_segment(deny, path=path, key="deny")
             or _has_json_managed_segment(ask, path=path, key="ask")
+        )
+    if platform == "forge":
+        forge_policy = policy["forge"]
+        return (
+            len(forge_policy["commandAllowlist"])
+            + len(forge_policy["commandRequestlist"])
+            + len(forge_policy["commandDenylist"])
         )
     if platform == "droid":
         allow = _read_list_field(data, "commandAllowlist", path)
@@ -699,6 +744,11 @@ def main() -> int:
         help="path to factory-droid settings",
     )
     parser.add_argument(
+        "--forge-settings",
+        default=str(Path.home() / "forge" / "permissions.yaml"),
+        help="path to Forge settings",
+    )
+    parser.add_argument(
         "--json",
         action="store_true",
         help="Emit JSON output for failure responses.",
@@ -751,6 +801,7 @@ def main() -> int:
     cursor_target = Path(args.cursor_config).expanduser().resolve()
     claude_target = Path(args.claude_settings).expanduser().resolve()
     droid_target = Path(args.factory_settings).expanduser().resolve()
+    forge_target = Path(args.forge_settings).expanduser().resolve()
 
     apply_result = None
     mode = "apply" if args.apply else "preview"
@@ -763,6 +814,7 @@ def main() -> int:
                 cursor_path=cursor_target,
                 claude_path=claude_target,
                 droid_path=droid_target,
+                forge_path=forge_target,
             )
         except Exception as exc:
             return _emit_failure(
@@ -779,6 +831,7 @@ def main() -> int:
             cursor_path=cursor_target,
             claude_path=claude_target,
             droid_path=droid_target,
+                forge_path=forge_target,
         )
         text_summary = _build_text_summary(
             mode=mode,
@@ -831,3 +884,32 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+def _apply_forge_rules(path: Path, payload: dict[str, Any]) -> tuple[int, int]:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    old_allow = []
+    old_request = []
+    old_deny = []
+    if path.exists():
+        try:
+            import yaml as forge_yaml
+            data = forge_yaml.safe_load(path.read_text(encoding="utf-8"))
+            if data and isinstance(data, dict):
+                old_allow = data.get("commandAllowlist", []) or []
+                old_request = data.get("commandRequestlist", []) or []
+                old_deny = data.get("commandDenylist", []) or []
+        except Exception:
+            pass
+    allow = replace_managed_entries(old_allow, payload.get("commandAllowlist", []), path, "commandAllowlist")
+    request = replace_managed_entries(old_request, payload.get("commandRequestlist", []), path, "commandRequestlist")
+    deny = replace_managed_entries(old_deny, payload.get("commandDenylist", []), path, "commandDenylist")
+    data = {
+        "commandAllowlist": allow,
+        "commandRequestlist": request,
+        "commandDenylist": deny,
+    }
+    path.write_text(forge_yaml.safe_dump(data, default_flow_style=False, sort_keys=False), encoding="utf-8")
+    return (
+        count_policy_entries(old_allow) + count_policy_entries(old_request) + count_policy_entries(old_deny),
+        count_policy_entries(allow) + count_policy_entries(request) + count_policy_entries(deny),
+    )

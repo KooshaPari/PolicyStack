@@ -272,6 +272,7 @@ def _validate_host_artifacts(out_dir: Path, rendered: dict[str, Any]) -> None:
         out_dir / "claude.settings.json",
         out_dir / "factory-droid.settings.json",
         out_dir / "policy-wrapper-rules.json",
+        out_dir / "forge.settings.yaml",
         out_dir / "policy-wrapper-dispatch.manifest.json",
     ]
     missing = [str(path) for path in required_files if not path.exists()]
@@ -521,6 +522,7 @@ def main(argv: list[str] | None = None) -> int:
                     cursor_path=Path.home() / ".cursor" / "cli-config.json",
                     claude_path=Path.home() / ".claude" / "settings.json",
                     droid_path=Path.home() / ".factory" / "settings.json",
+                    forge_path=Path.home() / "forge" / "permissions.yaml",
                 )
             else:
                 applied = None
