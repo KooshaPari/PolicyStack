@@ -38,7 +38,7 @@ except ModuleNotFoundError:
         find_managed_segment,
         replace_managed_entries,
     )
-from policy_lib import Condition, ConditionGroup, CommandRule, _normalized_command, normalize_payload
+from policy_lib import Condition, ConditionGroup, CommandRule, _normalized_command, normalize_payload  # noqa: E402 -- sys.path must be extended before local import
 
 
 COD_EX_DECISION = {"allow": "allow", "request": "prompt", "deny": "forbidden"}
@@ -120,8 +120,7 @@ def _summarize_rule(rule: CommandRule) -> dict[str, Any]:
 
 
 def _normalize_for_wrapper(rule: CommandRule, command: str) -> dict[str, Any]:
-    if rule.conditions is None:
-        return {}
+    conditions = rule.conditions.export() if rule.conditions is not None else {"mode": "all", "conditions": []}
     return {
         "id": rule.rule_id,
         "source": rule.source,
@@ -130,7 +129,7 @@ def _normalize_for_wrapper(rule: CommandRule, command: str) -> dict[str, Any]:
         "matcher": rule.matcher,
         "pattern": rule.pattern,
         "normalized_pattern": _wrapper_pattern(rule),
-        "conditions": rule.conditions.export(),
+        "conditions": conditions,
         "platform_action": rule.action,
         "shell_entry": _shell_entry(command),
         "bash_entry": _bash_entry(command),
@@ -172,6 +171,10 @@ def render_platform_payload(
             )
             if not include_conditional:
                 continue
+        elif include_conditional:
+            # When include_conditional is True, also include unconditional rules in
+            # wrapper_rules so callers get a complete picture of all policy entries.
+            wrapper_rules.append(_normalize_for_wrapper(rule, _cursor_pattern(rule)))
 
         command = _cursor_pattern(rule)
         platform_decision = rule.action
@@ -181,8 +184,10 @@ def render_platform_payload(
             cursor_allow.append(_shell_entry(command))
             claude_allow.append(_bash_entry(command))
             droid_allow.append(command)
+            forge_allow.append(command)
         elif platform_decision == "request":
-            cursor_ask.append(_shell_entry(command))
+            # Cursor treats request as deny (requires user confirmation in the shell layer).
+            cursor_deny.append(_shell_entry(command))
             claude_ask.append(_bash_entry(command))
             droid_request.append(command)
             forge_request.append(command)
@@ -191,7 +196,6 @@ def render_platform_payload(
             claude_deny.append(_bash_entry(command))
             droid_deny.append(command)
             forge_deny.append(command)
-            forge_allow.append(command)
 
     return {
         "policy": {
@@ -519,28 +523,34 @@ def _emit_failure(message: str, exit_code: int, json_mode: bool) -> int:
 
 def _count_platform_rules(policy: dict[str, Any], platform: str) -> int:
     if platform == "codex":
-        return len(policy["codex"]["rules"])
+        return len(policy["codex"].get("rules", []))
     if platform == "cursor":
         cursor_policy = policy["cursor"]
         return (
-            len(cursor_policy["allow"]) + len(cursor_policy["deny"]) + len(cursor_policy["ask"])
+            len(cursor_policy.get("allow", []))
+            + len(cursor_policy.get("deny", []))
+            + len(cursor_policy.get("ask", []))
         )
     if platform == "claude":
         claude_policy = policy["claude"]
-        return len(claude_policy["allow"]) + len(claude_policy["deny"]) + len(claude_policy["ask"])
+        return (
+            len(claude_policy.get("allow", []))
+            + len(claude_policy.get("deny", []))
+            + len(claude_policy.get("ask", []))
+        )
     if platform == "forge":
         forge_policy = policy["forge"]
         return (
-            len(forge_policy["commandAllowlist"])
-            + len(forge_policy["commandRequestlist"])
-            + len(forge_policy["commandDenylist"])
+            len(forge_policy.get("commandAllowlist", []))
+            + len(forge_policy.get("commandRequestlist", []))
+            + len(forge_policy.get("commandDenylist", []))
         )
     if platform == "droid":
         droid_policy = policy["droid"]
         return (
-            len(droid_policy["commandAllowlist"])
-            + len(droid_policy["commandRequestlist"])
-            + len(droid_policy["commandDenylist"])
+            len(droid_policy.get("commandAllowlist", []))
+            + len(droid_policy.get("commandRequestlist", []))
+            + len(droid_policy.get("commandDenylist", []))
         )
     raise ValueError(f"unknown platform: {platform}")
 
@@ -559,7 +569,6 @@ def _build_success_entries(
         ("cursor", cursor_path),
         ("claude", claude_path),
         ("droid", droid_path),
-        ("forge", forge_path),
     ]
     return [
         {
@@ -576,28 +585,34 @@ def _build_success_entries(
 
 def _managed_segment_length_after(policy: dict[str, Any], platform: str) -> int:
     if platform == "codex":
-        return len(policy["codex"]["rules"])
+        return len(policy["codex"].get("rules", []))
     if platform == "cursor":
         cursor_policy = policy["cursor"]
         return (
-            len(cursor_policy["allow"]) + len(cursor_policy["deny"]) + len(cursor_policy["ask"])
+            len(cursor_policy.get("allow", []))
+            + len(cursor_policy.get("deny", []))
+            + len(cursor_policy.get("ask", []))
         )
     if platform == "claude":
         claude_policy = policy["claude"]
-        return len(claude_policy["allow"]) + len(claude_policy["deny"]) + len(claude_policy["ask"])
+        return (
+            len(claude_policy.get("allow", []))
+            + len(claude_policy.get("deny", []))
+            + len(claude_policy.get("ask", []))
+        )
     if platform == "forge":
         forge_policy = policy["forge"]
         return (
-            len(forge_policy["commandAllowlist"])
-            + len(forge_policy["commandRequestlist"])
-            + len(forge_policy["commandDenylist"])
+            len(forge_policy.get("commandAllowlist", []))
+            + len(forge_policy.get("commandRequestlist", []))
+            + len(forge_policy.get("commandDenylist", []))
         )
     if platform == "droid":
         droid_policy = policy["droid"]
         return (
-            len(droid_policy["commandAllowlist"])
-            + len(droid_policy["commandRequestlist"])
-            + len(droid_policy["commandDenylist"])
+            len(droid_policy.get("commandAllowlist", []))
+            + len(droid_policy.get("commandRequestlist", []))
+            + len(droid_policy.get("commandDenylist", []))
         )
     raise ValueError(f"unknown platform: {platform}")
 
@@ -658,11 +673,14 @@ def _had_managed_segment_before(platform: str, path: Path) -> bool:
             or _has_json_managed_segment(ask, path=path, key="ask")
         )
     if platform == "forge":
-        forge_policy = policy["forge"]
+        forge_data = _load_json(path)
+        allow = _read_list_field(forge_data, "commandAllowlist", path)
+        request = _read_list_field(forge_data, "commandRequestlist", path)
+        deny = _read_list_field(forge_data, "commandDenylist", path)
         return (
-            len(forge_policy["commandAllowlist"])
-            + len(forge_policy["commandRequestlist"])
-            + len(forge_policy["commandDenylist"])
+            _has_json_managed_segment(allow, path=path, key="commandAllowlist")
+            or _has_json_managed_segment(request, path=path, key="commandRequestlist")
+            or _has_json_managed_segment(deny, path=path, key="commandDenylist")
         )
     if platform == "droid":
         allow = _read_list_field(data, "commandAllowlist", path)

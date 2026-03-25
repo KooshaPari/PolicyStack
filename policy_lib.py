@@ -131,35 +131,79 @@ class ConditionGroup:
             reasons.append(reason)
 
     def evaluate(self, cwd: Path) -> tuple[bool, list[str]]:
+        """Evaluate the condition group.
+
+        Returns ``(ok, reasons)`` where ``ok`` is True when the group fully
+        passes. See :meth:`evaluate_with_quality` for the three-valued result
+        that distinguishes partial failures from full failures.
+        """
+        ok, _partial_fail, reasons = self.evaluate_with_quality(cwd)
+        return ok, reasons
+
+    def evaluate_with_quality(self, cwd: Path) -> tuple[bool, bool, list[str]]:
+        """Evaluate and return ``(ok, partial_fail, reasons)``.
+
+        ``ok`` is True only when the group fully passes (all required conditions
+        met). ``partial_fail`` is True when the group fails but there was at
+        least one optional item that passed in an ``any``-mode group (i.e. a
+        "near miss" that warrants a cautious ``request`` response rather than a
+        silent ``None``).
+        """
         reasons: list[str] = []
         if not self.items:
-            return True, reasons
+            return True, False, reasons
 
         if self.mode == "any":
             has_required = False
             pass_required = False
             pass_optional = False
             for condition in self.items:
+                if isinstance(condition, Condition):
+                    ok, reason = condition.evaluate(cwd)
+                    self._append_reason(reasons, reason)
+                    if self._is_required(condition):
+                        has_required = True
+                        if ok:
+                            pass_required = True
+                    elif ok:
+                        pass_optional = True
+                else:
+                    inner_ok, _inner_partial, inner_reasons = condition.evaluate_with_quality(cwd)
+                    self._append_reason(reasons, inner_reasons)
+                    # Nested ConditionGroup items are treated as required in
+                    # the parent group.
+                    has_required = True
+                    if inner_ok:
+                        pass_required = True
+
+            if pass_required:
+                return True, False, reasons
+            if not has_required and pass_optional:
+                return True, False, reasons
+            # Required item(s) failed. Check whether any optional passed to
+            # signal a partial failure.
+            partial_fail = has_required and not pass_required and pass_optional
+            return False, partial_fail, reasons
+
+        # "all" mode: evaluate every item to collect all reasons, then decide.
+        failed_required = False
+        partial_fail = False
+        for condition in self.items:
+            if isinstance(condition, Condition):
                 ok, reason = condition.evaluate(cwd)
                 self._append_reason(reasons, reason)
-                required = self._is_required(condition)
-                if required:
-                    has_required = True
-                    if ok:
-                        pass_required = True
-                elif ok:
-                    pass_optional = True
-
-            if pass_required or (not has_required and pass_optional):
-                return True, reasons
-            return False, reasons
-
-        for condition in self.items:
-            ok, reason = condition.evaluate(cwd)
-            self._append_reason(reasons, reason)
-            if self._is_required(condition) and not ok:
-                return False, reasons
-        return True, reasons
+                if self._is_required(condition) and not ok:
+                    failed_required = True
+            else:
+                inner_ok, inner_partial, inner_reasons = condition.evaluate_with_quality(cwd)
+                self._append_reason(reasons, inner_reasons)
+                if not inner_ok:
+                    failed_required = True
+                    if inner_partial:
+                        partial_fail = True
+        if failed_required:
+            return False, partial_fail, reasons
+        return True, False, reasons
 
     def export(self) -> dict[str, Any]:
         return {
@@ -204,9 +248,14 @@ class CommandRule:
         if not self.conditions:
             return self.action
 
-        ok, reasons = self.conditions.evaluate(cwd)
+        ok, partial_fail, _reasons = self.conditions.evaluate_with_quality(cwd)
         if ok:
             return self.action
+        if partial_fail:
+            # Partial failure: required condition(s) failed but optional(s) passed
+            # in an any-mode group. Use on_mismatch if set, otherwise "request"
+            # as a cautious default (do not silently fall through to the next rule).
+            return self.on_mismatch if self.on_mismatch else "request"
         if self.on_mismatch:
             return self.on_mismatch
         return None
@@ -293,7 +342,9 @@ def _parse_match(match: Any) -> tuple[str, str]:
         return "glob", match
     if match is None:
         raise ValueError("match or pattern must be a non-empty string")
-    if not isinstance(match, dict) or not match:
+    if not isinstance(match, dict):
+        raise ValueError(f"matcher pattern must be string, got {type(match).__name__}: {match!r}")
+    if not match:
         raise ValueError(f"invalid match block: {match!r}")
     if len(match) != 1:
         raise ValueError(f"match block must have one key: {match!r}")

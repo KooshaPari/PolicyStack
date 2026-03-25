@@ -15,7 +15,7 @@ REPO_ROOT = SCRIPT_DIR.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from resolve import _build_chain, _resolve_config_root, resolve
+from resolve import _build_chain, _resolve_config_root, resolve  # noqa: E402 -- sys.path must be extended before local import
 
 EXIT_OK = 0
 EXIT_WRITE_FAILED = 10

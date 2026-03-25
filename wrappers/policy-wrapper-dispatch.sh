@@ -89,7 +89,7 @@ print(
             "command": sys.argv[1],
             "decision": sys.argv[2],
             "matched": False,
-            "fallback": sys.argv[3],
+            "fallback": sys.argv[2],
             "fallback_reason": sys.argv[3],
             "condition_passed": False,
             "error": sys.argv[3],
