@@ -181,7 +181,9 @@ def test_main_returns_remediation_failure_exit_code(monkeypatch) -> None:
     )
 
 
-def test_find_stacked_records_collects_mixed_comment_error_with_partial_data(monkeypatch) -> None:
+def test_find_stacked_records_collects_mixed_comment_error_with_partial_data(
+    monkeypatch,
+) -> None:
     monkeypatch.setattr(
         MOD,
         "list_pr_comments_all",

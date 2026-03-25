@@ -32,8 +32,15 @@ def build_result_envelope(
     return payload
 
 
-def build_summary_envelope(*, checked: int, missing: int, invalid: int) -> dict[str, Any]:
-    return {"type": "summary", "checked": checked, "missing": missing, "invalid": invalid}
+def build_summary_envelope(
+    *, checked: int, missing: int, invalid: int
+) -> dict[str, Any]:
+    return {
+        "type": "summary",
+        "checked": checked,
+        "missing": missing,
+        "invalid": invalid,
+    }
 
 
 def build_failure_envelope(
@@ -56,7 +63,9 @@ def emit_json(payload: dict[str, Any], *, sort_keys: bool = False) -> None:
     print(json.dumps(payload, ensure_ascii=True, sort_keys=sort_keys))
 
 
-def emit_status(*, json_mode: bool, code: str, message: str, text: str | None = None) -> None:
+def emit_status(
+    *, json_mode: bool, code: str, message: str, text: str | None = None
+) -> None:
     if json_mode:
         emit_json(build_status_envelope(code=code, message=message))
         return
@@ -84,7 +93,9 @@ def emit_result(
 
 def emit_summary(*, json_mode: bool, checked: int, missing: int, invalid: int) -> None:
     if json_mode:
-        emit_json(build_summary_envelope(checked=checked, missing=missing, invalid=invalid))
+        emit_json(
+            build_summary_envelope(checked=checked, missing=missing, invalid=invalid)
+        )
         return
     print(f"summary checked={checked} missing={missing} invalid={invalid}")
 
@@ -101,7 +112,9 @@ def emit_failure(
 ) -> None:
     if json_mode:
         emit_json(
-            build_failure_envelope(code=code, message=message, path=path, details=details),
+            build_failure_envelope(
+                code=code, message=message, path=path, details=details
+            ),
             sort_keys=sort_keys,
         )
         return

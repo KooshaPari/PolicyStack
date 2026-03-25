@@ -154,12 +154,15 @@ class ConditionGroup:
                 return True, reasons
             return False, reasons
 
+        # "all" mode: evaluate all conditions and collect reasons
+        # but still return False if any required condition fails
+        failed_required = False
         for condition in self.items:
             ok, reason = condition.evaluate(cwd)
             self._append_reason(reasons, reason)
             if self._is_required(condition) and not ok:
-                return False, reasons
-        return True, reasons
+                failed_required = True
+        return not failed_required, reasons
 
     def export(self) -> dict[str, Any]:
         return {
@@ -207,9 +210,11 @@ class CommandRule:
         ok, reasons = self.conditions.evaluate(cwd)
         if ok:
             return self.action
+        # If conditions fail and on_mismatch is specified, use it
+        # Otherwise, default to "request" for rules with conditions
         if self.on_mismatch:
             return self.on_mismatch
-        return None
+        return "request"
 
     def decision_trace(self) -> str:
         return f"{self.rule_id}::{self.action}::{self.source}"
@@ -242,13 +247,17 @@ def _parse_condition_group(value: Any) -> ConditionGroup | None:
         conditions = value["all"]
         if not isinstance(conditions, list):
             raise ValueError("'all' must be a list")
-        return ConditionGroup(mode="all", items=tuple(_parse_condition(v) for v in conditions))
+        return ConditionGroup(
+            mode="all", items=tuple(_parse_condition(v) for v in conditions)
+        )
 
     if "any" in value:
         conditions = value["any"]
         if not isinstance(conditions, list):
             raise ValueError("'any' must be a list")
-        return ConditionGroup(mode="any", items=tuple(_parse_condition(v) for v in conditions))
+        return ConditionGroup(
+            mode="any", items=tuple(_parse_condition(v) for v in conditions)
+        )
 
     if "mode" in value and "conditions" in value:
         mode = value["mode"]
@@ -257,7 +266,9 @@ def _parse_condition_group(value: Any) -> ConditionGroup | None:
         conditions = value["conditions"]
         if not isinstance(conditions, list):
             raise ValueError("'conditions' must be a list when 'mode' is set")
-        return ConditionGroup(mode=mode, items=tuple(_parse_condition(v) for v in conditions))
+        return ConditionGroup(
+            mode=mode, items=tuple(_parse_condition(v) for v in conditions)
+        )
 
     return ConditionGroup(items=(_parse_condition(value),))
 
@@ -268,7 +279,8 @@ def _parse_condition(value: Any) -> Condition | ConditionGroup:
     if isinstance(value, str):
         name = value
     elif isinstance(value, list) or (
-        isinstance(value, dict) and ("all" in value or "any" in value or "mode" in value)
+        isinstance(value, dict)
+        and ("all" in value or "any" in value or "mode" in value)
     ):
         return _parse_condition_group(value)
     elif isinstance(value, dict) and "name" not in value:
@@ -293,7 +305,9 @@ def _parse_match(match: Any) -> tuple[str, str]:
         return "glob", match
     if match is None:
         raise ValueError("match or pattern must be a non-empty string")
-    if not isinstance(match, dict) or not match:
+    if not isinstance(match, dict):
+        raise ValueError(f"matcher pattern must be string: {match!r}")
+    if not match:
         raise ValueError(f"invalid match block: {match!r}")
     if len(match) != 1:
         raise ValueError(f"match block must have one key: {match!r}")
@@ -307,7 +321,9 @@ def _parse_match(match: Any) -> tuple[str, str]:
     return matcher, pattern
 
 
-def normalize_payload(payload: dict[str, Any], cwd: Path | None = None) -> list[CommandRule]:
+def normalize_payload(
+    payload: dict[str, Any], cwd: Path | None = None
+) -> list[CommandRule]:
     if not isinstance(payload, dict):
         raise ValueError("policy payload must be a mapping")
 

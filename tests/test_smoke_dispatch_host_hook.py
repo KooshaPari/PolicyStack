@@ -123,11 +123,18 @@ def _setup_synthetic_root(tmp_path: Path, include_snapshots: bool) -> Path:
     )
 
     if include_snapshots:
-        (root / "policy-config" / "snapshots" / "policy_snapshot_codex_deployment.json").write_text(
+        (
+            root
+            / "policy-config"
+            / "snapshots"
+            / "policy_snapshot_codex_deployment.json"
+        ).write_text(
             "{}",
             encoding="utf-8",
         )
-        (root / "policy-config" / "snapshots" / "policy_snapshot_codex_query.json").write_text(
+        (
+            root / "policy-config" / "snapshots" / "policy_snapshot_codex_query.json"
+        ).write_text(
             "{}",
             encoding="utf-8",
         )

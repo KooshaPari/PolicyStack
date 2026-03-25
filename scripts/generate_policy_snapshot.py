@@ -15,7 +15,7 @@ REPO_ROOT = SCRIPT_DIR.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from resolve import _build_chain, _resolve_config_root, resolve
+from resolve import _build_chain, _resolve_config_root, resolve  # noqa: E402 -- sys.path manipulation for local discovery
 
 EXIT_OK = 0
 EXIT_WRITE_FAILED = 10
@@ -55,9 +55,7 @@ def _resolve_output_path(root: Path, output: str) -> Path:
 def _canonical_snapshot_path(root: Path, harness: str, task_domain: str) -> Path:
     config_root = _resolve_config_root(root)
     return (
-        config_root
-        / "snapshots"
-        / f"policy_snapshot_{harness}_{task_domain}.json"
+        config_root / "snapshots" / f"policy_snapshot_{harness}_{task_domain}.json"
     ).resolve()
 
 
@@ -141,7 +139,9 @@ def _first_differing_key(existing: Any, current: Any, prefix: str = "") -> str |
     return None
 
 
-def _print_failure(args: argparse.Namespace, kind: str, message: str, exit_code: int, **details: Any) -> int:
+def _print_failure(
+    args: argparse.Namespace, kind: str, message: str, exit_code: int, **details: Any
+) -> int:
     if args.json:
         payload = {
             "status": "error",
@@ -158,7 +158,9 @@ def _print_failure(args: argparse.Namespace, kind: str, message: str, exit_code:
     return exit_code
 
 
-def _print_success(args: argparse.Namespace, kind: str, message: str, **details: Any) -> int:
+def _print_success(
+    args: argparse.Namespace, kind: str, message: str, **details: Any
+) -> int:
     if args.json:
         payload = {
             "status": "ok",
@@ -176,11 +178,15 @@ def _print_success(args: argparse.Namespace, kind: str, message: str, **details:
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", default=".", help="Repo root containing policy-contract.")
+    parser.add_argument(
+        "--root", default=".", help="Repo root containing policy-contract."
+    )
     parser.add_argument("--harness", help="harness identifier")
     parser.add_argument("--task-domain", help="task domain identifier")
     parser.add_argument("--task-instance", help="optional task-instance policy file")
-    parser.add_argument("--system", help="optional absolute or relative system policy path")
+    parser.add_argument(
+        "--system", help="optional absolute or relative system policy path"
+    )
     parser.add_argument("--user", help="optional absolute or relative user policy path")
     parser.add_argument("--output", help="output snapshot path")
     parser.add_argument(
@@ -250,7 +256,11 @@ def main() -> int:
             "--check-existing cannot be used with --write-canonical or --validate-canonical",
             EXIT_INVALID,
         )
-    if not args.write_canonical and not args.validate_canonical and (not args.harness or not args.task_domain):
+    if (
+        not args.write_canonical
+        and not args.validate_canonical
+        and (not args.harness or not args.task_domain)
+    ):
         return _print_failure(
             args,
             "error",

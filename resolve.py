@@ -80,11 +80,15 @@ class _ResolverArgumentParser(argparse.ArgumentParser):
         raise _ArgumentParseError(text, status=status)
 
 
-def load_yaml(path: Path, *, required: bool = False, scope: str | None = None) -> dict[str, Any]:
+def load_yaml(
+    path: Path, *, required: bool = False, scope: str | None = None
+) -> dict[str, Any]:
     if not path.exists():
         if required:
             scope_label = f" for scope '{scope}'" if scope else ""
-            raise FileNotFoundError(f"missing required policy file{scope_label}: {path}")
+            raise FileNotFoundError(
+                f"missing required policy file{scope_label}: {path}"
+            )
         return {}
     with path.open("r", encoding="utf-8") as f:
         data = yaml.safe_load(f) or {}
@@ -185,9 +189,7 @@ def _validate_scope_chain(chain: list[tuple[str, str]]) -> None:
             )
 
     if not set(REQUIRED_SCOPES).issubset(scope_names):
-        missing_scopes = ", ".join(
-            sorted(set(REQUIRED_SCOPES) - set(scope_names))
-        )
+        missing_scopes = ", ".join(sorted(set(REQUIRED_SCOPES) - set(scope_names)))
         raise ValueError(
             f"required scopes missing from final resolved policy: {missing_scopes}"
         )
@@ -223,7 +225,9 @@ def _build_resolved_payload(
     }
 
 
-def _merge_dict(base: dict[str, Any], override: dict[str, Any], base_path: str = "") -> dict[str, Any]:
+def _merge_dict(
+    base: dict[str, Any], override: dict[str, Any], base_path: str = ""
+) -> dict[str, Any]:
     out = dict(base)
     for key, value in override.items():
         key_path = f"{base_path}.{key}" if base_path else key
@@ -234,7 +238,9 @@ def _merge_dict(base: dict[str, Any], override: dict[str, Any], base_path: str =
             continue
         base_value = out[key]
         if isinstance(base_value, dict) and not isinstance(value, dict):
-            raise TypeError(f"{key_path}: expected mapping but got {type(value).__name__}")
+            raise TypeError(
+                f"{key_path}: expected mapping but got {type(value).__name__}"
+            )
         if isinstance(base_value, list) and not isinstance(value, list):
             raise TypeError(f"{key_path}: expected list but got {type(value).__name__}")
         if isinstance(base_value, dict) and isinstance(value, dict):
@@ -250,14 +256,18 @@ def _merge_dict(base: dict[str, Any], override: dict[str, Any], base_path: str =
         out[key] = value
     if base_path == "":
         out["scope"] = override.get("scope", out.get("scope"))
-        out["policy_version"] = override.get("policy_version", out.get("policy_version"))
+        out["policy_version"] = override.get(
+            "policy_version", out.get("policy_version")
+        )
     return out
 
 
 def _load_host_rules_emitter():
     """Load the host-rule emitter without importing package-level path state."""
     script_path = Path(__file__).resolve().parent / "scripts" / "sync_host_rules.py"
-    spec = importlib.util.spec_from_file_location("policy_contract_host_sync", script_path)
+    spec = importlib.util.spec_from_file_location(
+        "policy_contract_host_sync", script_path
+    )
     if spec is None or spec.loader is None:
         raise RuntimeError(f"unable to load host sync script: {script_path}")
     module = importlib.util.module_from_spec(spec)
@@ -278,10 +288,14 @@ def _validate_host_artifacts(out_dir: Path, rendered: dict[str, Any]) -> None:
     if missing:
         raise FileNotFoundError(f"missing host artifacts: {', '.join(missing)}")
 
-    with (out_dir / "policy-wrapper-dispatch.manifest.json").open("r", encoding="utf-8") as fp:
+    with (out_dir / "policy-wrapper-dispatch.manifest.json").open(
+        "r", encoding="utf-8"
+    ) as fp:
         manifest = json.load(fp)
     if manifest.get("bundle_path") != str(out_dir / "policy-wrapper-rules.json"):
-        raise ValueError("dispatch manifest bundle_path does not match output directory")
+        raise ValueError(
+            "dispatch manifest bundle_path does not match output directory"
+        )
 
     required_fallbacks = (
         "fallback_missing_policy",
@@ -324,7 +338,9 @@ def _validate_host_artifacts(out_dir: Path, rendered: dict[str, Any]) -> None:
         raise ValueError("policy-wrapper command payload count mismatch")
 
 
-def resolve(policies: list[tuple[str, Path]], output: Path | None = None) -> dict[str, Any]:
+def resolve(
+    policies: list[tuple[str, Path]], output: Path | None = None
+) -> dict[str, Any]:
     chain = []
     merged: dict[str, Any] = {}
     required_scopes = set(REQUIRED_SCOPES)
@@ -344,8 +360,7 @@ def resolve(policies: list[tuple[str, Path]], output: Path | None = None) -> dic
             raise ValueError(f"duplicate scope in chain: {scope_name}")
         if scope_name != scope:
             raise ValueError(
-                f"{path}: scope mismatch in chain: expected "
-                f"{scope}, got {scope_name}"
+                f"{path}: scope mismatch in chain: expected {scope}, got {scope_name}"
             )
         if scope_name in seen_scopes:
             raise ValueError(f"duplicate scope in chain: {scope_name}")
@@ -397,7 +412,9 @@ def _build_chain(args: argparse.Namespace) -> list[tuple[str, Path]]:
 
     chain.append(("repo", config_root / "repo.yaml"))
     chain.append(("harness", config_root / "harness" / f"{args.harness}.yaml"))
-    chain.append(("task_domain", config_root / "task-domain" / f"{args.task_domain}.yaml"))
+    chain.append(
+        ("task_domain", config_root / "task-domain" / f"{args.task_domain}.yaml")
+    )
 
     if args.task_instance:
         chain.append(("task_instance", Path(args.task_instance).expanduser().resolve()))
@@ -408,7 +425,9 @@ def _count_existing_scopes(chain: list[tuple[str, Path]]) -> int:
     return sum(1 for _, path in chain if path.exists())
 
 
-def _print_failure_json(code: str, message: str, details: dict[str, Any] | None = None) -> None:
+def _print_failure_json(
+    code: str, message: str, details: dict[str, Any] | None = None
+) -> None:
     payload: dict[str, Any] = {"code": code, "message": message}
     if details:
         payload["details"] = details
@@ -443,11 +462,15 @@ def _print_success_json(
 
 def _build_parser() -> _ResolverArgumentParser:
     parser = _ResolverArgumentParser(description="Resolve scoped agent policy files.")
-    parser.add_argument("--root", default=".", help="Repo root containing policy-contract.")
+    parser.add_argument(
+        "--root", default=".", help="Repo root containing policy-contract."
+    )
     parser.add_argument("--harness", required=True, help="harness identifier")
     parser.add_argument("--task-domain", required=True, help="task domain identifier")
     parser.add_argument("--task-instance", help="optional task-instance policy file")
-    parser.add_argument("--system", help="optional absolute or relative system policy path")
+    parser.add_argument(
+        "--system", help="optional absolute or relative system policy path"
+    )
     parser.add_argument("--user", help="optional absolute or relative user policy path")
     parser.add_argument(
         "--json",
@@ -497,7 +520,11 @@ def main(argv: list[str] | None = None) -> int:
             if args.emit
             else _build_resolved_payload(
                 payload,
-                [(scope_name, str(scope_path)) for scope_name, scope_path in chain if scope_path.exists()],
+                [
+                    (scope_name, str(scope_path))
+                    for scope_name, scope_path in chain
+                    if scope_path.exists()
+                ],
             )
         )
         if args.emit_host_rules:
@@ -538,7 +565,9 @@ def main(argv: list[str] | None = None) -> int:
                     else None
                 ),
                 "applied": applied,
-                "host_artifacts_written_to": str(host_out_dir) if host_out_dir else None,
+                "host_artifacts_written_to": str(host_out_dir)
+                if host_out_dir
+                else None,
             }
             if json_mode:
                 _print_success_json(

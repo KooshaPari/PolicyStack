@@ -65,7 +65,9 @@ def test_discover_default_policy_paths_prefers_existing_and_uses_yaml_placeholde
     ]
 
 
-def test_required_default_policy_paths_matches_default_resolution(tmp_path: Path) -> None:
+def test_required_default_policy_paths_matches_default_resolution(
+    tmp_path: Path,
+) -> None:
     config_root = tmp_path / "policy-config"
     config_root.mkdir(parents=True, exist_ok=True)
     (config_root / "system.yaml").write_text("x: 1", encoding="utf-8")

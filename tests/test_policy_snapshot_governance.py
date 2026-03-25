@@ -64,8 +64,12 @@ class TestPolicySnapshotGovernanceScript(TestCase):
             self._seed_policy_config(root)
             config_root = root / "policy-contract" / "policy-config"
             self._write_policy(config_root / "harness" / "codex.yaml", "harness")
-            self._write_policy(config_root / "task-domain" / "deployment.yaml", "task_domain")
-            self._write_policy(config_root / "task-domain" / "query.yaml", "task_domain")
+            self._write_policy(
+                config_root / "task-domain" / "deployment.yaml", "task_domain"
+            )
+            self._write_policy(
+                config_root / "task-domain" / "query.yaml", "task_domain"
+            )
             snapshot_path = root / "snapshots" / "unit.json"
 
             write = subprocess.run(
@@ -118,7 +122,9 @@ class TestPolicySnapshotGovernanceScript(TestCase):
             self.assertEqual(check.returncode, 0, check.stdout + check.stderr)
             self.assertIn("[ok] snapshot matches", check.stdout)
 
-    def test_snapshot_json_success_payloads_include_deterministic_metadata(self) -> None:
+    def test_snapshot_json_success_payloads_include_deterministic_metadata(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             self._seed_policy_config(root)
@@ -179,14 +185,20 @@ class TestPolicySnapshotGovernanceScript(TestCase):
             self.assertEqual(check_payload["chain_length"], 5)
             self.assertEqual(check_payload["output_path"], "snapshots/unit.json")
 
-    def test_snapshot_write_canonical_and_check_existing_from_clean_repo_context(self) -> None:
+    def test_snapshot_write_canonical_and_check_existing_from_clean_repo_context(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             self._seed_policy_config(root)
             config_root = root / "policy-contract" / "policy-config"
             self._write_policy(config_root / "harness" / "codex.yaml", "harness")
-            self._write_policy(config_root / "task-domain" / "deployment.yaml", "task_domain")
-            self._write_policy(config_root / "task-domain" / "query.yaml", "task_domain")
+            self._write_policy(
+                config_root / "task-domain" / "deployment.yaml", "task_domain"
+            )
+            self._write_policy(
+                config_root / "task-domain" / "query.yaml", "task_domain"
+            )
 
             write_canonical = subprocess.run(
                 [
@@ -267,8 +279,12 @@ class TestPolicySnapshotGovernanceScript(TestCase):
             self._seed_policy_config(root)
             config_root = root / "policy-contract" / "policy-config"
             self._write_policy(config_root / "harness" / "codex.yaml", "harness")
-            self._write_policy(config_root / "task-domain" / "deployment.yaml", "task_domain")
-            self._write_policy(config_root / "task-domain" / "query.yaml", "task_domain")
+            self._write_policy(
+                config_root / "task-domain" / "deployment.yaml", "task_domain"
+            )
+            self._write_policy(
+                config_root / "task-domain" / "query.yaml", "task_domain"
+            )
             canonical_dir = root / "custom-snapshots"
 
             write_canonical = subprocess.run(
@@ -337,8 +353,12 @@ class TestPolicySnapshotGovernanceScript(TestCase):
             self._seed_policy_config(root)
             config_root = root / "policy-contract" / "policy-config"
             self._write_policy(config_root / "harness" / "codex.yaml", "harness")
-            self._write_policy(config_root / "task-domain" / "deployment.yaml", "task_domain")
-            self._write_policy(config_root / "task-domain" / "query.yaml", "task_domain")
+            self._write_policy(
+                config_root / "task-domain" / "deployment.yaml", "task_domain"
+            )
+            self._write_policy(
+                config_root / "task-domain" / "query.yaml", "task_domain"
+            )
 
             validate = subprocess.run(
                 [
@@ -421,7 +441,9 @@ class TestPolicySnapshotGovernanceScript(TestCase):
             payload.setdefault("commands", {})
             payload["commands"].setdefault("allow", [])
             payload["commands"]["allow"].append("deterministic-drift-command")
-            repo_file.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+            repo_file.write_text(
+                yaml.safe_dump(payload, sort_keys=False), encoding="utf-8"
+            )
 
             check = subprocess.run(
                 [
@@ -480,7 +502,9 @@ class TestPolicySnapshotGovernanceScript(TestCase):
             payload.setdefault("commands", {})
             payload["commands"].setdefault("allow", [])
             payload["commands"]["allow"].append("deterministic-drift-command")
-            repo_file.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+            repo_file.write_text(
+                yaml.safe_dump(payload, sort_keys=False), encoding="utf-8"
+            )
 
             check = subprocess.run(
                 [

@@ -327,15 +327,15 @@ func evaluate(bundle PolicyWrapper, command string, cwd string) EvalResult {
 		errText := ""
 		switch {
 		case evalErrs != nil && len(evalErrs) > 0:
-			decision = "request"
-			conditionPassed = false
-			errText = strings.Join(evalErrs, "; ")
+			// Condition evaluation error - skip to next rule
+			continue
 		case passed:
 			decision = rule.Action
 		case rule.OnMismatch != nil && *rule.OnMismatch != "":
 			decision = *rule.OnMismatch
 		default:
-			continue
+			// Default to "request" when conditions fail and no on_mismatch is set
+			decision = "request"
 		}
 
 		rank := decisionRank(decision)

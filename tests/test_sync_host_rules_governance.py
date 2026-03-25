@@ -54,7 +54,9 @@ def test_validate_policy_json_rejects_unreadable_file(tmp_path: Path) -> None:
         policy_file.chmod(0o600)
 
 
-def test_replace_managed_entries_replaces_existing_segment_and_preserves_user_items() -> None:
+def test_replace_managed_entries_replaces_existing_segment_and_preserves_user_items() -> (
+    None
+):
     existing = [
         "Shell(user allow prefix)",
         JSON_MANAGED_MARKER_START,
@@ -79,7 +81,9 @@ def test_replace_managed_entries_replaces_existing_segment_and_preserves_user_it
     ]
 
 
-def test_replace_managed_entries_clear_semantics_keep_markers_with_empty_generated() -> None:
+def test_replace_managed_entries_clear_semantics_keep_markers_with_empty_generated() -> (
+    None
+):
     updated = replace_managed_entries(
         [
             JSON_MANAGED_MARKER_START,
@@ -97,7 +101,13 @@ def test_replace_managed_entries_clear_semantics_keep_markers_with_empty_generat
 def test_find_managed_segment_boundaries_and_absence() -> None:
     path = Path("/tmp/managed.json")
     start, end = find_managed_segment(
-        ["user", JSON_MANAGED_MARKER_START, "generated", JSON_MANAGED_MARKER_END, "tail"],
+        [
+            "user",
+            JSON_MANAGED_MARKER_START,
+            "generated",
+            JSON_MANAGED_MARKER_END,
+            "tail",
+        ],
         JSON_MANAGED_MARKER_START,
         JSON_MANAGED_MARKER_END,
         path=path,
@@ -117,7 +127,9 @@ def test_find_managed_segment_boundaries_and_absence() -> None:
     assert missing_end is None
 
 
-def test_ensure_prefix_rules_file_clear_semantics_preserve_user_text(tmp_path: Path) -> None:
+def test_ensure_prefix_rules_file_clear_semantics_preserve_user_text(
+    tmp_path: Path,
+) -> None:
     target = tmp_path / "default.rules"
     target.write_text(
         "\n".join(
@@ -145,7 +157,9 @@ def test_ensure_prefix_rules_file_clear_semantics_preserve_user_text(tmp_path: P
     assert "# user suffix" in updated
 
 
-def test_apply_host_artifacts_clears_managed_codex_block_on_zero_rules(tmp_path: Path) -> None:
+def test_apply_host_artifacts_clears_managed_codex_block_on_zero_rules(
+    tmp_path: Path,
+) -> None:
     codex_rules_path = tmp_path / "default.rules"
     codex_rules_path.write_text(
         "\n".join(
@@ -179,7 +193,9 @@ def test_apply_host_artifacts_clears_managed_codex_block_on_zero_rules(tmp_path:
     assert "# user suffix" in updated
 
 
-def test_main_uses_explicit_cwd_for_rendering(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_main_uses_explicit_cwd_for_rendering(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     policy_path = tmp_path / "policy.json"
     policy_path.write_text(
         json.dumps({"policy": {"commands": {"allow": [], "deny": [], "require": []}}}),
@@ -219,7 +235,9 @@ def test_main_uses_explicit_cwd_for_rendering(tmp_path: Path, monkeypatch: pytes
             "conditional_count": 0,
         }
 
-    monkeypatch.setattr(sync_host_rules, "render_platform_payload", fake_render_platform_payload)
+    monkeypatch.setattr(
+        sync_host_rules, "render_platform_payload", fake_render_platform_payload
+    )
     monkeypatch.setattr(
         sys,
         "argv",
@@ -378,7 +396,11 @@ def test_main_json_success_payload_managed_diagnostics_are_deterministic(
         json.dumps(
             {
                 "permissions": {
-                    "allow": [JSON_MANAGED_MARKER_START, "Shell(stale)", JSON_MANAGED_MARKER_END],
+                    "allow": [
+                        JSON_MANAGED_MARKER_START,
+                        "Shell(stale)",
+                        JSON_MANAGED_MARKER_END,
+                    ],
                     "deny": [],
                 }
             }
@@ -392,7 +414,11 @@ def test_main_json_success_payload_managed_diagnostics_are_deterministic(
                 "permissions": {
                     "allow": [],
                     "deny": [],
-                    "ask": [JSON_MANAGED_MARKER_START, "Bash(stale)", JSON_MANAGED_MARKER_END],
+                    "ask": [
+                        JSON_MANAGED_MARKER_START,
+                        "Bash(stale)",
+                        JSON_MANAGED_MARKER_END,
+                    ],
                 }
             }
         ),
@@ -403,7 +429,11 @@ def test_main_json_success_payload_managed_diagnostics_are_deterministic(
         json.dumps(
             {
                 "commandAllowlist": [],
-                "commandRequestlist": [JSON_MANAGED_MARKER_START, "stale", JSON_MANAGED_MARKER_END],
+                "commandRequestlist": [
+                    JSON_MANAGED_MARKER_START,
+                    "stale",
+                    JSON_MANAGED_MARKER_END,
+                ],
                 "commandDenylist": [],
             }
         ),
@@ -536,10 +566,14 @@ def test_main_json_failure_response_for_internal_error_mapping(
         encoding="utf-8",
     )
 
-    def failing_success_entries(*args: object, **kwargs: object) -> list[dict[str, object]]:
+    def failing_success_entries(
+        *args: object, **kwargs: object
+    ) -> list[dict[str, object]]:
         raise RuntimeError("manifest boom")
 
-    monkeypatch.setattr(sync_host_rules, "_build_success_entries", failing_success_entries)
+    monkeypatch.setattr(
+        sync_host_rules, "_build_success_entries", failing_success_entries
+    )
     monkeypatch.setattr(
         sys,
         "argv",
@@ -587,7 +621,9 @@ def test_apply_host_artifacts_fails_on_non_object_json_config(tmp_path: Path) ->
         apply_host_artifacts(rendered, cursor_path=cursor_path)
 
 
-def test_apply_host_artifacts_replaces_managed_sections_and_converges_on_rerun(tmp_path: Path) -> None:
+def test_apply_host_artifacts_replaces_managed_sections_and_converges_on_rerun(
+    tmp_path: Path,
+) -> None:
     cursor_path = tmp_path / "cursor.json"
     claude_path = tmp_path / "claude.json"
     droid_path = tmp_path / "droid.json"
@@ -617,8 +653,16 @@ def test_apply_host_artifacts_replaces_managed_sections_and_converges_on_rerun(t
         json.dumps(
             {
                 "permissions": {
-                    "allow": [JSON_MANAGED_MARKER_START, "Bash(stale claude allow)", JSON_MANAGED_MARKER_END],
-                    "deny": [JSON_MANAGED_MARKER_START, "Bash(stale claude deny)", JSON_MANAGED_MARKER_END],
+                    "allow": [
+                        JSON_MANAGED_MARKER_START,
+                        "Bash(stale claude allow)",
+                        JSON_MANAGED_MARKER_END,
+                    ],
+                    "deny": [
+                        JSON_MANAGED_MARKER_START,
+                        "Bash(stale claude deny)",
+                        JSON_MANAGED_MARKER_END,
+                    ],
                     "ask": [
                         "Bash(user claude ask)",
                         JSON_MANAGED_MARKER_START,
@@ -633,8 +677,16 @@ def test_apply_host_artifacts_replaces_managed_sections_and_converges_on_rerun(t
     droid_path.write_text(
         json.dumps(
             {
-                "commandAllowlist": [JSON_MANAGED_MARKER_START, "stale droid allow", JSON_MANAGED_MARKER_END],
-                "commandRequestlist": [JSON_MANAGED_MARKER_START, "stale droid request", JSON_MANAGED_MARKER_END],
+                "commandAllowlist": [
+                    JSON_MANAGED_MARKER_START,
+                    "stale droid allow",
+                    JSON_MANAGED_MARKER_END,
+                ],
+                "commandRequestlist": [
+                    JSON_MANAGED_MARKER_START,
+                    "stale droid request",
+                    JSON_MANAGED_MARKER_END,
+                ],
                 "commandDenylist": [
                     "user droid deny",
                     JSON_MANAGED_MARKER_START,
@@ -690,7 +742,9 @@ def test_apply_host_artifacts_replaces_managed_sections_and_converges_on_rerun(t
     claude_after_second = json.loads(claude_path.read_text(encoding="utf-8"))
     droid_after_second = json.loads(droid_path.read_text(encoding="utf-8"))
 
-    assert "Shell(stale cursor allow)" not in cursor_after_second["permissions"]["allow"]
+    assert (
+        "Shell(stale cursor allow)" not in cursor_after_second["permissions"]["allow"]
+    )
     assert "Shell(stale cursor deny)" not in cursor_after_second["permissions"]["deny"]
     assert "Bash(stale claude allow)" not in claude_after_second["permissions"]["allow"]
     assert "Bash(stale claude deny)" not in claude_after_second["permissions"]["deny"]
@@ -700,14 +754,26 @@ def test_apply_host_artifacts_replaces_managed_sections_and_converges_on_rerun(t
     assert "stale droid deny" not in droid_after_second["commandDenylist"]
 
     assert "Shell(user cursor allow)" in cursor_after_second["permissions"]["allow"]
-    assert "Shell(user cursor allow suffix)" in cursor_after_second["permissions"]["allow"]
+    assert (
+        "Shell(user cursor allow suffix)" in cursor_after_second["permissions"]["allow"]
+    )
     assert "Bash(user claude ask)" in claude_after_second["permissions"]["ask"]
     assert "user droid deny" in droid_after_second["commandDenylist"]
 
-    assert cursor_after_second["permissions"]["allow"].count(JSON_MANAGED_MARKER_START) == 1
-    assert cursor_after_second["permissions"]["allow"].count(JSON_MANAGED_MARKER_END) == 1
-    assert claude_after_second["permissions"]["allow"].count(JSON_MANAGED_MARKER_START) == 1
-    assert claude_after_second["permissions"]["allow"].count(JSON_MANAGED_MARKER_END) == 1
+    assert (
+        cursor_after_second["permissions"]["allow"].count(JSON_MANAGED_MARKER_START)
+        == 1
+    )
+    assert (
+        cursor_after_second["permissions"]["allow"].count(JSON_MANAGED_MARKER_END) == 1
+    )
+    assert (
+        claude_after_second["permissions"]["allow"].count(JSON_MANAGED_MARKER_START)
+        == 1
+    )
+    assert (
+        claude_after_second["permissions"]["allow"].count(JSON_MANAGED_MARKER_END) == 1
+    )
     assert droid_after_second["commandAllowlist"].count(JSON_MANAGED_MARKER_START) == 1
     assert droid_after_second["commandAllowlist"].count(JSON_MANAGED_MARKER_END) == 1
 
@@ -727,7 +793,9 @@ def test_apply_host_artifacts_replaces_managed_sections_and_converges_on_rerun(t
     assert droid_path.read_text(encoding="utf-8") == droid_snapshot
 
 
-def test_apply_host_artifacts_apply_rerun_is_idempotent_after_refactor(tmp_path: Path) -> None:
+def test_apply_host_artifacts_apply_rerun_is_idempotent_after_refactor(
+    tmp_path: Path,
+) -> None:
     codex_path = tmp_path / "default.rules"
     cursor_path = tmp_path / "cursor.json"
     claude_path = tmp_path / "claude.json"
@@ -746,13 +814,17 @@ def test_apply_host_artifacts_apply_rerun_is_idempotent_after_refactor(tmp_path:
         ),
         encoding="utf-8",
     )
-    cursor_path.write_text(json.dumps({"permissions": {"allow": [], "deny": []}}), encoding="utf-8")
+    cursor_path.write_text(
+        json.dumps({"permissions": {"allow": [], "deny": []}}), encoding="utf-8"
+    )
     claude_path.write_text(
         json.dumps({"permissions": {"allow": [], "deny": [], "ask": []}}),
         encoding="utf-8",
     )
     droid_path.write_text(
-        json.dumps({"commandAllowlist": [], "commandRequestlist": [], "commandDenylist": []}),
+        json.dumps(
+            {"commandAllowlist": [], "commandRequestlist": [], "commandDenylist": []}
+        ),
         encoding="utf-8",
     )
 
@@ -795,7 +867,9 @@ def test_apply_host_artifacts_apply_rerun_is_idempotent_after_refactor(tmp_path:
     assert first["applied"]["claude"]["after"] == second["applied"]["claude"]["after"]
     assert first["applied"]["droid"]["after"] == second["applied"]["droid"]["after"]
     codex_after_lines = codex_path.read_text(encoding="utf-8").splitlines()
-    assert [line for line in codex_after_lines if line.strip().startswith("prefix_rule(")] == [
+    assert [
+        line for line in codex_after_lines if line.strip().startswith("prefix_rule(")
+    ] == [
         line for line in codex_snapshot_lines if line.strip().startswith("prefix_rule(")
     ]
     assert cursor_path.read_text(encoding="utf-8") == cursor_snapshot
@@ -803,7 +877,9 @@ def test_apply_host_artifacts_apply_rerun_is_idempotent_after_refactor(tmp_path:
     assert droid_path.read_text(encoding="utf-8") == droid_snapshot
 
 
-def test_codex_clear_apply_cycle_preserves_unmanaged_text_before_and_after(tmp_path: Path) -> None:
+def test_codex_clear_apply_cycle_preserves_unmanaged_text_before_and_after(
+    tmp_path: Path,
+) -> None:
     codex_path = tmp_path / "default.rules"
     codex_path.write_text(
         "\n".join(
@@ -825,7 +901,15 @@ def test_codex_clear_apply_cycle_preserves_unmanaged_text_before_and_after(tmp_p
         cwd=tmp_path,
     )
     apply_rendered = render_platform_payload(
-        {"policy": {"commands": {"allow": ["git status"], "deny": ["rm -rf /"], "require": []}}},
+        {
+            "policy": {
+                "commands": {
+                    "allow": ["git status"],
+                    "deny": ["rm -rf /"],
+                    "require": [],
+                }
+            }
+        },
         include_conditional=False,
         cwd=tmp_path,
     )

@@ -166,7 +166,9 @@ def _run() -> int:
     has_mixed = len(unique_versions) > 1
 
     if not unique_versions:
-        report_lines.append("[no-observed-versions] no valid policy_version values were observed")
+        report_lines.append(
+            "[no-observed-versions] no valid policy_version values were observed"
+        )
     elif len(unique_versions) != 1:
         report_lines.append(
             "[mixed-version-chain] inconsistent policy_version values; versions="
