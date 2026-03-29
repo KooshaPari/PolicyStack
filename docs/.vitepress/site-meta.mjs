@@ -1,7 +1,7 @@
 export function createSiteMeta({ base = '/' } = {}) {
   return {
     base,
-    title: 'policy-contract',
+    title: 'Policy Contract',
     description: 'Documentation',
     themeConfig: {
       nav: [
