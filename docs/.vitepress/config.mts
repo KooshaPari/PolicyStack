@@ -1,27 +1,22 @@
 import { defineConfig } from 'vitepress'
+import { createSiteMeta } from './site-meta.mjs'
 
-const isPagesBuild = process.env.GITHUB_ACTIONS === 'true' || process.env.GITHUB_PAGES === 'true'
-const repoName = process.env.GITHUB_REPOSITORY?.split('/')[1] || 'policy-contract'
-const docsBase = isPagesBuild ? `/${repoName}/` : '/'
+const siteMeta = createSiteMeta()
 
 export default defineConfig({
   title: 'Policy Contract',
-  description: 'Policy scope stack for multi-harness AgentOps',
+  description: 'Documentation',
   lang: 'en-US',
-  base: docsBase,
-  lastUpdated: true,
-  cleanUrls: true,
+  srcDir: '.',
+  outDir: '../.vitepress-dist',
   themeConfig: {
-    siteTitle: 'Policy Contract',
-    nav: [{ text: 'Guide', link: '/guide/' }],
-    sidebar: {
-      '/guide/': [
-        { text: 'Guide', items: [{ text: 'Getting Started', link: '/guide/' }] }
-      ]
-    },
-    socialLinks: [{ icon: 'github', link: `https://github.com/KooshaPari/${repoName}` }],
-    search: { provider: 'local' }
+    nav: [
+      { text: 'Home', link: siteMeta.base || '/' },
+    ],
+    sidebar: [],
+    socialLinks: [],
+    search: { provider: 'local' },
   },
   markdown: { lineNumbers: true },
-  ignoreDeadLinks: true
+  ignoreDeadLinks: true,
 })
