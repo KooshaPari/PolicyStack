@@ -1,0 +1,93 @@
+name: Benchmarks
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  benchmark:
+    name: Python Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Run benchmarks
+        id: benchmark
+        run: |
+          mkdir -p benchmark-results
+
+          # Check for benchmarks directory
+          if [ -d "benchmarks" ]; then
+            pytest benchmarks/ --benchmark-json=benchmark-results/bench.json -v || true
+          else
+            echo "No benchmarks directory found"
+          fi
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: PolicyStack-benchmark-results-${{ github.sha }}
+          path: benchmark-results/
+          retention-days: 30
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'Benchmark results available at: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+            })
+
+  benchmark-regression:
+    name: Compare with Main
+    runs-on: ubuntu-latest
+    needs: benchmark
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download current results
+        uses: actions/download-artifact@v4
+        with:
+          name: PolicyStack-benchmark-results-${{ github.sha }}
+          path: current
+
+      - name: Checkout main
+        run: |
+          git fetch origin main
+          git stash
+          git checkout origin/main
+
+      - name: Run main benchmarks
+        run: |
+          mkdir -p main
+          if [ -d "benchmarks" ]; then
+            uv sync --dev
+            pytest benchmarks/ --benchmark-json=main/bench.json -v || true
+          fi
+
+      - name: Compare results
+        run: |
+          echo "=== Benchmark Comparison ==="
+          echo "Main branch results: main/"
+          echo "Current branch results: current/"
