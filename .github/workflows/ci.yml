@@ -2,62 +2,40 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feature/*, bugfix/*, docs/*, release/*, hotfix/*]
   pull_request:
     branches: [main]
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: ['18', '20', '22']
+    
     steps:
       - uses: actions/checkout@v4
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-        with:
-          enable-cache: true
-      - name: Set up Python
-        run: uv python install 3.11
-      - name: Run policy contract tests
-        run: |
-          uv run --with pytest --with pyyaml --with jsonschema pytest tests/ -q --tb=short
-      - name: Run governance tests
-        run: |
-          uv run --with pytest --with pyyaml --with jsonschema pytest tests/test_resolve_cli_governance.py -q
-          uv run --with pytest --with pyyaml pytest tests/test_policy_common.py -q
-          uv run --with pytest --with pyyaml pytest tests/test_smoke_dispatch_host_hook.py -q
 
-  validate:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          enable-cache: true
-      - name: Validate policy contract
-        run: uv run --with pyyaml --with jsonschema python scripts/validate_policy_contract.py --root . --json
-      - name: Check policy versions
-        run: uv run --with pyyaml python scripts/check_policy_versions.py --root . --json
-      - name: Generate and validate snapshots
-        run: |
-          for pair in "codex:deployment" "codex:query"; do
-            harness="${pair%%:*}"
-            task_domain="${pair##*:}"
-            uv run --with pyyaml python scripts/generate_policy_snapshot.py \
-              --root . \
-              --harness "${harness}" \
-              --task-domain "${task_domain}" \
-              --output "policy-config/snapshots/policy_snapshot_${harness}_${task_domain}.json" \
-              --check-existing \
-              --json || exit 1
-          done
+          node-version: $123matrix.node-version125
 
-  security:
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test -- --coverage
+      
+
+  phenotype-validate:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run Semgrep
-        uses: returntocorp/semgrep-action@v1
-        with:
-          config: p/yaml p/python
+    uses: KooshaPari/phenotypeActions/.github/workflows/validate-governance.yml@main

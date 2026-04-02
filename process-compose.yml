@@ -1,0 +1,53 @@
+version: "0.5"
+
+# PolicyStack - TypeScript/Node API
+# Native-first local development orchestration
+
+environment:
+  - NODE_ENV=development
+  - TS_NODE_LOGGING=true
+
+processes:
+  # ============================================================
+  # Development
+  # ============================================================
+  dev:
+    command: npm run dev
+    depends_on: {}
+    log_location: .logs/dev.log
+    readiness_probe:
+      http_get:
+        host: localhost
+        port: 3000
+        path: /health
+      initial_delay_seconds: 10
+      period_seconds: 5
+      failure_threshold: 3
+
+  build:
+    command: npm run build
+    depends_on: {}
+    log_location: .logs/build.log
+
+  test:
+    command: npm run test
+    depends_on: {}
+    log_location: .logs/test.log
+
+  lint:
+    command: npm run lint
+    depends_on: {}
+    log_location: .logs/lint.log
+
+  typecheck:
+    command: npm run typecheck
+    depends_on: {}
+    log_location: .logs/typecheck.log
+
+  # ============================================================
+  # Production-like
+  # ============================================================
+  start:
+    command: npm start
+    depends_on: {}
+    log_location: .logs/start.log

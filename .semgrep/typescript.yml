@@ -1,0 +1,75 @@
+# Semgrep configuration for TypeScript projects
+# See: https://semgrep.dev/docs/running-rules/
+
+rules:
+  # Security rules
+  - id: eval-usage
+    pattern: eval(...)
+    message: "Avoid eval() - major security risk."
+    languages: [typescript, javascript]
+    severity: ERROR
+    metadata:
+      category: security
+      confidence: HIGH
+
+  - id: innerHTML-assignment
+    pattern: $X.innerHTML = ...
+    message: "innerHTML assignment can lead to XSS. Use textContent or createElement."
+    languages: [typescript, javascript]
+    severity: WARNING
+    metadata:
+      category: security
+      confidence: HIGH
+
+  - id: hardcoded-api-key
+    pattern-regex: (api[_-]?key|apikey)\s*[=:]\s*["'][a-zA-Z0-9]{16,}["']
+    message: "Possible hardcoded API key detected."
+    languages: [typescript, javascript]
+    severity: ERROR
+    metadata:
+      category: security
+      confidence: LOW
+
+  - id: console-log
+    pattern: console.log(...)
+    message: "Console statement should be removed in production."
+    languages: [typescript, javascript]
+    severity: INFO
+    metadata:
+      category: best-practice
+      confidence: HIGH
+
+  - id: any-type-usage
+    pattern: |
+      let $X: any
+    message: "Avoid using 'any' type. Use specific types."
+    languages: [typescript]
+    severity: INFO
+    metadata:
+      category: best-practice
+      confidence: HIGH
+
+  - id: non-null-assertion
+    pattern: $X!.$Y
+    message: "Non-null assertion can cause runtime errors. Use optional chaining."
+    languages: [typescript]
+    severity: WARNING
+    metadata:
+      category: best-practice
+      confidence: MEDIUM
+
+  # Performance rules
+  - id: await-in-loop
+    patterns:
+      - pattern: |
+          for ... {
+            ...
+            await $X
+            ...
+          }
+    message: "Consider Promise.all() for parallel execution instead of sequential awaits."
+    languages: [typescript, javascript]
+    severity: INFO
+    metadata:
+      category: performance
+      confidence: MEDIUM

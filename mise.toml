@@ -1,0 +1,35 @@
+[tasks.format]
+description = "Format code"
+
+run = "npx prettier --write ."
+
+
+[tasks.lint]
+description = "Lint code"
+
+run = "eslint ."
+
+
+[tasks.test]
+description = "Run tests"
+
+run = "npm test"
+
+
+[tasks.build]
+description = "Build project"
+
+run = "npm run build"
+
+
+[tasks.audit]
+description = "Audit dependencies"
+
+run = "npm audit"
+
+
+[tasks.docs:build]
+description = "Build documentation"
+
+run = "typedoc --out docs"
+

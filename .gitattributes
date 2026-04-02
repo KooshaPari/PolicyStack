@@ -1,0 +1,51 @@
+# Auto detect text files and perform LF normalization
+* text=auto eol=lf
+
+# Source code
+*.ts text diff=javascript
+*.js text diff=javascript
+*.tsx text diff=javascript
+*.jsx text diff=javascript
+*.sh text eol=lf
+*.yml text
+*.yaml text
+*.json text
+*.md text
+
+# Documentation
+*.txt text
+
+# Config files
+.env* text
+.gitattributes text
+.gitignore text
+.editorconfig text
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.tar binary
+*.tar.gz binary
+*.rar binary
+*.7z binary
+
+# Node
+package-lock.json linguist-generated=true
+yarn.lock linguist-generated=true
+pnpm-lock.yaml linguist-generated=true
+node_modules binary
+
+# Misc
+*.db binary
+*.sqlite binary

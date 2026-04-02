@@ -1,108 +1,64 @@
 name: Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version to release (e.g., v1.0.0)'
-        required: true
-        type: string
-      dry_run:
-        description: 'Dry run (no actual release)'
-        required: false
-        default: 'false'
-        type: boolean
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+
+permissions:
+  contents: write
+  packages: write
 
 jobs:
-  release-validate:
-    name: Validate Release
+  release:
     runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, 'release:') || contains(github.event.head_commit.message, 'chore(release)')
+    outputs:
+      version: $123steps.version.outputs.version125
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Validate version format
-        run: |
-          VERSION=${{ github.event.inputs.version }}
-          if [[ ! $VERSION =~ ^v?[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
-            echo "Invalid version format: $VERSION"
-            exit 1
-          fi
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "TAG=v${VERSION#v}" >> $GITHUB_ENV
-
-      - name: Check version doesn't exist
-        run: |
-          git tag -l "${{ env.TAG }}" | grep -q . && echo "Version ${{ env.TAG }} already exists" && exit 1 || true
-
-  release-python:
-    name: Release Python Package
-    runs-on: ubuntu-latest
-    needs: release-validate
-    if: ${{ !inputs.dry_run }}
-    environment: release
-    permissions:
-      contents: write
-      id-token: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
+      - name: Build
+        run: npm run build
 
-      - name: Create release tag
+      - name: Test
+        run: npm test
+
+      - name: Determine version
+        id: version
         run: |
-          git tag "${{ env.TAG }}" -m "Release ${{ env.TAG }}"
-          git push origin "${{ env.TAG }}"
+          VERSION=$(jq -r '.version' package.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Build and publish
-        run: |
-          uv build
-          uv publish --token ${{ secrets.PYPI_TOKEN }}
-
-  release-github:
-    name: Create GitHub Release
-    runs-on: ubuntu-latest
-    needs: [release-validate, release-python]
-    if: ${{ !inputs.dry_run }}
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Generate changelog
-        id: changelog
-        run: |
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          if [ -n "$PREV_TAG" ]; then
-            CHANGELOG=$(git log $PREV_TAG..HEAD --oneline --format='- %s (%h)')
-          else
-            CHANGELOG=$(git log --oneline --format='- %s (%h)' | head -20)
-          fi
-          echo "body<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGELOG" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ env.TAG }}
-          name: Release ${{ env.TAG }}
-          body: ${{ steps.changelog.outputs.body }}
-          draft: false
-          prerelease: ${{ contains(github.event.inputs.version, '-') }}
+      - name: Publish to NPM
+        run: npm publish
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: $123secrets.NPM_TOKEN125
+      
+
+  promote:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Promote to staging
+        uses: KooshaPari/phenotypeActions/promote@main
+        with:
+          version: $123needs.release.outputs.version125
+          channel: beta
+          registry: npm
