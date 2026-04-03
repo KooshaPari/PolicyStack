@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "required_conditions": [],
+  "commands": [
+    {
+      "id": "rule-1",
+      "source": "test",
+      "action": "allow",
+      "matcher": "exact",
+      "pattern": "ls",
+      "normalized_pattern": "ls",
+      "conditions": "git_is_worktree",
+      "platform_action": "allow",
+      "shell_entry": "ls",
+      "bash_entry": "ls"
+    },
+    {
+      "id": "rule-2",
+      "source": "test",
+      "action": "deny",
+      "matcher": "prefix",
+      "pattern": "rm",
+      "normalized_pattern": "rm",
+      "conditions": "git_is_worktree",
+      "platform_action": "deny",
+      "shell_entry": "rm",
+      "bash_entry": "rm"
+    }
+  ]
+}

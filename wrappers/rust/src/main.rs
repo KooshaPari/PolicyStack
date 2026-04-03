@@ -62,7 +62,7 @@ struct Args {
     bundle: PathBuf,
 
     /// Command to evaluate
-    #[arg(long)]
+    #[arg(long, allow_hyphen_values = true)]
     command: String,
 
     /// Working directory for git evaluations
@@ -102,26 +102,28 @@ fn eval_condition(name: &str, cwd: Option<&PathBuf>) -> Result<bool, String> {
         "git_clean_worktree" => Ok(run_git(cwd, &["status", "--porcelain"])?
             .is_empty()),
         "git_synced_to_upstream" => {
-            run_git(cwd, &["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"])?;
-            let counts = run_git(cwd, &["rev-list", "--left-right", "--count", "@{u}...HEAD"])?;
+            run_git(cwd, &["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"])
+                .map_err(|_| "git-no-upstream".to_string())?;
+            let counts = run_git(cwd, &["rev-list", "--left-right", "--count", "@{u}...HEAD"])
+                .map_err(|_| "git-upstream-compare-failed".to_string())?;
             let mut it = counts.split_whitespace();
-            let behind = it.next().ok_or_else(|| "bad upstream counts".to_string())?;
-            let ahead = it.next().ok_or_else(|| "bad upstream counts".to_string())?;
+            let behind = it.next().ok_or_else(|| "git-behind-not-found".to_string())?;
+            let ahead = it.next().ok_or_else(|| "git-ahead-not-found".to_string())?;
             if it.next().is_some() {
                 return Ok(false);
             }
             behind
                 .parse::<i64>()
-                .map_err(|_| "bad upstream counts".to_string())?;
+                .map_err(|_| "git-behind-parse-error".to_string())?;
             ahead
                 .parse::<i64>()
-                .map_err(|_| "bad upstream counts".to_string())?;
+                .map_err(|_| "git-ahead-parse-error".to_string())?;
             if behind != "0" || ahead != "0" {
                 return Ok(false);
             }
             Ok(true)
         }
-        _ => Err(format!("unsupported condition: {name}")),
+        _ => Err(format!("unsupported-condition:{}", name.replace('_', "-"))),
     }
 }
 
@@ -230,7 +232,7 @@ fn eval_condition_node(value: &Value, cwd: Option<&PathBuf>, depth: usize) -> Co
             passed: false,
             reasons: vec!["condition depth limit exceeded".to_string()],
             has_required: false,
-            error: Some("condition nesting too deep".to_string()),
+            error: Some("nesting-too-deep".to_string()),
         };
     }
 
@@ -245,7 +247,7 @@ fn eval_condition_node(value: &Value, cwd: Option<&PathBuf>, depth: usize) -> Co
             Ok(ok) => result.passed = ok,
             Err(err) => {
                 if let Some(reason) = result.reasons.first() {
-                    result.reasons[0] = format!("{reason}: {err}");
+                    result.reasons[0] = format!("{}: {}", reason, err);
                 }
                 result.error = Some(err);
             }
@@ -269,7 +271,7 @@ fn eval_condition_node(value: &Value, cwd: Option<&PathBuf>, depth: usize) -> Co
                 passed: false,
                 reasons: vec!["invalid condition list for all".to_string()],
                 has_required: false,
-                error: Some("invalid condition list for all".to_string()),
+                error: Some("invalid-all-list".to_string()),
             };
         }
 
@@ -282,7 +284,7 @@ fn eval_condition_node(value: &Value, cwd: Option<&PathBuf>, depth: usize) -> Co
                 passed: false,
                 reasons: vec!["invalid condition list for any".to_string()],
                 has_required: false,
-                error: Some("invalid condition list for any".to_string()),
+                error: Some("invalid-any-list".to_string()),
             };
         }
 
@@ -292,15 +294,15 @@ fn eval_condition_node(value: &Value, cwd: Option<&PathBuf>, depth: usize) -> Co
                     passed: false,
                     reasons: vec!["invalid condition mode".to_string()],
                     has_required: false,
-                    error: Some("invalid condition mode".to_string()),
+                    error: Some("invalid-mode-type".to_string()),
                 };
             };
             if mode != "all" && mode != "any" {
                 return ConditionEval {
                     passed: false,
-                    reasons: vec![format!("unsupported condition mode: {mode}")],
+                    reasons: vec![format!("unsupported condition mode: {}", mode)],
                     has_required: false,
-                    error: Some(format!("unsupported condition mode: {mode}")),
+                    error: Some(format!("unsupported-mode:{}", mode)),
                 };
             }
 
@@ -309,7 +311,7 @@ fn eval_condition_node(value: &Value, cwd: Option<&PathBuf>, depth: usize) -> Co
                     passed: false,
                     reasons: vec!["condition mode missing conditions".to_string()],
                     has_required: false,
-                    error: Some("condition mode missing conditions".to_string()),
+                    error: Some("missing-conditions".to_string()),
                 };
             };
             let Some(items) = raw_conditions.as_array() else {
@@ -317,7 +319,7 @@ fn eval_condition_node(value: &Value, cwd: Option<&PathBuf>, depth: usize) -> Co
                     passed: false,
                     reasons: vec!["condition mode conditions must be list".to_string()],
                     has_required: false,
-                    error: Some("condition mode conditions must be list".to_string()),
+                    error: Some("conditions-not-list".to_string()),
                 };
             };
             let result = eval_condition_list(mode, items, cwd, depth);
@@ -329,7 +331,7 @@ fn eval_condition_node(value: &Value, cwd: Option<&PathBuf>, depth: usize) -> Co
                 passed: false,
                 reasons: vec!["unsupported condition object".to_string()],
                 has_required: false,
-                error: Some("unsupported condition object".to_string()),
+                error: Some("unsupported-object".to_string()),
             };
         };
         let required = if let Some(raw_required) = object.get("required") {
@@ -338,7 +340,7 @@ fn eval_condition_node(value: &Value, cwd: Option<&PathBuf>, depth: usize) -> Co
                     passed: false,
                     reasons: vec!["condition.required must be boolean".to_string()],
                     has_required: false,
-                    error: Some("condition.required must be boolean".to_string()),
+                    error: Some("required-not-bool".to_string()),
                 };
             };
             value
@@ -355,7 +357,7 @@ fn eval_condition_node(value: &Value, cwd: Option<&PathBuf>, depth: usize) -> Co
         match eval_condition(name, cwd) {
             Ok(ok) => result.passed = ok,
             Err(err) => {
-                result.reasons[0] = format!("{name}: {err}");
+                result.reasons[0] = format!("{}: {}", name, err);
                 result.error = Some(err);
             }
         }
@@ -366,11 +368,11 @@ fn eval_condition_node(value: &Value, cwd: Option<&PathBuf>, depth: usize) -> Co
         passed: false,
         reasons: vec!["unsupported condition type".to_string()],
         has_required: false,
-        error: Some("unsupported condition type".to_string()),
+        error: Some("unsupported-type".to_string()),
     }
 }
 
-fn matches(rule: &Rule, command: &str) -> bool {
+fn matches_rule(rule: &Rule, command: &str) -> bool {
     let normalized = normalize_command(command);
     let pattern = normalize_command(&rule.normalized_pattern);
 
@@ -378,7 +380,7 @@ fn matches(rule: &Rule, command: &str) -> bool {
         "exact" => normalized == pattern,
         "prefix" => normalized.starts_with(&pattern),
         "glob" => fnmatch::fnmatch(&normalized, &pattern).unwrap_or(false),
-        _ => fnmatch::fnmatch(&normalized, &pattern).unwrap_or(false),
+        _ => normalized == pattern,
     }
 }
 
@@ -403,7 +405,7 @@ fn evaluate(bundle: &PolicyWrapper, command: &str, cwd: Option<&PathBuf>) -> Eva
     let mut matched = false;
 
     for rule in &bundle.commands {
-        if !matches(rule, &normalized) {
+        if !matches_rule(rule, &normalized) {
             continue;
         }
         matched = true;
@@ -418,12 +420,8 @@ fn evaluate(bundle: &PolicyWrapper, command: &str, cwd: Option<&PathBuf>) -> Eva
 
         if let Some(err) = cond_error {
             condition_passed = false;
-            error = format!("condition evaluation error: {err}");
-            if let Some(fallback) = rule.on_mismatch.as_deref() {
-                if !fallback.is_empty() {
-                    decision = fallback.to_string();
-                }
-            }
+            error = err;
+            decision = "request".to_string();
         } else if cond_ok {
             decision = rule.action.clone();
         } else if let Some(fallback) = rule.on_mismatch.as_deref() {
@@ -498,7 +496,7 @@ fn main() {
     let raw = match fs::read_to_string(&args.bundle) {
         Ok(value) => value,
         Err(err) => {
-            eprintln!("failed to read bundle: {err}");
+            eprintln!("failed to read bundle: {}", err);
             process::exit(1);
         }
     };
@@ -506,7 +504,7 @@ fn main() {
     let bundle: PolicyWrapper = match serde_json::from_str(&raw) {
         Ok(value) => value,
         Err(err) => {
-            eprintln!("invalid bundle JSON: {err}");
+            eprintln!("invalid bundle JSON: {}", err);
             process::exit(1);
         }
     };
@@ -515,9 +513,9 @@ fn main() {
 
     if args.json {
         match serde_json::to_string_pretty(&result) {
-            Ok(json) => println!("{json}"),
+            Ok(json) => println!("{}", json),
             Err(err) => {
-                eprintln!("failed to encode output: {err}");
+                eprintln!("failed to encode output: {}", err);
                 process::exit(1);
             }
         }

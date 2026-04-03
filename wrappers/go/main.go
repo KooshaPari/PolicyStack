@@ -65,18 +65,18 @@ func evalCondition(name string, cwd string) (bool, string, error) {
 	case "git_is_worktree":
 		output, err := runGit(cwd, "rev-parse", "--is-inside-work-tree")
 		if err != nil {
-			return false, "git_is_worktree", err
+			return false, "git-is-worktree", err
 		}
-		return output == "true", "git_is_worktree", nil
+		return output == "true", "git-is-worktree", nil
 	case "git_clean_worktree":
 		output, err := runGit(cwd, "status", "--porcelain")
 		if err != nil {
-			return false, "git_clean_worktree", err
+			return false, "git-clean-worktree", err
 		}
-		return output == "", "git_clean_worktree", nil
+		return output == "", "git-clean-worktree", nil
 	case "git_synced_to_upstream":
 		if _, err := runGit(cwd, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"); err != nil {
-			return false, "git_synced_to_upstream: no upstream", err
+			return false, "git-no-upstream", err
 		}
 		output, err := runGit(
 			cwd,
@@ -86,22 +86,23 @@ func evalCondition(name string, cwd string) (bool, string, error) {
 			"@{u}...HEAD",
 		)
 		if err != nil {
-			return false, "git_synced_to_upstream: unable to compare upstream", err
+			return false, "git-upstream-compare-failed", err
 		}
 		parts := strings.Fields(output)
 		if len(parts) != 2 {
-			return false, "git_synced_to_upstream: malformed upstream counts", nil
+			return false, "git-malformed-upstream-counts", nil
 		}
 		behind, ahead := parts[0], parts[1]
 		if _, err := strconv.Atoi(behind); err != nil {
-			return false, "git_synced_to_upstream: malformed behind count", err
+			return false, "git-behind-parse-error", err
 		}
 		if _, err := strconv.Atoi(ahead); err != nil {
-			return false, "git_synced_to_upstream: malformed ahead count", err
+			return false, "git-ahead-parse-error", err
 		}
-		return behind == "0" && ahead == "0", "git_synced_to_upstream", nil
+		return behind == "0" && ahead == "0", "git-synced-to-upstream", nil
 	default:
-		return false, "unsupported_condition:" + name, fmt.Errorf("unsupported condition: %s", name)
+		kebab := strings.ReplaceAll(name, "_", "-")
+		return false, "unsupported-condition:" + kebab, fmt.Errorf("unsupported condition: %s", name)
 	}
 }
 
@@ -190,7 +191,7 @@ func evalConditionList(
 
 func evalConditionNode(value interface{}, depth int, cwd string) (bool, []string, bool, error) {
 	if depth > 64 {
-		return false, []string{"condition depth limit exceeded"}, false, fmt.Errorf("condition nesting too deep")
+		return false, []string{"condition depth limit exceeded"}, false, fmt.Errorf("nesting-too-deep")
 	}
 
 	if name, ok := value.(string); ok {
@@ -208,53 +209,53 @@ func evalConditionNode(value interface{}, depth int, cwd string) (bool, []string
 
 	obj, ok := value.(map[string]interface{})
 	if !ok {
-		return false, []string{"unsupported condition type"}, false, fmt.Errorf("unsupported condition type")
+		return false, []string{"unsupported condition type"}, false, fmt.Errorf("unsupported-type")
 	}
 
 	if rawAll, ok := obj["all"]; ok {
 		rawConditions, ok := rawAll.([]interface{})
 		if !ok {
-			return false, []string{"invalid condition all block"}, false, fmt.Errorf("invalid condition all block")
+			return false, []string{"invalid condition all block"}, false, fmt.Errorf("invalid-all-list")
 		}
 		return evalConditionList("all", rawConditions, depth, cwd)
 	}
 	if rawAny, ok := obj["any"]; ok {
 		rawConditions, ok := rawAny.([]interface{})
 		if !ok {
-			return false, []string{"invalid condition any block"}, false, fmt.Errorf("invalid condition any block")
+			return false, []string{"invalid condition any block"}, false, fmt.Errorf("invalid-any-list")
 		}
 		return evalConditionList("any", rawConditions, depth, cwd)
 	}
 	if rawMode, ok := obj["mode"]; ok {
 		mode, ok := rawMode.(string)
 		if !ok || (mode != "all" && mode != "any") {
-			return false, []string{"invalid condition mode"}, false, fmt.Errorf("invalid condition mode")
+			return false, []string{"invalid condition mode"}, false, fmt.Errorf("invalid-mode-type")
 		}
 		rawConditions, ok := obj["conditions"]
 		if !ok {
-			return false, []string{"condition mode requires conditions"}, false, fmt.Errorf("condition mode requires conditions")
+			return false, []string{"condition mode requires conditions"}, false, fmt.Errorf("missing-conditions")
 		}
 		conditions, ok := rawConditions.([]interface{})
 		if !ok {
-			return false, []string{"invalid condition list"}, false, fmt.Errorf("invalid condition list")
+			return false, []string{"invalid condition list"}, false, fmt.Errorf("conditions-not-list")
 		}
 		return evalConditionList(mode, conditions, depth, cwd)
 	}
 
 	rawName, ok := obj["name"]
 	if !ok {
-		return false, []string{"unsupported condition object"}, false, fmt.Errorf("unsupported condition object")
+		return false, []string{"unsupported condition object"}, false, fmt.Errorf("unsupported-object")
 	}
 	name, ok := rawName.(string)
 	if !ok {
-		return false, []string{"invalid condition name"}, false, fmt.Errorf("invalid condition name")
+		return false, []string{"invalid condition name"}, false, fmt.Errorf("invalid-name-type")
 	}
 
 	required := true
 	if rawRequired, ok := obj["required"]; ok {
 		requiredValue, ok := rawRequired.(bool)
 		if !ok {
-			return false, []string{"condition.required must be boolean"}, false, fmt.Errorf("condition.required must be boolean")
+			return false, []string{"condition.required must be boolean"}, false, fmt.Errorf("required-not-bool")
 		}
 		required = requiredValue
 	}
@@ -274,7 +275,7 @@ func evalConditions(raw interface{}, cwd string) (bool, []string, bool, []string
 	return passed, reasons, hasRequired, nil
 }
 
-func matches(rule Rule, command string) bool {
+func matchesRule(rule Rule, command string) bool {
 	pattern := normalizeCommand(rule.NormalizedPattern)
 	normalized := normalizeCommand(command)
 	switch rule.Matcher {
@@ -316,7 +317,7 @@ func evaluate(bundle PolicyWrapper, command string, cwd string) EvalResult {
 	matched := false
 
 	for _, rule := range bundle.Commands {
-		if !matches(rule, normalized) {
+		if !matchesRule(rule, normalized) {
 			continue
 		}
 		passed, reasons, hasRequired, evalErrs := evalConditions(rule.Conditions, cwd)

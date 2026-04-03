@@ -62,10 +62,10 @@ fn normalizeErrorName(
 
     for (raw_name, 0..) |ch, i| {
         if (i > 0 and std.ascii.isUpper(ch)) {
-            output[out_len] = ' ';
+            output[out_len] = '-';
             out_len += 1;
         } else if (ch == '_') {
-            output[out_len] = ' ';
+            output[out_len] = '-';
             out_len += 1;
         }
         if (ch == '_') {
@@ -112,14 +112,30 @@ fn runGit(cwd: ?[]const u8, args: []const []const u8, allocator: std.mem.Allocat
     child.stdin_behavior = .Ignore;
     child.stdout_behavior = .Pipe;
     child.stderr_behavior = .Pipe;
-    if (cwd) |dir| child.cwd = dir;
-    try child.spawn();
+    
+    // POSIX chdir requires a null-terminated path.
+    if (cwd) |dir| {
+        if (dir.len > 0) {
+            const cwd_z = try allocator.dupeZ(u8, dir);
+            defer allocator.free(cwd_z);
+            child.cwd = cwd_z;
+            try child.spawn();
+        } else {
+            try child.spawn();
+        }
+    } else {
+        try child.spawn();
+    }
 
-    const stdout = try child.stdout.?.readToEndAlloc(allocator, 4096);
+    const stdout = try child.stdout.?.readToEndAlloc(allocator, 1024 * 1024);
+    const stderr = try child.stderr.?.readToEndAlloc(allocator, 1024 * 1024);
+    defer allocator.free(stderr);
+    
     const term = try child.wait();
     if (term != .Exited or term.Exited != 0) {
-        const stderr = try child.stderr.?.readToEndAlloc(allocator, 4096);
-        defer allocator.free(stderr);
+        if (stderr.len > 0) {
+            std.log.err("git failed: {s}", .{stderr});
+        }
         return error.GitFailed;
     }
     return stdout;
@@ -137,7 +153,9 @@ fn evalCondition(name: []const u8, cwd: ?[]const u8, allocator: std.mem.Allocato
         return out.len == 0;
     }
     if (std.mem.eql(u8, name, "git_synced_to_upstream")) {
-        _ = try runGit(cwd, &[_][]const u8{ "git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}" }, allocator);
+        const out_upstream = try runGit(cwd, &[_][]const u8{ "git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}" }, allocator);
+        allocator.free(out_upstream);
+        
         const counts = try runGit(
             cwd,
             &[_][]const u8{ "git", "rev-list", "--left-right", "--count", "@{u}...HEAD" },
@@ -145,13 +163,13 @@ fn evalCondition(name: []const u8, cwd: ?[]const u8, allocator: std.mem.Allocato
         );
         defer allocator.free(counts);
         var it = std.mem.tokenizeAny(u8, counts, " \t\r\n");
-        const behind = it.next() orelse return false;
-        const ahead = it.next() orelse return false;
+        const behind = it.next() orelse return error.GitBehindNotFound;
+        const ahead = it.next() orelse return error.GitAheadNotFound;
         if (it.next() != null) {
             return false;
         }
-        _ = std.fmt.parseInt(i64, behind, 10) catch return error.BadUpstreamCounts;
-        _ = std.fmt.parseInt(i64, ahead, 10) catch return error.BadUpstreamCounts;
+        _ = std.fmt.parseInt(i64, behind, 10) catch return error.GitBehindParseError;
+        _ = std.fmt.parseInt(i64, ahead, 10) catch return error.GitAheadParseError;
         return std.mem.eql(u8, behind, "0") and std.mem.eql(u8, ahead, "0");
     }
     return error.UnsupportedCondition;
@@ -167,11 +185,11 @@ fn evalConditionList(
     var reasons = std.array_list.Managed([]const u8).init(allocator);
     if (conditions.len == 0) {
         return ConditionEval{
-        .passed = true,
-        .has_required = false,
-        .reasons = &EMPTY_REASONS,
-        .@"error" = null,
-    };
+            .passed = true,
+            .has_required = false,
+            .reasons = &EMPTY_REASONS,
+            .@"error" = null,
+        };
     }
 
     var pass_required = false;
@@ -274,7 +292,7 @@ fn evalConditionNode(
             .passed = false,
             .has_required = false,
             .reasons = try cloneReasonList(allocator, "condition depth limit exceeded"),
-            .@"error" = "condition nesting too deep",
+            .@"error" = "nesting-too-deep",
         };
     }
 
@@ -314,26 +332,26 @@ fn evalConditionNode(
         const object = value.object;
         if (object.get("all")) |raw_all| {
             if (raw_all != .array) {
-            return ConditionEval{
-                .passed = false,
-                .has_required = false,
-                .reasons = try cloneReasonList(allocator, "invalid condition list for all"),
-                .@"error" = "invalid condition list for all",
-            };
-        }
+                return ConditionEval{
+                    .passed = false,
+                    .has_required = false,
+                    .reasons = try cloneReasonList(allocator, "invalid condition list for all"),
+                    .@"error" = "invalid-all-list",
+                };
+            }
             const result = try evalConditionList("all", raw_all.array.items, cwd, depth, allocator);
             return result;
         }
 
         if (object.get("any")) |raw_any| {
             if (raw_any != .array) {
-            return ConditionEval{
-                .passed = false,
-                .has_required = false,
-                .reasons = try cloneReasonList(allocator, "invalid condition list for any"),
-                .@"error" = "invalid condition list for any",
-            };
-        }
+                return ConditionEval{
+                    .passed = false,
+                    .has_required = false,
+                    .reasons = try cloneReasonList(allocator, "invalid condition list for any"),
+                    .@"error" = "invalid-any-list",
+                };
+            }
             const result = try evalConditionList("any", raw_any.array.items, cwd, depth, allocator);
             return result;
         }
@@ -344,12 +362,12 @@ fn evalConditionNode(
                     .passed = false,
                     .has_required = false,
                     .reasons = try cloneReasonList(allocator, "invalid condition mode"),
-                    .@"error" = "invalid condition mode",
+                    .@"error" = "invalid-mode-type",
                 };
             }
             const mode = raw_mode.string;
             if (!std.mem.eql(u8, mode, "all") and !std.mem.eql(u8, mode, "any")) {
-                const detail = try std.fmt.allocPrint(allocator, "unsupported condition mode: {s}", .{mode});
+                const detail = try std.fmt.allocPrint(allocator, "unsupported-mode:{s}", .{mode});
                 return ConditionEval{
                     .passed = false,
                     .has_required = false,
@@ -366,7 +384,7 @@ fn evalConditionNode(
                         allocator,
                         "condition mode missing conditions",
                     ),
-                    .@"error" = "condition mode missing conditions",
+                    .@"error" = "missing-conditions",
                 };
             };
             if (raw_conditions != .array) {
@@ -377,7 +395,7 @@ fn evalConditionNode(
                         allocator,
                         "condition mode conditions must be list",
                     ),
-                    .@"error" = "condition mode conditions must be list",
+                    .@"error" = "conditions-not-list",
                 };
             }
             const result = try evalConditionList(mode, raw_conditions.array.items, cwd, depth, allocator);
@@ -389,7 +407,7 @@ fn evalConditionNode(
                 .passed = false,
                 .has_required = false,
                 .reasons = try cloneReasonList(allocator, "unsupported condition object"),
-                .@"error" = "unsupported condition object",
+                .@"error" = "unsupported-object",
             };
         };
         if (raw_name != .string) {
@@ -397,7 +415,7 @@ fn evalConditionNode(
                 .passed = false,
                 .has_required = false,
                 .reasons = try cloneReasonList(allocator, "invalid condition name"),
-                .@"error" = "invalid condition name",
+                .@"error" = "invalid-name-type",
             };
         }
         const name = raw_name.string;
@@ -409,13 +427,13 @@ fn evalConditionNode(
                     .passed = false,
                     .has_required = false,
                     .reasons = try cloneReasonList(allocator, "condition.required must be boolean"),
-                    .@"error" = "condition.required must be boolean",
+                    .@"error" = "required-not-bool",
                 };
             }
             required = raw_required.bool;
         }
 
-            const ok = evalCondition(name, cwd, allocator) catch |err| {
+        const ok = evalCondition(name, cwd, allocator) catch |err| {
             const reason = try std.fmt.allocPrint(allocator, "{s}: {s}", .{ name, @errorName(err) });
             const detail = try normalizeErrorName(allocator, @errorName(err));
             const reasons = try cloneReasonList(allocator, reason);
@@ -439,7 +457,7 @@ fn evalConditionNode(
         .passed = false,
         .has_required = false,
         .reasons = try cloneReasonList(allocator, "unsupported condition type"),
-        .@"error" = "unsupported condition type",
+        .@"error" = "unsupported-type",
     };
 }
 
@@ -530,7 +548,7 @@ fn globRec(pat: []const u8, pi: usize, text: []const u8, ti: usize) bool {
     };
 }
 
-fn matches(rule: Rule, command: []const u8) bool {
+fn matchesRule(rule: Rule, command: []const u8) bool {
     const pattern = rule.normalized_pattern;
     if (std.mem.eql(u8, rule.matcher, "exact")) return std.mem.eql(u8, command, pattern);
     if (std.mem.eql(u8, rule.matcher, "prefix")) return std.mem.startsWith(u8, command, pattern);
@@ -622,10 +640,10 @@ pub fn main() !void {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
-    const opts = parseArgs(allocator) catch {
-        std.log.err("usage: --bundle <path> --command <text> [--cwd <path>] [--json]", .{});
-        std.process.exit(1);
-    };
+    const opts = try parseArgs(allocator);
+    defer allocator.free(opts.bundle);
+    defer allocator.free(opts.command);
+    defer if (opts.cwd) |cwd| allocator.free(cwd);
 
     const normalized = try normalizeCommand(allocator, opts.command);
     defer allocator.free(normalized);
@@ -649,7 +667,7 @@ pub fn main() !void {
     var best_condition_reasons: []const []const u8 = &EMPTY_REASONS;
 
     for (policy.commands) |rule| {
-        if (!matches(rule, normalized)) continue;
+        if (!matchesRule(rule, normalized)) continue;
         matched = true;
 
         const eval = evalConditionNode(rule.conditions, opts.cwd, 0, allocator) catch |err| {

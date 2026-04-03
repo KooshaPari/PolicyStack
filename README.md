@@ -415,3 +415,7 @@ Reference evaluators:
 - `wrappers/go` (runnable Go implementation)
 - `wrappers/rust` (runnable Rust implementation)
 - `wrappers/zig` (runnable Zig implementation)
+
+/// @trace PS-001
+
+/// @trace PS-001
