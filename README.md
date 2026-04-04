@@ -416,6 +416,35 @@ Reference evaluators:
 - `wrappers/rust` (runnable Rust implementation)
 - `wrappers/zig` (runnable Zig implementation)
 
+### Federation Tools (Merged from agentops-policy-federation)
+
+Additional policy tools available in `tools/`:
+
+```bash
+# Federate policy across repositories
+python tools/federate_policy.py \
+  --repo my-repo \
+  --harness codex \
+  --out /tmp/federated-policy.json
+
+# Validate policy payload against schemas
+python tools/validate_policy_payload.py \
+  --payload /tmp/effective-policy.json \
+  --policy-schema schemas/policy-resolution.schema.json \
+  --manifest-schema schemas/extension-manifest.schema.json
+
+# Audit policy rotation
+python tools/audit_policy_rotation.py \
+  --policy-dir policy-config/snapshots
+
+# Build PR package
+python tools/build_pr_package.py \
+  --repo my-repo \
+  --pr-number 123
+```
+
+/// @trace PS-001
+
 /// @trace PS-001
 
 /// @trace PS-001
