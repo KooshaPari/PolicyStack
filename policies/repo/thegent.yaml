@@ -1,0 +1,52 @@
+version: "1.0"
+id: "repo/thegent"
+scope: repo
+merge:
+  strategy: append_unique
+policy:
+  ci:
+    required_checks:
+      - "thegent-ci"
+      - "policy-resolve"
+    allow_manual_approval: false
+  authorization:
+    rules:
+      - id: "thegent-deny-git-write-outside-worktrees"
+        description: "Git writes are blocked unless they originate from approved thegent worktrees."
+        priority: 10
+        effect: deny
+        actions: ["exec"]
+        match:
+          command_patterns:
+            - "git commit*"
+            - "git push*"
+      - id: "thegent-deny-write-outside-worktrees"
+        description: "Direct file writes are blocked outside approved thegent worktrees when cwd is inside the thegent canonical repo."
+        priority: 10
+        effect: deny
+        actions: ["write"]
+        match:
+          cwd_patterns:
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/thegent"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/thegent/*"
+          target_path_patterns:
+            - "*"
+      - id: "thegent-allow-write-in-worktrees"
+        description: "Approved thegent worktrees may perform file writes."
+        priority: 100
+        effect: allow
+        actions: ["write"]
+        match:
+          target_path_patterns:
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/thegent-wtrees/*"
+      - id: "thegent-allow-git-write-in-worktrees"
+        description: "Approved thegent worktrees may perform commit and push operations."
+        priority: 100
+        effect: allow
+        actions: ["exec"]
+        match:
+          command_patterns:
+            - "git commit*"
+            - "git push*"
+          cwd_patterns:
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/thegent-wtrees/*"

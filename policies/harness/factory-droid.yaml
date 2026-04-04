@@ -1,0 +1,14 @@
+version: "1.0"
+id: "harness/factory-droid"
+scope: harness
+merge:
+  strategy: merge_map
+policy:
+  runtime:
+    mode: "factory-droid"
+    allowlist_tools:
+      - "mcp"
+      - "cli"
+      - "git"
+  approvals:
+    command_ask_mode: "review"

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Resolved Policy",
+  "type": "object",
+  "required": ["policy_hash", "scope_chain", "policy", "resolved_at"],
+  "properties": {
+    "policy_hash": {"type": "string"},
+    "scope_chain": {"type": "array", "items": {"type": "string"}},
+    "policy": {"type": "object"},
+    "policy_contract_versions": {
+      "type": "object",
+      "additionalProperties": {"type": "string"}
+    },
+    "contract_count": {"type": "number"},
+    "conflicts": {"type": "array"},
+    "resolved_at": {"type": "string", "format": "date-time"},
+    "source_files": {"type": "array", "items": {"type": "string"}},
+    "extensions": {
+      "type": "object",
+      "properties": {
+        "enabled": {"type": "array", "items": {"type": "string"}},
+        "disabled": {"type": "array"}
+      },
+      "additionalProperties": true
+    }
+  }
+}

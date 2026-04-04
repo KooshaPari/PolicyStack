@@ -1,0 +1,112 @@
+name: Phenotype Quality Gate (Policy Enforcement)
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  tooling-audit:
+    name: Tooling Compliance Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      
+      - name: Run Tooling Audit
+        run: |
+          ../AgilePlus/bin/ptool-audit \
+            --path . \
+            --format markdown \
+            --output reports/TOOLING_AUDIT.md \
+            --strict || true
+        continue-on-error: true
+      
+      - name: Check for Forbidden Tools
+        run: |
+          # Strict check - fail on forbidden tools
+          ../AgilePlus/bin/ptool-audit --path . --strict || {
+            echo "❌ FORBIDDEN TOOLS DETECTED"
+            echo "See reports/TOOLING_AUDIT.md for details"
+            exit 1
+          }
+      
+      - name: Upload Audit Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tooling-audit
+          path: reports/TOOLING_AUDIT.md
+
+  anti-pattern-lint:
+    name: Anti-Pattern Detection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      
+      - name: Run Anti-Pattern Lint
+        run: |
+          ../AgilePlus/bin/panti-lint \
+            --path . \
+            --format markdown \
+            --output reports/ANTI_PATTERN_REPORT.md
+        continue-on-error: true
+      
+      - name: Upload Lint Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anti-pattern-report
+          path: reports/ANTI_PATTERN_REPORT.md
+
+  loc-enforcement:
+    name: File Size & Complexity Enforcement
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      
+      - name: Enforce LOC Limits
+        run: |
+          ../AgilePlus/bin/ploc-enforce \
+            --path . \
+            --format markdown \
+            --output reports/LOC_REPORT.md \
+            --strict
+        continue-on-error: true
+      
+      - name: Upload LOC Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: loc-enforcement
+          path: reports/LOC_REPORT.md
+
+  unified-quality-gate:
+    name: Unified Quality Gate
+    needs: [tooling-audit, anti-pattern-lint, loc-enforcement]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      
+      - name: Run Unified Quality Gate
+        run: ../AgilePlus/bin/pquality-gate --path . --ci-mode --strict

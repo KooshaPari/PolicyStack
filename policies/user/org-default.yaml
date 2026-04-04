@@ -1,0 +1,35 @@
+version: "1.0"
+id: "user/org-default"
+scope: user
+merge:
+  strategy: merge_map
+policy:
+  approvals:
+    escalation_required: true
+    escalation_channels: ["slack", "pager"]
+  guardrails:
+    command_denylist:
+      - "git reset --hard"
+      - "rm -rf /"
+  authorization:
+    rules:
+      - id: "user-deny-no-verify-bypass"
+        description: "Disallow bypassing local or runtime approvals."
+        priority: 200
+        effect: deny
+        actions: ["exec"]
+        match:
+          command_patterns:
+            - "git commit --no-verify*"
+            - "git push --no-verify*"
+            - "* --dangerously-bypass-approvals-and-sandbox*"
+      - id: "user-deny-destructive-git"
+        description: "Block known destructive git commands globally."
+        priority: 150
+        effect: deny
+        actions: ["exec"]
+        match:
+          command_patterns:
+            - "git reset --hard*"
+            - "git push --force*"
+            - "git push -f*"

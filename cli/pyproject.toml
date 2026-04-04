@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "policy-federation-cli"
+version = "0.1.0"
+description = "Agent policy federation CLI"
+requires-python = ">=3.10"
+dependencies = ["pyyaml", "jsonschema"]
+
+[project.scripts]
+policyctl = "policy_federation.cli:main"

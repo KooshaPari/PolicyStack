@@ -1,0 +1,12 @@
+name: "run-metadata-signature"
+version: "0.1.0"
+entrypoint: "policy_federation.extensions.signature:apply"
+scope_selector:
+  includes: ["task_domain/devops"]
+inputs:
+  required_fields:
+    - policy_hash
+    - run_id
+permissions:
+  write:
+    - run.session.sidecar

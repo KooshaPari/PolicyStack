@@ -1,0 +1,19 @@
+version: "1.0"
+id: "system/base"
+scope: system
+merge:
+  strategy: replace
+policy:
+  approvals:
+    default: "deny-unknown-commands"
+  runtime:
+    sandbox: "required"
+    max_parallel_agents: 4
+  audit:
+    enabled: true
+    minimum_level: "info"
+  authorization:
+    defaults:
+      exec: ask
+      write: ask
+      network: ask

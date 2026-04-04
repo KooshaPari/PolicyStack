@@ -1,7 +1,6 @@
 import json
 import subprocess
 import os
-import sys
 
 def run_wrapper(wrapper_cmd, bundle, command, cwd):
     full_cmd = wrapper_cmd + ["--bundle", bundle, "--command", command, "--json"]

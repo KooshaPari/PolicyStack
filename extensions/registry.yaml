@@ -1,0 +1,22 @@
+extensions:
+  - name: audit-hooks
+    version: "0.1.0"
+    kind: "policy_extension"
+    scope: "global"
+    manifest: "extensions/manifests/audit-hooks.yaml"
+    requires:
+      - id: system/base
+        min_version: "1.0"
+    enabled_by_default: true
+    tags: ["audit", "compliance"]
+
+  - name: run-metadata-signature
+    version: "0.1.0"
+    kind: "runtime_extension"
+    scope: "global"
+    manifest: "extensions/manifests/run-metadata-signature.yaml"
+    requires:
+      - id: task-domain/devops
+        min_version: "1.0"
+    enabled_by_default: true
+    tags: ["audit", "integrity"]

@@ -1,0 +1,11 @@
+version: "1.0"
+fields:
+  - policy_hash
+  - scope_chain
+  - policy_payload_ref
+  - resolved_at
+  - run_id
+  - harness
+  - task_domain
+  - task_instance
+  - source_files

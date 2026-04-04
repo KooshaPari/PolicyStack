@@ -1,0 +1,18 @@
+version: "1.0"
+id: "harness/codex"
+scope: harness
+merge:
+  strategy: merge_map
+policy:
+  runtime:
+    mode: "codex-cli"
+    allowlist_commands:
+      - "run"
+      - "test"
+      - "lint"
+      - "policy resolve"
+  hooks:
+    pretool:
+      enabled: true
+    postrun:
+      enabled: true

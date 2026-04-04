@@ -1,0 +1,164 @@
+#!/usr/bin/env python3
+import argparse
+import csv
+import json
+import pathlib
+import sys
+
+
+def fail(message: str) -> None:
+    print(f"E150 recurrence spike stability budget gate failed: {message}", file=sys.stderr)
+    raise SystemExit(2)
+
+
+def _require_file(path: pathlib.Path, label: str) -> None:
+    if not path.is_file():
+        fail(f"E150 missing {label} file: {path}")
+
+
+def _to_records(payload: object, path: pathlib.Path, label: str) -> list[dict]:
+    if isinstance(payload, dict):
+        return [payload]
+    if isinstance(payload, list) and all(isinstance(item, dict) for item in payload):
+        return payload
+    fail(f"E150 invalid {label} JSON shape (expected object or list[object]): {path}")
+    return []
+
+
+def _read_json(path: pathlib.Path, label: str) -> list[dict]:
+    try:
+        payload = json.loads(path.read_text())
+    except Exception as exc:
+        fail(f"E150 invalid {label} JSON {path}: {exc}")
+    return _to_records(payload, path, label)
+
+
+def _read_csv(path: pathlib.Path, required: set[str], label: str) -> list[dict[str, str]]:
+    try:
+        with path.open(newline="") as handle:
+            reader = csv.DictReader(handle)
+            missing = sorted(required - set(reader.fieldnames or []))
+            if missing:
+                fail(f"E150 {label} CSV missing headers {missing}: {path}")
+            return list(reader)
+    except SystemExit:
+        raise
+    except Exception as exc:
+        fail(f"E150 invalid {label} CSV {path}: {exc}")
+
+
+def _load_records(path: pathlib.Path, required: set[str], label: str) -> list[dict]:
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        return _read_csv(path, required, label)
+    if suffix == ".json":
+        rows = _read_json(path, label)
+        for idx, row in enumerate(rows):
+            missing = sorted(field for field in required if field not in row)
+            if missing:
+                fail(f"E150 {label} JSON row {idx} missing keys {missing}: {path}")
+        return rows
+    fail(f"E150 unsupported {label} format (expected .csv or .json): {path}")
+    return []
+
+
+def _to_float(value: object, path: pathlib.Path, field: str) -> float:
+    try:
+        return float(str(value).strip())
+    except ValueError as exc:
+        fail(f"E150 invalid {field} in {path}: {exc}")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--report", required=True)
+    parser.add_argument("--recurrence", required=True)
+    parser.add_argument("--time-field", default="window")
+    parser.add_argument("--rate-field", default="recurrence_rate")
+    parser.add_argument("--stability-budget-field", default="stability_budget")
+    parser.add_argument("--max-stability-gap", type=float, default=0.0)
+    parser.add_argument("--max-stability-gap-mean", type=float, default=0.0)
+    parser.add_argument("--max-over-budget-count", type=int, default=0)
+    args = parser.parse_args()
+
+    report_path = pathlib.Path(args.report)
+    recurrence_path = pathlib.Path(args.recurrence)
+    _require_file(report_path, "report")
+    _require_file(recurrence_path, "recurrence")
+
+    report_rows = _read_json(report_path, "report")
+    report = report_rows[0] if report_rows else {}
+
+    rows = _load_records(
+        recurrence_path,
+        {args.time_field, args.rate_field, args.stability_budget_field},
+        "recurrence",
+    )
+    if not rows:
+        fail("E150 empty recurrence data")
+
+    ordered = sorted(rows, key=lambda row: str(row.get(args.time_field, "")))
+    rates = [_to_float(row[args.rate_field], recurrence_path, args.rate_field) for row in ordered]
+    budgets = [
+        _to_float(row[args.stability_budget_field], recurrence_path, args.stability_budget_field)
+        for row in ordered
+    ]
+
+    if len(rates) < 2:
+        fail("E150 insufficient recurrence points for stability calculations")
+
+    stability_steps = [abs(curr - prev) for prev, curr in zip(rates, rates[1:])]
+    paired_budgets = budgets[1:] if len(budgets) > 1 else []
+    stability_gaps = [
+        max(0.0, step - budget) for step, budget in zip(stability_steps, paired_budgets)
+    ]
+
+    stability_gap = max(stability_gaps) if stability_gaps else 0.0
+    stability_gap_mean = (sum(stability_gaps) / float(len(stability_gaps))) if stability_gaps else 0.0
+    over_budget_count = sum(1 for value in stability_gaps if value > 0.0)
+
+    report_stability_gap = _to_float(
+        report.get("recurrence_spike_stability_budget_gap_max", 0.0),
+        report_path,
+        "recurrence_spike_stability_budget_gap_max",
+    )
+    report_stability_gap_mean = _to_float(
+        report.get("recurrence_spike_stability_budget_gap_mean", 0.0),
+        report_path,
+        "recurrence_spike_stability_budget_gap_mean",
+    )
+    report_over_budget_count = int(
+        round(
+            _to_float(
+                report.get("recurrence_spike_stability_over_budget_count", 0),
+                report_path,
+                "recurrence_spike_stability_over_budget_count",
+            )
+        )
+    )
+
+    if stability_gap < report_stability_gap:
+        stability_gap = report_stability_gap
+    if stability_gap_mean < report_stability_gap_mean:
+        stability_gap_mean = report_stability_gap_mean
+    if over_budget_count < report_over_budget_count:
+        over_budget_count = report_over_budget_count
+
+    if stability_gap > args.max_stability_gap:
+        fail(f"E150 stability_gap={stability_gap} > max_stability_gap={args.max_stability_gap}")
+    if stability_gap_mean > args.max_stability_gap_mean:
+        fail(
+            f"E150 stability_gap_mean={stability_gap_mean} > "
+            f"max_stability_gap_mean={args.max_stability_gap_mean}"
+        )
+    if over_budget_count > args.max_over_budget_count:
+        fail(
+            f"E150 over_budget_count={over_budget_count} > "
+            f"max_over_budget_count={args.max_over_budget_count}"
+        )
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

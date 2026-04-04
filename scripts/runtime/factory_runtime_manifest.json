@@ -1,0 +1,16 @@
+{
+  "version": "0.1.0",
+  "harness": "factory-droid",
+  "wrappers": {
+    "exec": "./scripts/runtime/factory_exec_guard.sh",
+    "write_check": "./scripts/runtime/factory_write_guard.sh",
+    "network_check": "./scripts/runtime/factory_network_guard.sh"
+  },
+  "defaults": {
+    "ask_mode": "review"
+  },
+  "artifacts": {
+    "sidecar_env": "POLICY_SIDECAR_PATH",
+    "audit_log_env": "POLICY_AUDIT_LOG_PATH"
+  }
+}

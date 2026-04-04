@@ -1,0 +1,13 @@
+version: "1.0"
+id: "task-domain/devops"
+scope: task_domain
+extends:
+  - "task_domain/devops-shared"
+merge:
+  strategy: append_unique
+policy:
+  workflow:
+    enforce_branch_protection: true
+    required_checks: ["ci", "lint", "policy-check"]
+  outputs:
+    require_run_metadata: true

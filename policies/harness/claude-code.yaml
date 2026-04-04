@@ -1,0 +1,18 @@
+version: "1.0"
+id: "harness/claude-code"
+scope: harness
+merge:
+  strategy: merge_map
+policy:
+  runtime:
+    mode: "claude-code"
+    allowlist_tools:
+      - "Bash"
+      - "Write"
+      - "Edit"
+      - "MultiEdit"
+      - "WebFetch"
+      - "WebSearch"
+  hooks:
+    pretool:
+      enabled: true

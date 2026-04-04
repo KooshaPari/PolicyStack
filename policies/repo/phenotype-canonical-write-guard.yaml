@@ -1,0 +1,83 @@
+version: "1.0"
+id: "repo/phenotype-canonical-write-guard"
+scope: repo
+merge:
+  strategy: append_unique
+policy:
+  authorization:
+    rules:
+      # ── Canonical Repo Write Guard (deny git mutations in canonical repos) ──────
+      - id: "phenotype-deny-canonical-git-commit"
+        description: "Deny git commit operations in canonical repos (non-worktree, non-wtrees paths)."
+        priority: 120
+        effect: deny
+        actions: ["exec"]
+        match:
+          command_patterns:
+            - "git commit*"
+          cwd_patterns:
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/AgilePlus"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/agentops-policy-federation"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/spec-kitty"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/Phenotype"
+
+      - id: "phenotype-deny-canonical-git-add"
+        description: "Deny git add operations in canonical repos."
+        priority: 120
+        effect: deny
+        actions: ["exec"]
+        match:
+          command_patterns:
+            - "git add*"
+          cwd_patterns:
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/AgilePlus"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/agentops-policy-federation"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/spec-kitty"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/Phenotype"
+
+      - id: "phenotype-deny-canonical-git-merge"
+        description: "Deny git merge operations in canonical repos (use main repo only for final integration)."
+        priority: 120
+        effect: deny
+        actions: ["exec"]
+        match:
+          command_patterns:
+            - "git merge*"
+            - "git pull*"
+          cwd_patterns:
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/AgilePlus"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/agentops-policy-federation"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/spec-kitty"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/Phenotype"
+          exclude_patterns:
+            - "*origin/main*"
+
+      - id: "phenotype-deny-canonical-git-reset"
+        description: "Deny git reset operations in canonical repos to prevent accidental history loss."
+        priority: 120
+        effect: deny
+        actions: ["exec"]
+        match:
+          command_patterns:
+            - "git reset*"
+          cwd_patterns:
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/AgilePlus"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/agentops-policy-federation"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/spec-kitty"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/Phenotype"
+
+      - id: "phenotype-deny-canonical-file-writes"
+        description: "Deny file writes in canonical repos (all editing must happen in worktrees)."
+        priority: 120
+        effect: deny
+        actions: ["write"]
+        match:
+          target_path_patterns:
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/AgilePlus/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/agentops-policy-federation/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/spec-kitty/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/Phenotype/*"
+          exclude_patterns:
+            - "*-wtrees*"
+            - "*.worktrees*"
+            - "*PROJECT-wtrees*"

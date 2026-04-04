@@ -1,0 +1,20 @@
+---
+project: PolicyStack
+language: Python
+generated: "2026-04-03"
+
+attribution:
+  system: Phenotype Traceability
+  purpose: Feature Requirement (FR) tracking
+
+traceability:
+  cli: AgilePlus/bin/ptrace
+  ci_cd: .github/workflows/traceability.yml
+
+fr_requirements: []
+
+coverage:
+  status: initial
+  note: Python policy management
+
+last_updated: "2026-04-03"

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Run Session Sidecar",
+  "type": "object",
+  "required": ["run_id", "policy_hash", "scope_chain", "audit"],
+  "properties": {
+    "run_id": {"type": "string"},
+    "policy_hash": {"type": "string"},
+    "scope_chain": {"type": "array", "items": {"type": "string"}},
+    "audit": {"type": "object"},
+    "extensions": {"type": "object", "additionalProperties": true}
+  }
+}

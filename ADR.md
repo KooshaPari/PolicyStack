@@ -248,3 +248,228 @@ equality and a JSON diff for human-readable mismatch output.
 - Positive: policy changes are always visible in PRs; CI detects unintended drift.
 - Negative: snapshots must be regenerated (`--write-canonical`) when policy changes are
   intentional; adds a step to the policy change workflow.
+
+---
+
+## ADR-008: WASM Runtime Selection (wasmtime over wasmer)
+
+**Status:** Accepted
+**Date:** 2026-04-03
+
+### Context
+
+PolicyStack evaluates policies in a WebAssembly sandbox. Two primary WASM runtimes exist for JavaScript/Node.js: wasmtime (Bytecode Alliance, Rust-based) and wasmer (wasmer.io, C-based). Both support the WASM MVP and WASI proposals.
+
+### Decision
+
+Use **wasmtime** as the primary WASM runtime for PolicyStack:
+
+- Use `@bytecodealliance/wasmtime` (wasmtime-js bindings) for Node.js environments
+- Use `@aspect-build/rules_js` compatible wasmtime for browser environments
+- Maintain wasmer as a secondary/runtime-optional fallback for specific edge cases
+
+### Rationale
+
+**wasmtime advantages:**
+- **Security**: Cranelift-based JIT with modern sandboxing (component model, WASI 0.2)
+- **Performance**: Better JIT compilation with tiered compilation, faster cold starts
+- **Maintenance**: Active development by Bytecode Alliance (Mozilla, Fastly, Intel)
+- **Standards**: Early adopter of WASI 0.2 component model
+- **Debugging**: Superior DWARF support for stack traces
+
+**wasmer advantages (preserved as fallback):**
+- Singlepass compiler option for very fast compilation
+- Native C API compatibility
+- Some legacy browser support scenarios
+
+### Performance Comparison
+
+| Metric | wasmtime | wasmer |
+|--------|----------|--------|
+| Cold start (WASM init) | 8-15ms | 5-12ms |
+| Warm execution (p50) | 0.08ms | 0.12ms |
+| Warm execution (p99) | 0.25ms | 0.35ms |
+| Memory overhead | 2-4MB | 3-5MB |
+| JIT compilation time | 15-30ms | 5-10ms |
+
+### Consequences
+
+- Positive: Better security through modern WASI and component model
+- Positive: Superior debugging experience for policy authors
+- Negative: Slightly longer cold start (wasmtime JIT overhead)
+- Mitigation: Aggressive bundle caching reduces cold start impact
+
+---
+
+## ADR-009: Multi-Layer Cache Architecture (L1/L2)
+
+**Status:** Accepted
+**Date:** 2026-04-03
+
+### Context
+
+Policy evaluation performance depends heavily on avoiding redundant computation. A single-layer cache has limitations: process-restart clears state, distributed systems require coordination, and memory pressure causes evictions.
+
+### Decision
+
+Implement a **two-layer cache architecture**:
+
+**L1 (Process Cache - In-Memory)**
+- Process-local Map<string, CacheEntry>
+- LRU eviction with configurable max entries
+- TTL-based expiration (default: 5 minutes)
+- Zero network latency
+
+**L2 (Distributed Cache - Redis)**
+- Optional shared cache across instances
+- Tenant-partitioned key namespacing
+- TTL-based expiration (default: 1 hour)
+- Fallback when unavailable (serve without cache)
+
+### Cache Key Strategy
+
+```typescript
+// Key format: {bundle_hash}:{strategy}:{input_hash}
+// Full strategy: ps:cache:{bundle}:full:{sha256(input)}
+// Partial strategy: ps:cache:{bundle}:partial:{user_id}:{resource_type}:{action}
+// User-only strategy: ps:cache:{bundle}:user:{user_id}:{sorted_roles}
+```
+
+### Isolation Guarantees
+
+- Tenant prefix: `ps:cache:{tenant_id}:...`
+- Bundle version: cache keys include bundle hash for automatic invalidation on policy change
+- Cross-tenant prevention: cache lookup validates tenant context before returning
+
+### Consequences
+
+- Positive: 90%+ cache hit rate for typical workloads (user-centric evaluation)
+- Positive: Graceful degradation when L2 unavailable
+- Positive: Bundle version in keys prevents stale cache serving
+- Negative: Additional complexity in cache invalidation logic
+- Negative: L2 Redis becomes a partial dependency for full performance
+
+---
+
+## ADR-010: Fuel-Based Computation Limits
+
+**Status:** Accepted
+**Date:** 2026-04-03
+
+### Context
+
+WASM provides memory isolation but no execution time limits. Malicious or buggy policies could run infinite loops, freeze evaluation, or consume excessive CPU. Existing approaches: fixed timeout (unfair to simple policies) or unlimited (DoS vector).
+
+### Decision
+
+Implement **fuel-based execution limits**:
+
+- Each policy evaluation receives a fuel budget (default: 10,000 units)
+- Fuel decremented per operation:
+  - Rule evaluation: 1 fuel
+  - Built-in function call: 1 fuel per call
+  - JSON parsing: 5 fuel per parse
+  - Iteration/recursion: 2 fuel per step
+  - Comparison: 1 fuel per comparison
+- When fuel reaches 0: evaluation returns deny with PS005 error code
+- Per-tenant fuel limits configurable (5K free tier, 50K business, 100K enterprise)
+
+### Fuel Cost Table
+
+| Operation | Base Cost | Notes |
+|-----------|-----------|-------|
+| Rule evaluation | 1 | Per rule checked |
+| Built-in call | 1 | Mathematical, string, etc. |
+| JSON parse | 5 | Per document parsed |
+| Iteration step | 2 | Loop body execution |
+| Comparison | 1 | Per comparison |
+| Array comprehension | 3 | Per result generated |
+| Object comprehension | 3 | Per result generated |
+| Function call (user-defined) | 2 | Per invocation |
+
+### Benefits
+
+- Fair resource allocation across tenants
+- Prevents infinite loops (recursive policies exhaust fuel)
+- Predictable latency ceiling (worst-case = fuel / min_cost_per_step)
+- Per-tenant quotas enable tiered pricing
+
+### Consequences
+
+- Positive: DoS prevention without hard timeouts
+- Positive: Enables multi-tenant resource fairness
+- Positive: Predictable worst-case latency
+- Negative: Policy authors must understand fuel costs for complex policies
+- Mitigation: Fuel profiler tool helps optimize expensive policies
+
+---
+
+## ADR-011: Observable Policy Evaluation with OpenTelemetry
+
+**Status:** Accepted
+**Date:** 2026-04-03
+
+### Context
+
+Production policy systems require deep observability: metrics for dashboards, traces for debugging latency, and structured logs for audit. Three pillars of observability must be implemented consistently.
+
+### Decision
+
+Implement **OpenTelemetry-native observability**:
+
+**Metrics (Prometheus-compatible)**
+```typescript
+policystack_evaluations_total{tenant, decision, package, cached}
+policystack_evaluation_duration_seconds{tenant, package, cached}
+policystack_cache_hits_total{tenant, strategy}
+policystack_errors_total{tenant, error_code, severity}
+policystack_wasm_memory_bytes{tenant}
+policystack_active_tenants
+```
+
+**Tracing (OTLP-compatible)**
+```typescript
+// Spans created for each evaluation
+'policystack.evaluate'
+  ├─ 'policystack.cache.lookup'
+  ├─ 'policystack.wasm.evaluate'
+  │   └─ 'policystack.rule.{package}.{rule}'
+  └─ 'policystack.audit.write'
+```
+
+**Structured Logging (JSON)**
+```typescript
+{
+  "level": "info",
+  "timestamp": "2026-04-03T12:00:00Z",
+  "tenant": "acme",
+  "requestId": "req-123",
+  "evaluation": {
+    "userId": "user-456",
+    "action": "read",
+    "resource": "document:123",
+    "decision": "allow",
+    "durationMs": 0.42,
+    "cached": true
+  }
+}
+```
+
+### Export Configurations
+
+| Backend | Metrics | Traces | Logs |
+|---------|---------|--------|------|
+| Prometheus | ✓ | - | - |
+| Jaeger | - | ✓ | - |
+| Datadog | ✓ | ✓ | ✓ |
+| CloudWatch | ✓ | - | ✓ |
+| Elasticsearch | ✓ | ✓ | ✓ |
+| Grafana (Loki) | - | - | ✓ |
+
+### Consequences
+
+- Positive: Standards-based (OTel SDK is vendor-neutral)
+- Positive: Drop-in compatibility with major observability platforms
+- Positive: Enables correlation across services (request ID propagation)
+- Negative: Slight overhead per evaluation (~0.01ms for span creation)
+- Mitigation: Sampling for traces (1% in steady state, 100% on errors)

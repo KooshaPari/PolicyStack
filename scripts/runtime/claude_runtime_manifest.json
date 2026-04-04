@@ -1,0 +1,17 @@
+{
+  "version": "0.1.0",
+  "harness": "claude-code",
+  "wrappers": {
+    "exec": "./scripts/runtime/claude_exec_guard.sh",
+    "write_check": "./scripts/runtime/claude_write_guard.sh",
+    "network_check": "./scripts/runtime/claude_network_guard.sh",
+    "pretool_hook": "./scripts/runtime/claude_pretool_hook.py"
+  },
+  "defaults": {
+    "ask_mode": "review"
+  },
+  "artifacts": {
+    "sidecar_env": "POLICY_SIDECAR_PATH",
+    "audit_log_env": "POLICY_AUDIT_LOG_PATH"
+  }
+}

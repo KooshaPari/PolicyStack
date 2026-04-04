@@ -1,0 +1,445 @@
+version: "1.0"
+id: "repo/phenotype-worktrees"
+scope: repo
+merge:
+  strategy: append_unique
+policy:
+  authorization:
+    rules:
+      - id: "phenotype-ask-policy-edits"
+        description: "Policy file edits require explicit review-mode approval."
+        priority: 110
+        effect: ask
+        actions: ["write"]
+        match:
+          target_path_patterns:
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/agentops-policy-federation/policies/*"
+            - "/Users/kooshapari/.claude/settings.json"
+
+      # ── Read-Only Shell Commands (everywhere) ─────────────────────
+      - id: "phenotype-allow-readonly-shell"
+        description: "Allow read-only shell commands (ls, cat, head, tail, grep, find, sed, awk, etc.) anywhere."
+        priority: 95
+        effect: allow
+        actions: ["exec"]
+        match:
+          command_patterns:
+            - "ls *"
+            - "ls"
+            - "cat *"
+            - "head *"
+            - "tail *"
+            - "grep *"
+            - "*grep*"
+            - "rg *"
+            - "find *"
+            - "sed -n*"
+            - "sed -e*"
+            - "awk *"
+            - "sort *"
+            - "sort"
+            - "uniq *"
+            - "uniq"
+            - "diff *"
+            - "comm *"
+            - "cut *"
+            - "tr *"
+            - "tree *"
+            - "tree"
+            - "pwd"
+            - "realpath *"
+            - "readlink *"
+            - "basename *"
+            - "dirname *"
+            - "wc *"
+            - "wc"
+            - "sha256sum *"
+            - "md5 *"
+            - "md5sum *"
+            - "xxd *"
+            - "hexdump *"
+            - "less *"
+            - "more *"
+            - "column *"
+            - "echo *"
+            - "echo"
+            - "printf *"
+            - "test *"
+            - "[ *"
+
+      # ── Package Manager Read Commands (everywhere) ─────────────────
+      - id: "phenotype-allow-pkg-read"
+        description: "Allow read-only package manager commands anywhere."
+        priority: 95
+        effect: allow
+        actions: ["exec"]
+        match:
+          command_patterns:
+            - "pip list*"
+            - "pip show*"
+            - "pip freeze*"
+            - "uv pip list*"
+            - "uv pip show*"
+            - "uv pip freeze*"
+            - "uv run *"
+            - "uv sync*"
+            - "uv lock*"
+            - "npm ls*"
+            - "npm list*"
+            - "npm info*"
+            - "npm view*"
+            - "bun pm *"
+            - "pnpm ls*"
+            - "pnpm list*"
+            - "cargo tree*"
+            - "cargo metadata*"
+            - "go list*"
+            - "go version*"
+            - "python --version*"
+            - "python3 --version*"
+            - "node --version*"
+            - "bun --version*"
+            - "rustc --version*"
+
+      # ── Worktree Git Operations (all repos, all naming conventions) ──
+      - id: "phenotype-allow-worktree-git-ops"
+        description: "Allow git ops in any Phenotype worktree directory."
+        priority: 100
+        effect: allow
+        actions: ["exec"]
+        match:
+          command_patterns:
+            - "git commit*"
+            - "git push*"
+            - "git pull*"
+            - "git fetch*"
+            - "git rebase*"
+            - "git merge*"
+            - "git checkout*"
+            - "git switch*"
+            - "git branch*"
+            - "git stash*"
+            - "git cherry-pick*"
+            - "git tag*"
+            - "git add*"
+            - "git rm*"
+            - "git mv*"
+            - "git restore*"
+            - "git reset*"
+            - "git worktree add*"
+            - "git worktree remove*"
+            - "git worktree prune*"
+            - "git submodule*"
+          cwd_patterns:
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*-wtrees/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*-wtrees/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*-wtrees/*/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*/.worktrees/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*/.worktrees/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*/PROJECT-wtrees/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*/PROJECT-wtrees/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/worktrees/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/worktrees/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/worktrees/*/*/*"
+
+      - id: "phenotype-allow-worktree-writes"
+        description: "Allow file writes targeting any Phenotype worktree directory."
+        priority: 100
+        effect: allow
+        actions: ["write"]
+        match:
+          cwd_patterns:
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*-wtrees/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*-wtrees/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*-wtrees/*/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*/.worktrees/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*/.worktrees/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*/PROJECT-wtrees/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*/PROJECT-wtrees/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/worktrees/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/worktrees/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/worktrees/*/*/*"
+          target_path_patterns:
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*-wtrees/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*-wtrees/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*-wtrees/*/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*/.worktrees/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*/.worktrees/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*/PROJECT-wtrees/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*/PROJECT-wtrees/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/worktrees/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/worktrees/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/worktrees/*/*/*"
+
+      - id: "phenotype-allow-worktree-writes-any-cwd"
+        description: "Allow file writes targeting any Phenotype worktree directory regardless of cwd. Agents launched from a canonical repo root must still be able to write into worktree target paths."
+        priority: 101
+        effect: allow
+        actions: ["write"]
+        match:
+          target_path_patterns:
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*-wtrees/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*-wtrees/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*-wtrees/*/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*/.worktrees/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*/.worktrees/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*/PROJECT-wtrees/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*/PROJECT-wtrees/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/worktrees/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/worktrees/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/worktrees/*/*/*"
+
+      # Inline python (heredoc) is classified as Bash write-via-exec; target_paths may be empty if the
+      # hook cannot extract paths. Match on command + cwd only so worktree edits are not default-ask.
+      - id: "phenotype-allow-worktree-python-heredoc-write"
+        description: "Allow Python heredoc file edits when cwd is under an approved Phenotype worktree."
+        priority: 102
+        effect: allow
+        actions: ["write"]
+        match:
+          command_patterns:
+            - "python3 <<*"
+            - "*python3 <<*"
+            - "python <<*"
+            - "*python <<*"
+          cwd_patterns:
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*-wtrees/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*-wtrees/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*-wtrees/*/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*/.worktrees/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*/.worktrees/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*/PROJECT-wtrees/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*/PROJECT-wtrees/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/worktrees/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/worktrees/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/worktrees/*/*/*"
+
+      - id: "phenotype-allow-readonly-git"
+        description: "Allow read-only git commands anywhere."
+        priority: 90
+        effect: allow
+        actions: ["exec"]
+        match:
+          command_patterns:
+            - "git fetch*"
+            - "*git fetch*"
+            - "git log*"
+            - "*git log*"
+            - "git diff*"
+            - "*git diff*"
+            - "git status*"
+            - "*git status*"
+            - "git show*"
+            - "git branch -l*"
+            - "git branch --list*"
+            - "git remote*"
+            - "git rev-parse*"
+            - "git symbolic-ref*"
+            - "git describe*"
+            - "git shortlog*"
+            - "git blame*"
+            - "git ls-files*"
+            - "git ls-tree*"
+            - "git config --get*"
+            - "git config --list*"
+            - "git worktree list*"
+            - "git worktree add*"
+            - "git worktree prune*"
+
+      - id: "phenotype-allow-build-test"
+        description: "Allow build, test, lint, and format commands anywhere."
+        priority: 90
+        effect: allow
+        actions: ["exec"]
+        match:
+          command_patterns:
+            - "go build*"
+            - "go test*"
+            - "go vet*"
+            - "go mod*"
+            - "go generate*"
+            - "golangci-lint*"
+            - "gofumpt*"
+            - "npm run*"
+            - "npm test*"
+            - "npx *"
+            - "bunx *"
+            - "pnpm run*"
+            - "pnpm test*"
+            - "pnpm exec*"
+            - "bun run*"
+            - "bun test*"
+            - "biome *"
+            - "pytest*"
+            - "python -m pytest*"
+            - "python3 -m pytest*"
+            - "ruff check*"
+            - "ruff format*"
+            - "mypy*"
+            - "cargo build*"
+            - "cargo test*"
+            - "cargo check*"
+            - "cargo clippy*"
+            - "cargo fmt*"
+            - "rustfmt*"
+            - "make *"
+            - "make"
+            - "task *"
+            - "task"
+            - "oxlint*"
+            - "prettier*"
+            - "tsc *"
+            - "tsc"
+            - "shellcheck*"
+            - "shfmt*"
+            - "hadolint*"
+
+      - id: "phenotype-allow-timeout-wrapped-tests"
+        description: "Allow timeout-wrapped test runners anywhere."
+        priority: 91
+        effect: allow
+        actions: ["exec"]
+        match:
+          command_patterns:
+            - "timeout * bun test*"
+            - "timeout * pytest*"
+            - "timeout * python -m pytest*"
+            - "timeout * python3 -m pytest*"
+
+      - id: "phenotype-allow-worktree-package-adds"
+        description: "Allow worktree-local package additions and lockfile updates."
+        priority: 92
+        effect: allow
+        actions: ["exec"]
+        match:
+          command_patterns:
+            - "bun add*"
+            - "bun install*"
+            - "npm install*"
+            - "pnpm add*"
+            - "yarn add*"
+          cwd_patterns:
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*-wtrees/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*-wtrees/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*-wtrees/*/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*/.worktrees/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*/.worktrees/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*/PROJECT-wtrees/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/*/PROJECT-wtrees/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/worktrees/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/worktrees/*/*"
+            - "/Users/kooshapari/CodeProjects/Phenotype/repos/worktrees/*/*/*"
+
+      - id: "phenotype-allow-introspection"
+        description: "Allow safe system introspection commands anywhere."
+        priority: 90
+        effect: allow
+        actions: ["exec"]
+        match:
+          command_patterns:
+            - "ls*"
+            - "find *"
+            - "grep *"
+            - "rg *"
+            - "cat *"
+            - "head *"
+            - "tail *"
+            - "sed -n*"
+            - "awk *"
+            - "wc *"
+            - "which *"
+            - "type *"
+            - "file *"
+            - "stat *"
+            - "du *"
+            - "df *"
+            - "ps*"
+            - "env"
+            - "printenv*"
+            - "uname*"
+            - "hostname"
+            - "whoami"
+            - "id"
+            - "date"
+            - "diff*"
+            - "command -v *"
+            - "basename *"
+            - "pwd"
+            - "*pwd*"
+            - "readlink -f *"
+            - "realpath *"
+            - "gh pr *"
+            - "gh issue *"
+            - "gh api *"
+            - "gh repo *"
+            - "gh run *"
+            - "gh workflow *"
+            - "jq *"
+            - "yq *"
+            - "process-compose *"
+
+      - id: "phenotype-allow-repo-scaffolding"
+        description: "Allow safe mkdir scaffolding within Phenotype repos."
+        priority: 95
+        effect: allow
+        actions: ["exec"]
+        match:
+          command_patterns:
+            - "mkdir -p /Users/kooshapari/CodeProjects/Phenotype/repos/*"
+
+      - id: "phenotype-allow-repo-coordination"
+        description: "Allow read-only repo coordination loops and inventory commands."
+        priority: 95
+        effect: allow
+        actions: ["exec"]
+        match:
+          command_patterns:
+            - "for d in /Users/kooshapari/CodeProjects/Phenotype/repos/*/; do [ -d \"$d/.git\" ] && echo \"$d\"; done"
+            - "for d in /Users/kooshapari/CodeProjects/Phenotype/repos/*-wtrees/; do echo *basename*ls*done"
+            - "for repo in trace cliproxyapi++ heliosCLI agentapi-plusplus thegent; do echo \"=== $repo ===\" && *ls \"$repo/.github/workflows/\""
+            - "cd /Users/kooshapari/CodeProjects/Phenotype/repos && for repo in trace cliproxyapi++ heliosCLI agentapi-plusplus thegent; do echo \"=== $repo ===\" && *ls \"$repo/.github/workflows/\""
+            - "for repo in agentapi-plusplus-composite-actions bifrost-extensions-composite-actions cliproxyapi++-composite-actions agentapi-plusplus-governance bifrost-extensions-governance; do echo \"=== $repo ===\"; *ls \"$repo/.github/\""
+            - "cd /Users/kooshapari/CodeProjects/Phenotype/repos && for repo in agentapi-plusplus-composite-actions bifrost-extensions-composite-actions cliproxyapi++-composite-actions agentapi-plusplus-governance bifrost-extensions-governance; do echo \"=== $repo ===\"; *ls \"$repo/.github/\""
+            - "for repo in 4sgm bifrost-extensions portage cliproxyapi++ agentapi-plusplus AgilePlus civ helios-cli parpour thegent tokenledger trace; do echo \"=== $repo ===\" && (cd \"$repo\" 2>/dev/null && git log --oneline -1 --format=\"%h %ci %s\") 2>/dev/null || echo \"NOT FOUND\"; done"
+            - "for repo in trace cliproxyapi++ heliosCLI agentapi-plusplus thegent portage AgilePlus; do echo \"=== $repo ===\" && [ -f \"$repo/Dockerfile\" ] && echo \"Dockerfile: YES\" || echo \"Dockerfile: NO\" && [ -f \"$repo/docker-compose.yml\" ] || [ -f \"$repo/docker-compose.yaml\" ] && echo \"Docker Compose: YES\" || echo \"Docker Compose: NO\" && [ -d \"$repo/.devcontainer\" ] && echo \"DevContainer: YES\" || echo \"DevContainer: NO\" && [ -f \"$repo/.github/required-checks.txt\" ] && echo \"Required Checks: YES\" || echo \"Required Checks: NO\" && CLAUDE_SIZE=$(wc -c < \"$repo/CLAUDE.md\" 2>/dev/null || echo \"0\") && [ \"$CLAUDE_SIZE\" -gt 500 ] && echo \"CLAUDE.md: substantial (${CLAUDE_SIZE} bytes)\" || echo \"CLAUDE.md: minimal/empty\"; done"
+            - "for repo in phenotype-go-kit phenotype-shared template-commons thegent; do echo \"=== $repo ===\"; *Pre-commit: YES*"
+            - "echo \"=== REPOS MISSING CLAUDE.md ===\" && for repo in $(ls -d */ | grep -v -- '-wtrees' | sed 's|/$||' | sort); do if [ -d \"$repo/.git\" ] && [ ! -f \"$repo/CLAUDE.md\" ]; then echo \"$repo\"; fi; done"
+            - "echo \"=== REPOS MISSING AGENTS.md ===\" && for repo in $(ls -d */ | grep -v -- '-wtrees' | sed 's|/$||' | sort); do if [ -d \"$repo/.git\" ] && [ ! -f \"$repo/AGENTS.md\" ]; then echo \"$repo\"; fi; done"
+
+      - id: "phenotype-allow-docs-web-search"
+        description: "Allow documentation research web search and fetch across Phenotype repos."
+        priority: 85
+        effect: allow
+        actions: ["network"]
+        match:
+          command_patterns:
+            - "WebSearch *"
+            - "WebFetch *"
+
+      - id: "phenotype-allow-host-cache-maintenance"
+        description: "Allow local cache maintenance commands that do not affect source trees."
+        priority: 95
+        effect: allow
+        actions: ["exec"]
+        match:
+          command_patterns:
+            - "go clean -cache*"
+            - "rm -rf ~/Library/Caches/Homebrew/downloads/*"
+
+      - id: "phenotype-allow-archive-repo-moves"
+        description: "Allow archival moves into .archive instead of destructive deletion."
+        priority: 120
+        effect: allow
+        actions: ["exec"]
+        match:
+          command_patterns:
+            - "mv /Users/kooshapari/CodeProjects/Phenotype/repos/* /Users/kooshapari/CodeProjects/Phenotype/repos/.archive/*"
+
+      - id: "phenotype-deny-destructive-repo-removal"
+        description: "Block direct repo removal; move the repo into .archive or trashbin instead."
+        priority: 130
+        effect: deny
+        actions: ["exec"]
+        match:
+          command_patterns:
+            - "rm -rf /Users/kooshapari/CodeProjects/Phenotype/repos/*"

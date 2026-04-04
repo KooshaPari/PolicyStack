@@ -1,0 +1,14 @@
+name: "audit-hooks"
+version: "0.1.0"
+entrypoint: "policy_federation.extensions.audit_hooks:apply"
+scope_selector:
+  includes: ["*/*"]
+inputs:
+  required_fields:
+    - run_metadata.policy_hash
+    - run_metadata.scope_chain
+permissions:
+  read:
+    - policy
+  write:
+    - session.audit_log

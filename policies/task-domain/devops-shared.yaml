@@ -1,0 +1,102 @@
+version: "1.0"
+id: "task_domain/devops-shared"
+scope: task_domain
+merge:
+  strategy: append_unique
+policy:
+  authorization:
+    rules:
+      - id: "devops-ask-networked-installs"
+        description: "Networked package installation requires an explicit approval path."
+        priority: 50
+        effect: ask
+        actions: ["exec"]
+        match:
+          command_patterns:
+            - "uv pip install*"
+            - "pip install*"
+            - "npm install*"
+            - "pnpm add*"
+            - "brew install*"
+      - id: "devops-ask-network-egress"
+        description: "Outbound network access requires explicit approval."
+        priority: 40
+        effect: ask
+        actions: ["network"]
+        match:
+          command_patterns:
+            - "curl*"
+            - "wget*"
+            - "gh *"
+            - "npm publish*"
+
+      - id: "devops-allow-docs-web-search"
+        description: "Documentation research can use web search and fetch."
+        priority: 45
+        effect: allow
+        actions: ["network"]
+        match:
+          command_patterns:
+            - "WebSearch *"
+            - "WebFetch *"
+
+      - id: "devops-allow-read-only-tools"
+        description: "Common read-only development and navigation tools are allowed to reduce friction."
+        priority: 60
+        effect: allow
+        actions: ["exec"]
+        match:
+          command_patterns:
+            - "pwd"
+            - "ls"
+            - "ls *"
+            - "tree"
+            - "tree *"
+            - "git status"
+            - "git status *"
+            - "git diff"
+            - "git diff *"
+            - "git rev-parse *"
+            - "git log"
+            - "git log *"
+            - "git branch"
+            - "git branch *"
+            - "git remote"
+            - "git remote *"
+            - "go list *"
+            - "go version"
+            - "rustc --version"
+            - "cargo --version"
+            - "node --version"
+            - "npm --version"
+            - "uv --version"
+            - "python --version"
+            - "python3 --version"
+            - "ruff --version"
+            - "ruff check *"
+            - "ruff check * --fix"
+            - "*/ruff check *"
+            - "*/ruff check * --fix"
+            - "uv run ruff check *"
+            - "find *"
+            - "grep *"
+            - "cat *"
+            - "which *"
+            - "echo *"
+            - "whoami"
+            - "hostname"
+            - "date"
+
+      - id: "devops-allow-local-project-installs"
+        description: "Local project installations (pip install -e .) are allowed to reduce friction for development workflows."
+        priority: 65
+        effect: allow
+        actions: ["exec"]
+        match:
+          command_patterns:
+            - "uv pip install -e *"
+            - "pip install -e *"
+            - "pip3 install -e *"
+            - "uv pip install .*"
+            - "pip install .*"
+            - "pip3 install .*"

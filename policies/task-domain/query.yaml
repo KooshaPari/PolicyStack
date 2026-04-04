@@ -1,0 +1,11 @@
+version: "1.0"
+id: "task-domain/query"
+scope: task_domain
+merge:
+  strategy: append_unique
+policy:
+  workflow:
+    enforce_read_only_data_paths: true
+    allow_ci_probe: true
+  outputs:
+    allow_sampling: true

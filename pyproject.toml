@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "policy-federation"
+version = "0.1.0"
+description = "Agent policy federation"
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+  "D203",   # no-blank-line-before-class conflicts with D211
+  "D213",   # multi-line-summary-second-line conflicts with D212
+]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/**" = ["ALL"]  # Scripts are auto-generated, skip all checks
+"tests/**" = ["D", "PLR2004", "ANN", "E402"]  # Tests don't need docstrings, E402 for imports
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"

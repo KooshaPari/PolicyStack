@@ -1,0 +1,15 @@
+version: "1.0"
+id: "harness/cursor-agent"
+scope: harness
+merge:
+  strategy: merge_map
+policy:
+  runtime:
+    mode: "cursor"
+    allowlist_commands:
+      - "cursor.run"
+      - "cursor.edit"
+      - "policy resolve"
+  guardrails:
+    read_only_path_prefixes:
+      - "./"
