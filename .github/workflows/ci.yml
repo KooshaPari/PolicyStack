@@ -30,3 +30,4 @@ jobs:
   phenotype-validate:
     name: Governance Validation
     uses: KooshaPari/phenotypeActions/.github/workflows/validate-governance.yml@main
+
