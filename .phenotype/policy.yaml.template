@@ -1,0 +1,322 @@
+# PolicyStack Unified Configuration
+# Place this file at: .phenotype/policy.yaml (repo-specific) or ~/.phenotype/config.yaml (global)
+#
+# This configuration controls the policy enforcement system across all platforms:
+# - Claude Code (CC)
+# - Cursor
+# - Codex
+# - Droid
+# - OpenCode
+# - Kilo
+# - ForgeCode
+
+# ============================================================================
+# Core Settings
+# ============================================================================
+
+# Policy enforcement mode:
+# - "enforce": Block unauthorized commands (production)
+# - "audit": Log but allow all commands (testing)
+# - "disabled": No policy enforcement
+mode: enforce
+
+# Default ask mode for ambiguous decisions:
+# - "ask": Prompt user for manual approval (safest)
+# - "delegate": Route to headless agent review
+# - "review": Use guardian mode review
+# - "allow": Auto-allow when ambiguous (unsafe, testing only)
+ask_mode: delegate
+
+# Repository root for policy resolution (auto-detected if not set)
+# repo_root: /path/to/repo
+
+# ============================================================================
+# Platform Detection & Preferences
+# ============================================================================
+
+platform:
+  # Auto-detect active platform (true) or force specific (false)
+  auto_detect: true
+
+  # Preferred harness for delegation (when auto_detect is false)
+  # Options: forge, opencode, cursor, codex, droid, kilo, forgecode
+  preferred_harness: opencode
+
+  # Per-platform settings
+  overrides:
+    claude-code:
+      # Claude-specific settings
+      hook_integration: native
+      tool_gating: true
+      max_command_length: 10000
+
+    cursor:
+      # Cursor-specific settings
+      agent_mode: true
+      inline_suggestions: false
+
+    codex:
+      # Codex-specific settings
+      sandbox: read-only
+      ephemeral: true
+
+    opencode:
+      # OpenCode-specific settings
+      model: kimi-k2.5
+      timeout_seconds: 15
+
+    droid:
+      # Droid-specific settings
+      policy_model: factory-default
+
+    kilo:
+      # Kilo-specific settings
+      fast_mode: true
+
+    forgecode:
+      # ForgeCode API settings
+      api_url: https://api.forgecode.dev/v1/review
+      timeout_seconds: 20
+
+# ============================================================================
+# Tiered Risk Assessment
+# ============================================================================
+
+risk_assessment:
+  # Enable 4-tier risk assessment (recommended: true)
+  enabled: true
+
+  # Tier 1: Auto-allow patterns (read-only, safe operations)
+  tier_1:
+    enabled: true
+    # Additional patterns beyond built-in safe list
+    extra_patterns:
+      - "^echo "
+      - "^printenv"
+    # Paths considered safe for reads
+    safe_paths:
+      - ".worktrees/"
+      - "worktrees/"
+
+  # Tier 2: Cache-allow patterns (low-risk operations in worktrees)
+  tier_2:
+    enabled: true
+    # Commands allowed in worktrees without delegation
+    worktree_allowed:
+      - "^git add"
+      - "^git commit"
+      - "^git checkout"
+      - "^git switch"
+      - "^mkdir -p"
+      - "^touch"
+      - "^cp "
+      - "^ln -s"
+    # Require confirmation for destructive operations even in worktrees
+    confirm_destructive_in_worktree: true
+
+  # Tier 3: Fast-check patterns (medium risk, validation needed)
+  tier_3:
+    enabled: true
+    # Maximum risk score for fast-check (0.0-1.0)
+    max_risk_score: 0.5
+    # Commands requiring fast-check
+    patterns:
+      - "^git push"
+      - "^git pull"
+      - "^git merge"
+      - "^cargo build"
+      - "^cargo test"
+
+  # Tier 4: High-risk delegation patterns
+  tier_4:
+    enabled: true
+    # Always require delegation for these patterns
+    patterns:
+      - "rm -rf /"
+      - "rm -rf ~"
+      - "sudo "
+      - "chmod 777"
+      - "curl.*|.*sh"
+      - "wget.*|.*sh"
+    # High-risk paths (operations in these paths always delegate)
+    high_risk_paths:
+      - "/etc/"
+      - "/usr/bin/"
+      - "/usr/sbin/"
+      - "/bin/"
+      - "/sbin/"
+
+# ============================================================================
+# Decision Caching
+# ============================================================================
+
+cache:
+  # Enable decision caching (reduces LLM calls)
+  enabled: true
+
+  # Cache database path (default: ~/.phenotype/cache/delegate_cache.db)
+  # db_path: /custom/path/to/cache.db
+
+  # Time-to-live for cached decisions (seconds)
+  ttl_seconds: 86400  # 24 hours
+
+  # Maximum cache entries (0 = unlimited)
+  max_entries: 10000
+
+  # Cache patterns for fuzzy matching
+  pattern_matching: true
+
+# ============================================================================
+# Multi-Platform Delegation
+# ============================================================================
+
+delegation:
+  # Enable multi-platform delegation
+  enabled: true
+
+  # Primary harness (fallback chain used if unavailable)
+  primary: opencode
+
+  # Fallback chain order (when primary fails)
+  # Uses built-in defaults if not specified
+  fallback_chain:
+    - opencode
+    - forge
+    - cursor
+    - local-fast
+
+  # Harness-specific configuration
+  harnesses:
+    forge:
+      model: minimax-2.7-highspeed
+      timeout_seconds: 30
+      enabled: true
+
+    opencode:
+      model: kimi-k2.5
+      timeout_seconds: 15
+      enabled: true
+
+    cursor:
+      model: gemini-3-flash
+      timeout_seconds: 20
+      enabled: true
+
+    codex:
+      model: gpt-5.3-codex
+      timeout_seconds: 20
+      enabled: true
+
+    droid:
+      model: factory-default
+      timeout_seconds: 25
+      enabled: false  # Disabled by default
+
+    kilo:
+      model: kilo-default
+      timeout_seconds: 15
+      enabled: false  # Disabled by default
+
+    forgecode:
+      api_url: https://api.forgecode.dev/v1/review
+      timeout_seconds: 20
+      enabled: false  # Requires FORGECODE_API_KEY
+
+  # Local-fast evaluator settings
+  local_fast:
+    enabled: true
+    # Timeout for local evaluation (should be instant)
+    max_eval_time_ms: 100
+
+# ============================================================================
+# Guardian Mode (Headless Review)
+# ============================================================================
+
+guardian:
+  # Enable guardian mode for ambiguous decisions
+  enabled: true
+
+  # Primary reviewer (legacy binary path or harness name)
+  primary: codex
+
+  # Fallback reviewer when primary unavailable
+  fallback: opencode
+
+  # Timeout for guardian review (seconds)
+  timeout_seconds: 30
+
+  # Require confirmation even for guardian "allow" decisions
+  confirm_guardian_allows: false
+
+# ============================================================================
+# Audit & Logging
+# ============================================================================
+
+audit:
+  # Enable audit logging
+  enabled: true
+
+  # Audit log path (default: ~/.phenotype/audit.log)
+  # log_path: /custom/path/to/audit.log
+
+  # Log format: json, text
+  format: json
+
+  # What to log
+  log_decisions: true
+  log_commands: true
+  log_errors: true
+
+  # Stream audit events to external system (optional)
+  # stream_url: https://audit.example.com/phenotype
+
+# ============================================================================
+# Notifications
+# ============================================================================
+
+notifications:
+  # Notify on policy violations
+  on_violation: true
+
+  # Notify on delegation failures
+  on_delegation_failure: true
+
+  # Notify on high-risk operations (even if allowed)
+  on_high_risk: true
+
+  # Desktop notifications (macOS/Linux)
+  desktop: true
+
+# ============================================================================
+# Advanced Settings
+# ============================================================================
+
+advanced:
+  # Maximum command length to evaluate
+  max_command_length: 10000
+
+  # Timeout for policy evaluation (seconds)
+  evaluation_timeout_seconds: 5
+
+  # Parallel harness attempts (experimental)
+  parallel_harness_attempts: false
+
+  # Debug mode (verbose logging)
+  debug: false
+
+  # Strict mode (fail closed on errors)
+  strict_mode: false
+
+# ============================================================================
+# Environment Variable Overrides
+# ============================================================================
+# These environment variables override config file settings:
+#
+# POLICY_MODE - enforce/audit/disabled
+# POLICY_ASK_MODE - ask/delegate/review/allow
+# POLICY_DELEGATE_HARNESS - preferred harness name
+# POLICY_REVIEW_BIN - legacy primary reviewer binary
+# POLICY_FALLBACK_REVIEW_BIN - legacy fallback reviewer binary
+# POLICY_AUDIT_LOG_PATH - audit log file path
+# POLICY_REPO - repository name override
+# FORGECODE_API_KEY - API key for forgecode.dev
