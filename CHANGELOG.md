@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [0.1.0] — 2026-04-25
 
 ### Added
 - **Federation Merge Integration**: Complete federation merge with CLI, extensions, policies, schemas, and scripts (commit b5d81a1)
