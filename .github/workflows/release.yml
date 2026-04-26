@@ -18,14 +18,12 @@ jobs:
     outputs:
       version: $123steps.version.outputs.version125
     steps:
-      - uses: actions/checkout@v4
-        with:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4with:
           fetch-depth: 0
 
       
       - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
@@ -54,9 +52,7 @@ jobs:
     needs: release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Promote to staging
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4- name: Promote to staging
         uses: KooshaPari/phenotypeActions/promote@main
         with:
           version: $123needs.release.outputs.version125
