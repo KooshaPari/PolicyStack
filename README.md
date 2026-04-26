@@ -2,6 +2,17 @@
 
 This folder contains a concrete policy scope model:
 
+## Install
+
+**Python (policy contract tools):**
+```bash
+uv sync  # or: pip install -e .
+```
+
+**Using:** `uv run python policy-contract/resolve.py ...`
+
+Alternatively, clone this repo and install via Python standard tools. No Rust compilation needed unless building host wrappers.
+
 - `system` → global hard constraints
 - `user` → operator-level constraints
 - `repo` → repository contract baseline
