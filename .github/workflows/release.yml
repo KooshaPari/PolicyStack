@@ -16,14 +16,16 @@ jobs:
     runs-on: ubuntu-latest
     if: contains(github.event.head_commit.message, 'release:') || contains(github.event.head_commit.message, 'chore(release)')
     outputs:
-      version: $123steps.version.outputs.version125
+      version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4with:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
           fetch-depth: 0
 
       
       - name: Setup Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4with:
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
@@ -40,21 +42,23 @@ jobs:
         id: version
         run: |
           VERSION=$(jq -r '.version' package.json)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Publish to NPM
         run: npm publish
         env:
-          NODE_AUTH_TOKEN: $123secrets.NPM_TOKEN125
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       
 
   promote:
     needs: release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4- name: Promote to staging
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Promote to staging
         uses: KooshaPari/phenotypeActions/promote@main
         with:
-          version: $123needs.release.outputs.version125
+          version: ${{ needs.release.outputs.version }}
           channel: beta
           registry: npm

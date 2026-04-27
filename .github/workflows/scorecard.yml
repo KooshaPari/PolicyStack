@@ -11,8 +11,6 @@ permissions:
   security-events: write
   actions: read
 
-permissions: read-all
-
 jobs:
   analysis:
     name: Scorecard analysis
@@ -24,18 +22,22 @@ jobs:
       actions: read
 
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4with:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
           persist-credentials: false
 
-      - uses: ossf/scorecard-action@05b42c624433fc40578a4040d5cf5e36ddca8cde # v2.4.2with:
+      - uses: ossf/scorecard-action@05b42c624433fc40578a4040d5cf5e36ddca8cde # v2.4.2
+        with:
           results_file: results.sarif
           results_format: sarif
           publish_results: true
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4with:
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
           name: SARIF file
           path: results.sarif
           retention-days: 5
 
-      - uses: github/codeql-action/upload-sarif@ce64ddcb0d8d890d2df4a9d1c04ff297367dea2a # v3with:
+      - uses: github/codeql-action/upload-sarif@ce64ddcb0d8d890d2df4a9d1c04ff297367dea2a # v3
+        with:
           sarif_file: results.sarif
