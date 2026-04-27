@@ -4,6 +4,11 @@ on:
     branches: [main, develop]
   pull_request:
   schedule: [{cron: "0 2 * * *"}]
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
 jobs:
   codeql:
     runs-on: ubuntu-latest
