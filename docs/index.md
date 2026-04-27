@@ -8,3 +8,5 @@ hero:
       text: Get Started
       link: /guide/
 ---
+
+<!-- pages-trigger 2026-04-27 -->
