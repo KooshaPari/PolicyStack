@@ -8,6 +8,11 @@ on:
   schedule:
     - cron: '0 0 * * *'  # Daily
 
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
 jobs:
   # 1. Dependency Vulnerability Scan (Snyk-style)
   dependency-scan:
