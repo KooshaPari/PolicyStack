@@ -140,6 +140,8 @@ tasks:
               "{{.TASK_TMPDIR}}",
               ".pytest_cache",
               ".ruff_cache",
+              ".mypy_cache",
+              ".ty",
               ".coverage",
               "htmlcov",
               "node_modules",
