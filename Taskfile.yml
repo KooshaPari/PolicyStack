@@ -1,8 +1,1 @@
-version: '3'
-tasks:
-  fmt:
-    cmds:
-      - cargo fmt
-  test:
-    cmds:
-      - cargo test
+@/tmp/wt-taskfile-PolicyStack/Taskfile.yml
