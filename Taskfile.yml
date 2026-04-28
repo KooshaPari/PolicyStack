@@ -36,13 +36,21 @@ tasks:
     desc: Build project artifacts for the detected primary language
     cmds:
       - cmd: |
+          set -eu
           case "{{.PROJECT_LANG}}" in
             python)
               mkdir -p "{{.TASK_TMPDIR}}"
               export TMPDIR="$PWD/{{.TASK_TMPDIR}}"
               export PYTHONPYCACHEPREFIX="$PWD/{{.TASK_TMPDIR}}/pycache"
-              export PYTHONPATH="$PWD:$PWD/cli/src${PYTHONPATH:+:$PYTHONPATH}"
-              git ls-files '*.py' | grep -v '^scripts/' | xargs uv run --no-project python -m compileall -q
+              if [ -n "${PYTHONPATH-}" ]; then
+                export PYTHONPATH="$PWD:$PWD/cli/src:$PYTHONPATH"
+              else
+                export PYTHONPATH="$PWD:$PWD/cli/src"
+              fi
+              files="$(git ls-files '*.py' | grep -v '^scripts/' || true)"
+              if [ -n "$files" ]; then
+                printf '%s\n' "$files" | xargs uv run --no-project python -m compileall -q
+              fi
               ;;
             go)
               go build ./...
@@ -51,7 +59,8 @@ tasks:
               cargo build --release
               ;;
             node)
-              npm run docs:build
+              npm run build --if-present
+              npm run docs:build --if-present
               ;;
             *)
               echo "Unable to detect a supported language from repo manifests." >&2
@@ -75,12 +84,17 @@ tasks:
     desc: Run tests for the detected primary language
     cmds:
       - cmd: |
+          set -eu
           case "{{.PROJECT_LANG}}" in
             python)
               mkdir -p "{{.TASK_TMPDIR}}"
               export TMPDIR="$PWD/{{.TASK_TMPDIR}}"
               export PYTHONPYCACHEPREFIX="$PWD/{{.TASK_TMPDIR}}/pycache"
-              export PYTHONPATH="$PWD:$PWD/cli/src${PYTHONPATH:+:$PYTHONPATH}"
+              if [ -n "${PYTHONPATH-}" ]; then
+                export PYTHONPATH="$PWD:$PWD/cli/src:$PYTHONPATH"
+              else
+                export PYTHONPATH="$PWD:$PWD/cli/src"
+              fi
               {{.PYTHON_RUN}} python scripts/validate_policy_contract.py --root .
               uv run --no-project --with pyyaml python scripts/check_policy_versions.py --root .
               uv run --no-project {{.PYTHON_DEPS}} pytest tests/test_policy_contract.py -k TestPolicyContractSchemaGovernance -q
@@ -97,7 +111,7 @@ tasks:
               cargo test
               ;;
             node)
-              npm run docs:build
+              npm test --if-present
               ;;
             *)
               echo "Unable to detect a supported language from repo manifests." >&2
@@ -109,11 +123,16 @@ tasks:
     desc: Run lint or validation for the detected primary language
     cmds:
       - cmd: |
+          set -eu
           case "{{.PROJECT_LANG}}" in
             python)
               mkdir -p "{{.TASK_TMPDIR}}"
               export PYTHONPYCACHEPREFIX="$PWD/{{.TASK_TMPDIR}}/pycache"
-              export PYTHONPATH="$PWD:$PWD/cli/src${PYTHONPATH:+:$PYTHONPATH}"
+              if [ -n "${PYTHONPATH-}" ]; then
+                export PYTHONPATH="$PWD:$PWD/cli/src:$PYTHONPATH"
+              else
+                export PYTHONPATH="$PWD:$PWD/cli/src"
+              fi
               uv run --no-project --with ruff ruff check --select E9 --exclude scripts .
               python validate_governance.py
               ;;
@@ -125,7 +144,7 @@ tasks:
               cargo fmt --check
               ;;
             node)
-              npm run docs:build
+              npm run lint --if-present
               ;;
             *)
               echo "Unable to detect a supported language from repo manifests." >&2
@@ -137,6 +156,7 @@ tasks:
     desc: Remove build and cache artifacts
     cmds:
       - cmd: |
+          set -eu
           python - <<'PY'
           from pathlib import Path
           import shutil
