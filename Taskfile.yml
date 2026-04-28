@@ -2,6 +2,8 @@ version: "3"
 
 vars:
   TASK_TMPDIR: .pytest_cache/task-tmp
+  PYTHON_DEPS: --with pytest --with pytest-asyncio --with pyyaml --with jsonschema
+  PYTHON_RUN: uv run --no-project --with pyyaml --with jsonschema
 
   PROJECT_LANG:
     sh: |
@@ -39,7 +41,7 @@ tasks:
               mkdir -p "{{.TASK_TMPDIR}}"
               export TMPDIR="$PWD/{{.TASK_TMPDIR}}"
               export PYTHONPYCACHEPREFIX="$PWD/{{.TASK_TMPDIR}}/pycache"
-              export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}"
+              export PYTHONPATH="$PWD:$PWD/cli/src${PYTHONPATH:+:$PYTHONPATH}"
               git ls-files '*.py' | grep -v '^scripts/' | xargs uv run --no-project python -m compileall -q
               ;;
             go)
@@ -78,8 +80,15 @@ tasks:
               mkdir -p "{{.TASK_TMPDIR}}"
               export TMPDIR="$PWD/{{.TASK_TMPDIR}}"
               export PYTHONPYCACHEPREFIX="$PWD/{{.TASK_TMPDIR}}/pycache"
-              export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}"
-              uv run --no-project --with pytest --with pytest-asyncio --with pyyaml --with jsonschema pytest tests/test_smoke.py -q
+              export PYTHONPATH="$PWD:$PWD/cli/src${PYTHONPATH:+:$PYTHONPATH}"
+              {{.PYTHON_RUN}} python scripts/validate_policy_contract.py --root .
+              uv run --no-project --with pyyaml python scripts/check_policy_versions.py --root .
+              uv run --no-project {{.PYTHON_DEPS}} pytest tests/test_policy_contract.py -k TestPolicyContractSchemaGovernance -q
+              uv run --no-project {{.PYTHON_DEPS}} pytest tests/test_resolve_cli_governance.py -q
+              uv run --no-project {{.PYTHON_DEPS}} pytest tests/test_policy_common.py -q
+              uv run --no-project {{.PYTHON_DEPS}} pytest tests/test_smoke_dispatch_host_hook.py -q
+              uv run --no-project {{.PYTHON_DEPS}} pytest tests/test_policy_version_governance.py -q
+              uv run --no-project {{.PYTHON_DEPS}} pytest tests/test_policy_snapshot_governance.py -q
               ;;
             go)
               go test ./...
@@ -104,7 +113,7 @@ tasks:
             python)
               mkdir -p "{{.TASK_TMPDIR}}"
               export PYTHONPYCACHEPREFIX="$PWD/{{.TASK_TMPDIR}}/pycache"
-              export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}"
+              export PYTHONPATH="$PWD:$PWD/cli/src${PYTHONPATH:+:$PYTHONPATH}"
               uv run --no-project --with ruff ruff check --select E9 --exclude scripts .
               python validate_governance.py
               ;;
