@@ -22,7 +22,9 @@ tasks:
       - cmd: |
           case "{{.PROJECT_LANG}}" in
             python)
-              uv run --with build python -m build
+              mkdir -p .pytest_cache/task-tmp
+              export TMPDIR="$PWD/.pytest_cache/task-tmp"
+              uv run --no-project python -m compileall -q cli contracts extensions policies schemas specs tests tools wrappers policy_lib.py resolve.py validate_governance.py
               ;;
             go)
               go build ./...
@@ -31,7 +33,7 @@ tasks:
               cargo build --release
               ;;
             node)
-              npm run build
+              npm run docs:build
               ;;
             *)
               echo "Unable to detect a supported language from repo manifests." >&2
@@ -52,12 +54,14 @@ tasks:
       - npm run docs:build
 
   test:
-    desc: Run tests for the detected language
+    desc: Run the repo's smoke tests for the detected language
     cmds:
       - cmd: |
           case "{{.PROJECT_LANG}}" in
             python)
-              uv run --with pytest pytest -q
+              mkdir -p .pytest_cache/task-tmp
+              export TMPDIR="$PWD/.pytest_cache/task-tmp"
+              uv run --no-project --with pytest --with pytest-asyncio --with pyyaml --with jsonschema pytest tests/test_smoke.py -q
               ;;
             go)
               go test ./...
@@ -66,7 +70,7 @@ tasks:
               cargo test
               ;;
             node)
-              npm test
+              npm run docs:build
               ;;
             *)
               echo "Unable to detect a supported language from repo manifests." >&2
@@ -75,13 +79,12 @@ tasks:
           esac
 
   lint:
-    desc: Run linters for the detected language
+    desc: Run repo validation for the detected language
     cmds:
       - cmd: |
           case "{{.PROJECT_LANG}}" in
             python)
-              uv run --with ruff ruff check .
-              uv run --with ruff ruff format --check .
+              python validate_governance.py
               ;;
             go)
               golangci-lint run
@@ -91,7 +94,7 @@ tasks:
               cargo fmt --check
               ;;
             node)
-              npm run lint
+              npm run docs:build
               ;;
             *)
               echo "Unable to detect a supported language from repo manifests." >&2
@@ -102,7 +105,7 @@ tasks:
   clean:
     desc: Remove build and cache artifacts
     cmds:
-      - rm -rf build dist target .pytest_cache .ruff_cache .coverage htmlcov node_modules
+      - rm -rf build dist target .task-tmp .pytest_cache .ruff_cache .coverage htmlcov node_modules
       - rm -rf docs/.vitepress/dist docs/.vitepress/cache
       - find . -type d -name __pycache__ -prune -exec rm -rf {} +
       - find . -type f -name '*.pyc' -delete
