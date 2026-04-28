@@ -7,6 +7,7 @@ Establish a unified policy authorization pipeline where host tools (Cursor/Claud
 - Policy parser now emits conditional/unconditional split data for host export.
 - Conditional host export tests validate non-mutation and additive behavior for allow/request/deny.
 - Dispatch/runtime path now supports optional binary health checks and clearer required-binary error output.
+- Repo task automation now uses a language-detected `Taskfile.yml` with `build`, `test`, `lint`, and `clean` targets.
 
 ## Completed acceptance checkpoints
 - Unconditional host command surfaces remain stable when conditional export is enabled.

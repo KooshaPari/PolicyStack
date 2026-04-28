@@ -1,1 +1,95 @@
-@/tmp/wt-taskfile-PolicyStack/Taskfile.yml
+version: "3"
+
+vars:
+  PROJECT_LANG:
+    sh: |
+      if [ -f pyproject.toml ] || [ -f setup.py ] || [ -f requirements.txt ]; then
+        printf "python"
+      elif [ -f go.mod ]; then
+        printf "go"
+      elif [ -f Cargo.toml ]; then
+        printf "rust"
+      elif [ -f package.json ]; then
+        printf "node"
+      else
+        printf "unknown"
+      fi
+
+tasks:
+  build:
+    desc: Build project artifacts for the detected language
+    cmds:
+      - cmd: |
+          case "{{.PROJECT_LANG}}" in
+            python)
+              uv run --with build python -m build
+              ;;
+            go)
+              go build ./...
+              ;;
+            rust)
+              cargo build --release
+              ;;
+            node)
+              npm run build
+              ;;
+            *)
+              echo "Unable to detect a supported language from repo manifests." >&2
+              exit 1
+              ;;
+          esac
+
+  test:
+    desc: Run tests for the detected language
+    cmds:
+      - cmd: |
+          case "{{.PROJECT_LANG}}" in
+            python)
+              uv run --with pytest pytest -q
+              ;;
+            go)
+              go test ./...
+              ;;
+            rust)
+              cargo test
+              ;;
+            node)
+              npm test
+              ;;
+            *)
+              echo "Unable to detect a supported language from repo manifests." >&2
+              exit 1
+              ;;
+          esac
+
+  lint:
+    desc: Run linters for the detected language
+    cmds:
+      - cmd: |
+          case "{{.PROJECT_LANG}}" in
+            python)
+              uv run --with ruff ruff check .
+              uv run --with ruff ruff format --check .
+              ;;
+            go)
+              golangci-lint run
+              ;;
+            rust)
+              cargo clippy --all-targets --all-features -- -D warnings
+              cargo fmt --check
+              ;;
+            node)
+              npm run lint
+              ;;
+            *)
+              echo "Unable to detect a supported language from repo manifests." >&2
+              exit 1
+              ;;
+          esac
+
+  clean:
+    desc: Remove build and cache artifacts
+    cmds:
+      - rm -rf build dist target .pytest_cache .ruff_cache .coverage htmlcov node_modules
+      - find . -type d -name __pycache__ -prune -exec rm -rf {} +
+      - find . -type f -name '*.pyc' -delete
