@@ -98,6 +98,7 @@ tasks:
       - cmd: |
           case "{{.PROJECT_LANG}}" in
             python)
+              uv run --no-project --with ruff ruff check --select E9 --exclude scripts .
               python validate_governance.py
               ;;
             go)
