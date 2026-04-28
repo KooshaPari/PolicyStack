@@ -33,7 +33,7 @@ tasks:
             python)
               mkdir -p "{{.TASK_TMPDIR}}"
               export TMPDIR="$PWD/{{.TASK_TMPDIR}}"
-              uv run --no-project python -m compileall -q cli contracts extensions policies schemas specs tests tools wrappers policy_lib.py resolve.py validate_governance.py
+              git ls-files '*.py' | grep -v '^scripts/' | xargs uv run --no-project python -m compileall -q
               ;;
             go)
               go build ./...
