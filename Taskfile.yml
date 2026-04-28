@@ -183,6 +183,7 @@ tasks:
               "node_modules",
               "docs/.vitepress/dist",
               "docs/.vitepress/cache",
+              "wrappers/zig/.zig-cache",
           ]
 
           for raw_path in paths:
@@ -195,6 +196,10 @@ tasks:
           for cache_dir in Path(".").rglob("__pycache__"):
               if cache_dir.is_dir():
                   shutil.rmtree(cache_dir)
+
+          for zig_cache_dir in Path(".").rglob(".zig-cache"):
+              if zig_cache_dir.is_dir():
+                  shutil.rmtree(zig_cache_dir)
 
           for pyc_file in Path(".").rglob("*.pyc"):
               if pyc_file.is_file():
