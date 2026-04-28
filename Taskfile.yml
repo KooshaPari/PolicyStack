@@ -3,6 +3,8 @@ version: "3"
 vars:
   PROJECT_LANG:
     sh: |
+      # PolicyStack is Python-first, with package.json used for documentation.
+      # Pick the primary implementation language before secondary toolchains.
       if [ -f pyproject.toml ] || [ -f setup.py ] || [ -f requirements.txt ]; then
         printf "python"
       elif [ -f go.mod ]; then
@@ -16,8 +18,13 @@ vars:
       fi
 
 tasks:
+  default:
+    desc: Show available project tasks
+    cmds:
+      - task --list-all
+
   build:
-    desc: Build project artifacts for the detected language
+    desc: Build project artifacts for the detected primary language
     cmds:
       - cmd: |
           case "{{.PROJECT_LANG}}" in
@@ -42,7 +49,7 @@ tasks:
           esac
 
   quality:
-    desc: Run build, test, and lint for the detected language
+    desc: Run build, test, and lint for the detected primary language
     cmds:
       - task: build
       - task: test
@@ -54,7 +61,7 @@ tasks:
       - npm run docs:build
 
   test:
-    desc: Run the repo's smoke tests for the detected language
+    desc: Run tests for the detected primary language
     cmds:
       - cmd: |
           case "{{.PROJECT_LANG}}" in
@@ -79,7 +86,7 @@ tasks:
           esac
 
   lint:
-    desc: Run repo validation for the detected language
+    desc: Run lint or validation for the detected primary language
     cmds:
       - cmd: |
           case "{{.PROJECT_LANG}}" in
@@ -105,7 +112,37 @@ tasks:
   clean:
     desc: Remove build and cache artifacts
     cmds:
-      - rm -rf build dist target .task-tmp .pytest_cache .ruff_cache .coverage htmlcov node_modules
-      - rm -rf docs/.vitepress/dist docs/.vitepress/cache
-      - find . -type d -name __pycache__ -prune -exec rm -rf {} +
-      - find . -type f -name '*.pyc' -delete
+      - cmd: |
+          python - <<'PY'
+          from pathlib import Path
+          import shutil
+
+          paths = [
+              "build",
+              "dist",
+              "target",
+              ".task-tmp",
+              ".pytest_cache",
+              ".ruff_cache",
+              ".coverage",
+              "htmlcov",
+              "node_modules",
+              "docs/.vitepress/dist",
+              "docs/.vitepress/cache",
+          ]
+
+          for raw_path in paths:
+              path = Path(raw_path)
+              if path.is_dir():
+                  shutil.rmtree(path)
+              elif path.exists():
+                  path.unlink()
+
+          for cache_dir in Path(".").rglob("__pycache__"):
+              if cache_dir.is_dir():
+                  shutil.rmtree(cache_dir)
+
+          for pyc_file in Path(".").rglob("*.pyc"):
+              if pyc_file.is_file():
+                  pyc_file.unlink()
+          PY
