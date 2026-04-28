@@ -25,6 +25,11 @@ tasks:
     cmds:
       - task --list-all
 
+  language:
+    desc: Print the detected primary project language
+    cmds:
+      - echo "{{.PROJECT_LANG}}"
+
   build:
     desc: Build project artifacts for the detected primary language
     cmds:
