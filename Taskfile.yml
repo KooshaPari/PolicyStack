@@ -7,15 +7,22 @@ vars:
 
   PROJECT_LANG:
     sh: |
-      # PolicyStack is Python-first, with package.json used for documentation.
-      # Pick the primary implementation language before secondary toolchains.
-      if [ -f pyproject.toml ] || [ -f setup.py ] || [ -f requirements.txt ]; then
+      # Pick the primary implementation language from repository manifests
+      # before secondary toolchains such as docs package metadata.
+      if [ -f pyproject.toml ] \
+        || [ -f setup.py ] \
+        || [ -f requirements.txt ] \
+        || [ -f uv.lock ]; then
         printf "python"
       elif [ -f go.mod ]; then
         printf "go"
       elif [ -f Cargo.toml ]; then
         printf "rust"
-      elif [ -f package.json ]; then
+      elif [ -f package.json ] \
+        || [ -f bun.lock ] \
+        || [ -f package-lock.json ] \
+        || [ -f pnpm-lock.yaml ] \
+        || [ -f yarn.lock ]; then
         printf "node"
       else
         printf "unknown"
