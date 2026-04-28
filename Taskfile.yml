@@ -38,6 +38,8 @@ tasks:
             python)
               mkdir -p "{{.TASK_TMPDIR}}"
               export TMPDIR="$PWD/{{.TASK_TMPDIR}}"
+              export PYTHONPYCACHEPREFIX="$PWD/{{.TASK_TMPDIR}}/pycache"
+              export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}"
               git ls-files '*.py' | grep -v '^scripts/' | xargs uv run --no-project python -m compileall -q
               ;;
             go)
@@ -75,6 +77,8 @@ tasks:
             python)
               mkdir -p "{{.TASK_TMPDIR}}"
               export TMPDIR="$PWD/{{.TASK_TMPDIR}}"
+              export PYTHONPYCACHEPREFIX="$PWD/{{.TASK_TMPDIR}}/pycache"
+              export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}"
               uv run --no-project --with pytest --with pytest-asyncio --with pyyaml --with jsonschema pytest tests/test_smoke.py -q
               ;;
             go)
@@ -98,6 +102,9 @@ tasks:
       - cmd: |
           case "{{.PROJECT_LANG}}" in
             python)
+              mkdir -p "{{.TASK_TMPDIR}}"
+              export PYTHONPYCACHEPREFIX="$PWD/{{.TASK_TMPDIR}}/pycache"
+              export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}"
               uv run --no-project --with ruff ruff check --select E9 --exclude scripts .
               python validate_governance.py
               ;;
