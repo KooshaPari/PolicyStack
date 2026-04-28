@@ -184,6 +184,7 @@ tasks:
               "coverage.xml",
               "htmlcov",
               "node_modules",
+              "docs/node_modules",
               "docs/.vitepress/dist",
               "docs/.vitepress/cache",
               "wrappers/zig/.zig-cache",
