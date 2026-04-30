@@ -39,13 +39,19 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Python test dependencies
+      - name: Install Python lint + test dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pytest
+          python -m pip install ruff pytest
 
-      - name: Run smoke tests
-        run: python -m pytest tests/test_smoke.py -q
+      - name: Lint with ruff
+        run: ruff check .
+
+      - name: Format check
+        run: ruff format --check .
+
+      - name: Run full test suite
+        run: python -m pytest tests/ -q --tb=short
 
       - name: Validate governance
         run: python validate_governance.py
