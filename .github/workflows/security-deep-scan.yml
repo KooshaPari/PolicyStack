@@ -18,7 +18,9 @@ jobs:
   dependency-scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4- name: Run Trivy vulnerability scanner
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # was: @master
         with:
           scan-type: 'fs'
@@ -28,18 +30,21 @@ jobs:
           severity: 'CRITICAL,HIGH'
       
       - name: Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@b8d3b6e8af63cde30bdc382c0bc28114f4346c88 # v2with:
+        uses: github/codeql-action/upload-sarif@ce64ddcb0d8d890d2df4a9d1c04ff297367dea2a # v3
+        with:
           sarif_file: 'trivy-results.sarif'
 
   # 2. Secret Scanning (GitLeaks)
   secret-scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4with:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
           fetch-depth: 0
       
       - name: Scan for secrets
-        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2env:
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # 3. Code Security Analysis (CodeQL)
@@ -50,21 +55,40 @@ jobs:
       matrix:
         language: ['rust', 'go', 'python', 'typescript']
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4- name: Initialize CodeQL
-        uses: github/codeql-action/init@b8d3b6e8af63cde30bdc382c0bc28114f4346c88 # v2with:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@ce64ddcb0d8d890d2df4a9d1c04ff297367dea2a # v3
+        with:
           languages: ${{ matrix.language }}
       
       - name: Autobuild
-        uses: github/codeql-action/autobuild@b8d3b6e8af63cde30bdc382c0bc28114f4346c88 # v2- name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@b8d3b6e8af63cde30bdc382c0bc28114f4346c88 # v2 4. Container Security (if Dockerfile exists)
+        uses: github/codeql-action/autobuild@ce64ddcb0d8d890d2df4a9d1c04ff297367dea2a # v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@ce64ddcb0d8d890d2df4a9d1c04ff297367dea2a # v3
+
+  # 4. Container Security (if Dockerfile exists)
   container-scan:
     runs-on: ubuntu-latest
-    if: hashFiles('**/Dockerfile') != ''
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4- name: Build image
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Check for Dockerfile
+        id: dockerfile
+        run: |
+          if find . -name Dockerfile -type f -print -quit | grep -q .; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build image
+        if: steps.dockerfile.outputs.exists == 'true'
         run: docker build -t app:${{ github.sha }} .
       
       - name: Scan image with Trivy
+        if: steps.dockerfile.outputs.exists == 'true'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # was: @master
         with:
           image-ref: 'app:${{ github.sha }}'
@@ -72,5 +96,7 @@ jobs:
           output: 'trivy-image-results.sarif'
       
       - name: Upload image scan results
-        uses: github/codeql-action/upload-sarif@b8d3b6e8af63cde30bdc382c0bc28114f4346c88 # v2with:
+        if: steps.dockerfile.outputs.exists == 'true'
+        uses: github/codeql-action/upload-sarif@ce64ddcb0d8d890d2df4a9d1c04ff297367dea2a # v3
+        with:
           sarif_file: 'trivy-image-results.sarif'
