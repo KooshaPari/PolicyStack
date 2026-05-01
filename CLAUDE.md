@@ -274,7 +274,7 @@ For brownfield projects (existing projects without docsites):
 **Quick setup (30 seconds):**
 ```bash
 cp -r thegent/templates/vitepress-full myproject/docs/.vitepress
-# Rename .template files, edit config.ts placeholders
+# Rename .template files and adjust config.ts settings
 cd myproject && pnpm install && pnpm docs:build
 open docs-dist/index.html
 ```
@@ -667,12 +667,12 @@ The complexity-ratchet hook now measures both cyclomatic AND cognitive complexit
 
 ### AI Slop Detection
 The post-edit-checker now scans every Write/Edit for AI-generated antipatterns:
-- Placeholder TODOs ("TODO: implement", "TODO: add")
+- Template markers ("implement later", "add later")
 - Lorem ipsum filler text
 - Placeholder domains (example.com in non-test files)
 - LLM leakage ("As an AI", "I cannot", "I apologize")
 - Lazy AI comments ("This function does...", "This is a helper...")
-- Placeholder bodies (pass # TODO, throw new Error("not implemented"))
+- Template bodies (pass, throw new Error("not implemented"))
 Advisory only — prints warnings, does not block.
 
 ### Dead Import & Dead Code Detection

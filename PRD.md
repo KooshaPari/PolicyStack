@@ -95,7 +95,7 @@ still enforce complex policies.
   conditions, and normalized command entries.
 - A `policy-wrapper-dispatch.manifest.json` is generated alongside the wrapper bundle,
   containing the dispatch script path, bundle path, and `required_conditions` list.
-- The manifest `dispatch_command` template includes `{command}` and `{cwd}` placeholders.
+- The manifest `dispatch_command` template includes `{command}` and `{cwd}` template variables.
 - Evaluators respond with `allow`, `request`, or `deny`; host uses `missing_policy_default`
   for unmatched commands.
 
