@@ -89,17 +89,14 @@ class TestPolicySnapshotGovernanceScript(TestCase):
                 text=True,
                 check=False,
             )
-            self.assertEqual(write.returncode, 0, write.stdout + write.stderr)
-            self.assertTrue(snapshot_path.exists())
+            assert write.returncode == 0, write.stdout + write.stderr
+            assert snapshot_path.exists()
 
             payload = json.loads(snapshot_path.read_text(encoding="utf-8"))
-            self.assertIn("policy_hash", payload)
-            self.assertIn("scopes", payload)
-            self.assertEqual(payload["scopes"][0]["scope"], "system")
-            self.assertEqual(
-                payload["scopes"][0]["path"],
-                "policy-contract/policy-config/system.yaml",
-            )
+            assert "policy_hash" in payload
+            assert "scopes" in payload
+            assert payload["scopes"][0]["scope"] == "system"
+            assert payload["scopes"][0]["path"] == "policy-contract/policy-config/system.yaml"
 
             check = subprocess.run(
                 [
@@ -119,8 +116,8 @@ class TestPolicySnapshotGovernanceScript(TestCase):
                 text=True,
                 check=False,
             )
-            self.assertEqual(check.returncode, 0, check.stdout + check.stderr)
-            self.assertIn("[ok] snapshot matches", check.stdout)
+            assert check.returncode == 0, check.stdout + check.stderr
+            assert "[ok] snapshot matches" in check.stdout
 
     def test_snapshot_json_success_payloads_include_deterministic_metadata(
         self,
@@ -148,14 +145,14 @@ class TestPolicySnapshotGovernanceScript(TestCase):
                 text=True,
                 check=False,
             )
-            self.assertEqual(write.returncode, 0, write.stdout + write.stderr)
+            assert write.returncode == 0, write.stdout + write.stderr
             write_payload = json.loads(write.stdout)
-            self.assertEqual(write_payload["status"], "ok")
-            self.assertEqual(write_payload["kind"], "write")
-            self.assertEqual(write_payload["message"], "wrote snapshot")
-            self.assertEqual(write_payload["scope_count"], 5)
-            self.assertEqual(write_payload["chain_length"], 5)
-            self.assertEqual(write_payload["output_path"], "snapshots/unit.json")
+            assert write_payload["status"] == "ok"
+            assert write_payload["kind"] == "write"
+            assert write_payload["message"] == "wrote snapshot"
+            assert write_payload["scope_count"] == 5
+            assert write_payload["chain_length"] == 5
+            assert write_payload["output_path"] == "snapshots/unit.json"
 
             check = subprocess.run(
                 [
@@ -176,14 +173,14 @@ class TestPolicySnapshotGovernanceScript(TestCase):
                 text=True,
                 check=False,
             )
-            self.assertEqual(check.returncode, 0, check.stdout + check.stderr)
+            assert check.returncode == 0, check.stdout + check.stderr
             check_payload = json.loads(check.stdout)
-            self.assertEqual(check_payload["status"], "ok")
-            self.assertEqual(check_payload["kind"], "check_existing")
-            self.assertEqual(check_payload["message"], "snapshot matches")
-            self.assertEqual(check_payload["scope_count"], 5)
-            self.assertEqual(check_payload["chain_length"], 5)
-            self.assertEqual(check_payload["output_path"], "snapshots/unit.json")
+            assert check_payload["status"] == "ok"
+            assert check_payload["kind"] == "check_existing"
+            assert check_payload["message"] == "snapshot matches"
+            assert check_payload["scope_count"] == 5
+            assert check_payload["chain_length"] == 5
+            assert check_payload["output_path"] == "snapshots/unit.json"
 
     def test_snapshot_write_canonical_and_check_existing_from_clean_repo_context(
         self,
@@ -213,33 +210,17 @@ class TestPolicySnapshotGovernanceScript(TestCase):
                 text=True,
                 check=False,
             )
-            self.assertEqual(
-                write_canonical.returncode,
-                0,
-                write_canonical.stdout + write_canonical.stderr,
-            )
+            assert write_canonical.returncode == 0, write_canonical.stdout + write_canonical.stderr
             write_payload = json.loads(write_canonical.stdout)
-            self.assertEqual(
-                set(write_payload.keys()),
-                {"status", "kind", "message", "snapshot_count", "output_paths"},
-            )
-            self.assertEqual(write_payload["status"], "ok")
-            self.assertEqual(write_payload["kind"], "write_canonical")
-            self.assertEqual(write_payload["message"], "wrote canonical snapshots")
-            self.assertEqual(write_payload["snapshot_count"], 2)
-            self.assertIsInstance(write_payload["output_paths"], list)
-            self.assertEqual(len(write_payload["output_paths"]), 2)
-            self.assertEqual(
-                write_payload["output_paths"],
-                sorted(write_payload["output_paths"]),
-            )
-            self.assertEqual(
-                write_payload["output_paths"],
-                [
-                    "policy-contract/policy-config/snapshots/policy_snapshot_codex_deployment.json",
-                    "policy-contract/policy-config/snapshots/policy_snapshot_codex_query.json",
-                ],
-            )
+            assert set(write_payload.keys()) == {"status", "kind", "message", "snapshot_count", "output_paths"}
+            assert write_payload["status"] == "ok"
+            assert write_payload["kind"] == "write_canonical"
+            assert write_payload["message"] == "wrote canonical snapshots"
+            assert write_payload["snapshot_count"] == 2
+            assert isinstance(write_payload["output_paths"], list)
+            assert len(write_payload["output_paths"]) == 2
+            assert write_payload["output_paths"] == sorted(write_payload["output_paths"])
+            assert write_payload["output_paths"] == ["policy-contract/policy-config/snapshots/policy_snapshot_codex_deployment.json", "policy-contract/policy-config/snapshots/policy_snapshot_codex_query.json"]
 
             for task_domain in ("deployment", "query"):
                 output_rel = (
@@ -266,12 +247,12 @@ class TestPolicySnapshotGovernanceScript(TestCase):
                     text=True,
                     check=False,
                 )
-                self.assertEqual(check.returncode, 0, check.stdout + check.stderr)
+                assert check.returncode == 0, check.stdout + check.stderr
                 payload = json.loads(check.stdout)
-                self.assertEqual(payload["status"], "ok")
-                self.assertEqual(payload["kind"], "check_existing")
-                self.assertEqual(payload["message"], "snapshot matches")
-                self.assertEqual(payload["output_path"], output_rel)
+                assert payload["status"] == "ok"
+                assert payload["kind"] == "check_existing"
+                assert payload["message"] == "snapshot matches"
+                assert payload["output_path"] == output_rel
 
     def test_snapshot_validate_canonical_success_with_custom_dir(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -302,11 +283,7 @@ class TestPolicySnapshotGovernanceScript(TestCase):
                 text=True,
                 check=False,
             )
-            self.assertEqual(
-                write_canonical.returncode,
-                0,
-                write_canonical.stdout + write_canonical.stderr,
-            )
+            assert write_canonical.returncode == 0, write_canonical.stdout + write_canonical.stderr
 
             validate = subprocess.run(
                 [
@@ -323,29 +300,17 @@ class TestPolicySnapshotGovernanceScript(TestCase):
                 text=True,
                 check=False,
             )
-            self.assertEqual(validate.returncode, 0, validate.stdout + validate.stderr)
+            assert validate.returncode == 0, validate.stdout + validate.stderr
             payload = json.loads(validate.stdout)
-            self.assertEqual(
-                set(payload.keys()),
-                {"status", "kind", "message", "snapshot_count", "output_paths"},
-            )
-            self.assertEqual(payload["status"], "ok")
-            self.assertEqual(payload["kind"], "validate_canonical")
-            self.assertEqual(payload["message"], "canonical snapshots match")
-            self.assertEqual(payload["snapshot_count"], 2)
-            self.assertIsInstance(payload["output_paths"], list)
-            self.assertEqual(len(payload["output_paths"]), 2)
-            self.assertEqual(
-                payload["output_paths"],
-                sorted(payload["output_paths"]),
-            )
-            self.assertEqual(
-                payload["output_paths"],
-                [
-                    "custom-snapshots/policy_snapshot_codex_deployment.json",
-                    "custom-snapshots/policy_snapshot_codex_query.json",
-                ],
-            )
+            assert set(payload.keys()) == {"status", "kind", "message", "snapshot_count", "output_paths"}
+            assert payload["status"] == "ok"
+            assert payload["kind"] == "validate_canonical"
+            assert payload["message"] == "canonical snapshots match"
+            assert payload["snapshot_count"] == 2
+            assert isinstance(payload["output_paths"], list)
+            assert len(payload["output_paths"]) == 2
+            assert payload["output_paths"] == sorted(payload["output_paths"])
+            assert payload["output_paths"] == ["custom-snapshots/policy_snapshot_codex_deployment.json", "custom-snapshots/policy_snapshot_codex_query.json"]
 
     def test_snapshot_validate_canonical_fails_when_snapshot_missing(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -373,14 +338,14 @@ class TestPolicySnapshotGovernanceScript(TestCase):
                 text=True,
                 check=False,
             )
-            self.assertEqual(validate.returncode, EXIT_MISSING_SNAPSHOT)
+            assert validate.returncode == EXIT_MISSING_SNAPSHOT
             payload = json.loads(validate.stdout)
-            self.assertEqual(payload["status"], "error")
-            self.assertEqual(payload["kind"], "drift")
-            self.assertEqual(payload["message"], "canonical snapshot missing")
-            self.assertIn("output_path", payload)
-            self.assertIn("harness", payload)
-            self.assertIn("task_domain", payload)
+            assert payload["status"] == "error"
+            assert payload["kind"] == "drift"
+            assert payload["message"] == "canonical snapshot missing"
+            assert "output_path" in payload
+            assert "harness" in payload
+            assert "task_domain" in payload
 
     def test_snapshot_write_fails_for_empty_resolved_policy(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -405,9 +370,9 @@ class TestPolicySnapshotGovernanceScript(TestCase):
                 text=True,
                 check=False,
             )
-            self.assertEqual(write.returncode, EXIT_INVALID)
-            self.assertIn("[error] resolved policy is empty", write.stdout)
-            self.assertFalse(snapshot_path.exists())
+            assert write.returncode == EXIT_INVALID
+            assert "[error] resolved policy is empty" in write.stdout
+            assert not snapshot_path.exists()
 
     def test_snapshot_check_existing_detects_drift(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -463,13 +428,13 @@ class TestPolicySnapshotGovernanceScript(TestCase):
                 text=True,
                 check=False,
             )
-            self.assertEqual(check.returncode, EXIT_CHECK_FAILED)
-            self.assertIn("[drift] snapshot differs", check.stdout)
-            self.assertIn(f"expected_hash={expected_hash}", check.stdout)
-            self.assertIn("first_differing_key=policy_hash", check.stdout)
+            assert check.returncode == EXIT_CHECK_FAILED
+            assert "[drift] snapshot differs" in check.stdout
+            assert f"expected_hash={expected_hash}" in check.stdout
+            assert "first_differing_key=policy_hash" in check.stdout
             actual_hash_match = re.search(r"actual_hash=([0-9a-f]{64})", check.stdout)
-            self.assertIsNotNone(actual_hash_match, check.stdout)
-            self.assertNotEqual(actual_hash_match.group(1), expected_hash)
+            assert actual_hash_match is not None, check.stdout
+            assert actual_hash_match.group(1) != expected_hash
 
     def test_snapshot_check_existing_detects_drift_json_payload(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -525,13 +490,13 @@ class TestPolicySnapshotGovernanceScript(TestCase):
                 text=True,
                 check=False,
             )
-            self.assertEqual(check.returncode, EXIT_CHECK_FAILED)
+            assert check.returncode == EXIT_CHECK_FAILED
             payload = json.loads(check.stdout)
-            self.assertEqual(payload["kind"], "drift")
-            self.assertEqual(payload["exit_code"], EXIT_CHECK_FAILED)
-            self.assertEqual(payload["message"], "snapshot differs")
-            self.assertIn("first_differing_key", payload)
-            self.assertEqual(payload["first_differing_key"], "policy_hash")
-            self.assertEqual(payload["expected_hash"], expected_hash)
-            self.assertRegex(payload["actual_hash"], r"^[0-9a-f]{64}$")
-            self.assertNotEqual(payload["actual_hash"], expected_hash)
+            assert payload["kind"] == "drift"
+            assert payload["exit_code"] == EXIT_CHECK_FAILED
+            assert payload["message"] == "snapshot differs"
+            assert "first_differing_key" in payload
+            assert payload["first_differing_key"] == "policy_hash"
+            assert payload["expected_hash"] == expected_hash
+            assert re.search(r"^[0-9a-f]{64}$", payload["actual_hash"])
+            assert payload["actual_hash"] != expected_hash

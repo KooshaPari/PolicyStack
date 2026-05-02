@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import contextlib
 import datetime
 import json
 import re
 import sys
 import uuid
-from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def build_run_sidecar(
@@ -156,10 +160,8 @@ def read_audit_log(audit_log_path: Path) -> list[dict]:
         for line in handle:
             line = line.strip()
             if line:
-                try:
+                with contextlib.suppress(json.JSONDecodeError):
                     events.append(json.loads(line))
-                except json.JSONDecodeError:
-                    pass
     return events
 
 

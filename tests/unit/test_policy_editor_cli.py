@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import sys
 import tempfile
@@ -74,10 +75,8 @@ def test_cli_add_rule_simple(temp_policy_file):
     # Capture output
     old_stdout = sys.stdout
     sys.stdout = StringIO()
-    try:
+    with contextlib.suppress(SystemExit):
         main()
-    except SystemExit:
-        pass
     output = sys.stdout.getvalue()
     sys.stdout = old_stdout
 
@@ -117,10 +116,8 @@ def test_cli_add_rule_with_patterns(temp_policy_file):
 
     old_stdout = sys.stdout
     sys.stdout = StringIO()
-    try:
+    with contextlib.suppress(SystemExit):
         main()
-    except SystemExit:
-        pass
     output = sys.stdout.getvalue()
     sys.stdout = old_stdout
 
@@ -156,10 +153,8 @@ def test_cli_remove_rule(temp_policy_file):
     ]
     old_stdout = sys.stdout
     sys.stdout = StringIO()
-    try:
+    with contextlib.suppress(SystemExit):
         main()
-    except SystemExit:
-        pass
     sys.stdout = old_stdout
 
     # Then remove it
@@ -172,10 +167,8 @@ def test_cli_remove_rule(temp_policy_file):
         "temp-rule",
     ]
     sys.stdout = StringIO()
-    try:
+    with contextlib.suppress(SystemExit):
         main()
-    except SystemExit:
-        pass
     output = sys.stdout.getvalue()
     sys.stdout = old_stdout
 
@@ -214,10 +207,8 @@ def test_cli_add_rule_with_audit_log(temp_policy_file, temp_audit_log):
 
     old_stdout = sys.stdout
     sys.stdout = StringIO()
-    try:
+    with contextlib.suppress(SystemExit):
         main()
-    except SystemExit:
-        pass
     sys.stdout = old_stdout
 
     # Verify audit event was recorded
@@ -254,10 +245,8 @@ def test_cli_remove_rule_with_audit_log(temp_policy_file, temp_audit_log):
     ]
     old_stdout = sys.stdout
     sys.stdout = StringIO()
-    try:
+    with contextlib.suppress(SystemExit):
         main()
-    except SystemExit:
-        pass
     sys.stdout = old_stdout
 
     # Remove and log
@@ -272,10 +261,8 @@ def test_cli_remove_rule_with_audit_log(temp_policy_file, temp_audit_log):
         str(temp_audit_log),
     ]
     sys.stdout = StringIO()
-    try:
+    with contextlib.suppress(SystemExit):
         main()
-    except SystemExit:
-        pass
     sys.stdout = old_stdout
 
     # Verify audit event
@@ -541,7 +528,7 @@ def test_cli_audit_verify_chain_valid(temp_audit_log_with_events):
         exit_code = e.code
     else:
         exit_code = 0
-    output = sys.stdout.getvalue()
+    sys.stdout.getvalue()
     sys.stdout = old_stdout
 
     # Valid chain should not raise SystemExit with code 1

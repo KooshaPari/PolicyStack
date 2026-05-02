@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import yaml
 
 from .authorization import validate_authorization_block
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def add_rule(policy_path: Path, rule: dict) -> None:
@@ -23,7 +26,8 @@ def add_rule(policy_path: Path, rule: dict) -> None:
         doc = yaml.safe_load(f)
 
     if not isinstance(doc, dict):
-        raise ValueError("Policy file must be a YAML mapping")
+        msg = "Policy file must be a YAML mapping"
+        raise ValueError(msg)
 
     # Initialize authorization section if missing
     if "policy" not in doc:
@@ -37,16 +41,19 @@ def add_rule(policy_path: Path, rule: dict) -> None:
 
     rules = doc["policy"]["authorization"]["rules"]
     if not isinstance(rules, list):
-        raise ValueError("policy.authorization.rules must be a list")
+        msg = "policy.authorization.rules must be a list"
+        raise ValueError(msg)
 
     # Check for duplicate rule ID
     rule_id = rule.get("id")
     if not rule_id:
-        raise ValueError("Rule must have an 'id' field")
+        msg = "Rule must have an 'id' field"
+        raise ValueError(msg)
 
     existing_ids = {r.get("id") for r in rules if isinstance(r, dict)}
     if rule_id in existing_ids:
-        raise ValueError(f"Rule with id '{rule_id}' already exists")
+        msg = f"Rule with id '{rule_id}' already exists"
+        raise ValueError(msg)
 
     # Append the new rule
     rules.append(rule)
@@ -73,21 +80,24 @@ def remove_rule(policy_path: Path, rule_id: str) -> None:
         doc = yaml.safe_load(f)
 
     if not isinstance(doc, dict):
-        raise ValueError("Policy file must be a YAML mapping")
+        msg = "Policy file must be a YAML mapping"
+        raise ValueError(msg)
 
     # Access authorization.rules
     authorization = doc.get("policy", {}).get("authorization", {})
     rules = authorization.get("rules", [])
 
     if not isinstance(rules, list):
-        raise ValueError("policy.authorization.rules must be a list")
+        msg = "policy.authorization.rules must be a list"
+        raise ValueError(msg)
 
     # Find and remove the rule
     original_count = len(rules)
     rules[:] = [r for r in rules if isinstance(r, dict) and r.get("id") != rule_id]
 
     if len(rules) == original_count:
-        raise ValueError(f"Rule with id '{rule_id}' not found")
+        msg = f"Rule with id '{rule_id}' not found"
+        raise ValueError(msg)
 
     # Validate the entire document
     validate_authorization_block({"policy": doc["policy"]})

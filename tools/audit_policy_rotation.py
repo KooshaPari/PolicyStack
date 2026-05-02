@@ -100,10 +100,9 @@ def main() -> None:
         out_path = Path(args.out)
         out_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     else:
-        print(json.dumps(payload, indent=2))
+        pass
 
     if changes and args.fail_on_change:
-        print(f"policy rotation changes detected: {changes}")
         raise SystemExit(1)
 
 

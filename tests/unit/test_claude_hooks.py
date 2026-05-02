@@ -24,8 +24,8 @@ class ClaudeHooksTest(unittest.TestCase):
         }
         result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
         hook = result["hookSpecificOutput"]
-        self.assertEqual(hook["permissionDecision"], "deny")
-        self.assertIn("user-deny-no-verify-bypass", hook["permissionDecisionReason"])
+        assert hook["permissionDecision"] == "deny"
+        assert "user-deny-no-verify-bypass" in hook["permissionDecisionReason"]
 
     def test_claude_pretool_hook_uses_default_ask_mode_for_ask_paths(self) -> None:
         payload = {
@@ -51,9 +51,9 @@ class ClaudeHooksTest(unittest.TestCase):
 
         intercept.assert_called_once()
         # Default ask_mode is "fail" unless POLICY_ASK_MODE env var is set
-        self.assertEqual(intercept.call_args.kwargs["ask_mode"], "fail")
+        assert intercept.call_args.kwargs["ask_mode"] == "fail"
         hook = result["hookSpecificOutput"]
-        self.assertEqual(hook["permissionDecision"], "ask")
+        assert hook["permissionDecision"] == "ask"
 
     def test_claude_pretool_hook_allows_safe_process_inspection(self) -> None:
         payload = {
@@ -65,7 +65,7 @@ class ClaudeHooksTest(unittest.TestCase):
             "session_id": "session-2",
         }
         result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
-        self.assertEqual(result, {"continue": True, "suppressOutput": True})
+        assert result == {"continue": True, "suppressOutput": True}
 
     def test_claude_pretool_hook_allows_repo_inventory_loop(self) -> None:
         payload = {
@@ -88,7 +88,7 @@ class ClaudeHooksTest(unittest.TestCase):
             "os.environ", {"POLICY_REPO": "thegent", "POLICY_TASK_DOMAIN": "devops"},
         ):
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
-        self.assertEqual(result, {"continue": True, "suppressOutput": True})
+        assert result == {"continue": True, "suppressOutput": True}
 
     def test_claude_pretool_hook_allows_pwd_git_status_probe(self) -> None:
         payload = {
@@ -108,7 +108,7 @@ class ClaudeHooksTest(unittest.TestCase):
             {"POLICY_REPO": "bifrost-extensions", "POLICY_TASK_DOMAIN": "devops"},
         ):
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
-        self.assertEqual(result, {"continue": True, "suppressOutput": True})
+        assert result == {"continue": True, "suppressOutput": True}
 
     def test_claude_pretool_hook_allows_worktree_package_add(self) -> None:
         payload = {
@@ -127,7 +127,7 @@ class ClaudeHooksTest(unittest.TestCase):
             "os.environ", {"POLICY_REPO": "heliosApp", "POLICY_TASK_DOMAIN": "devops"},
         ):
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
-        self.assertEqual(result, {"continue": True, "suppressOutput": True})
+        assert result == {"continue": True, "suppressOutput": True}
 
     def test_claude_pretool_hook_allows_web_search(self) -> None:
         payload = {
@@ -142,7 +142,7 @@ class ClaudeHooksTest(unittest.TestCase):
             "os.environ", {"POLICY_REPO": "thegent", "POLICY_TASK_DOMAIN": "devops"},
         ):
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
-        self.assertEqual(result, {"continue": True, "suppressOutput": True})
+        assert result == {"continue": True, "suppressOutput": True}
 
     def test_claude_pretool_hook_allows_plane_web_search(self) -> None:
         payload = {
@@ -157,7 +157,7 @@ class ClaudeHooksTest(unittest.TestCase):
             "os.environ", {"POLICY_REPO": "thegent", "POLICY_TASK_DOMAIN": "devops"},
         ):
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
-        self.assertEqual(result, {"continue": True, "suppressOutput": True})
+        assert result == {"continue": True, "suppressOutput": True}
 
     def test_claude_pretool_hook_writes_audit_log(self) -> None:
         """Test that evaluate_claude_pretool_payload returns correct decision."""
@@ -177,8 +177,8 @@ class ClaudeHooksTest(unittest.TestCase):
         ):
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
         # Should return continue with suppressOutput
-        self.assertEqual(result.get("continue"), True)
-        self.assertEqual(result.get("suppressOutput"), True)
+        assert result.get("continue")
+        assert result.get("suppressOutput")
 
     def test_claude_pretool_hook_allows_sed_inline_edit_in_worktree(self) -> None:
         payload = {
@@ -199,7 +199,7 @@ class ClaudeHooksTest(unittest.TestCase):
             "os.environ", {"POLICY_REPO": "heliosApp", "POLICY_TASK_DOMAIN": "devops"},
         ):
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
-        self.assertEqual(result, {"continue": True, "suppressOutput": True})
+        assert result == {"continue": True, "suppressOutput": True}
 
     def test_claude_pretool_hook_allows_trace_cli_stub_write(self) -> None:
         payload = {
@@ -221,7 +221,7 @@ class ClaudeHooksTest(unittest.TestCase):
             "os.environ", {"POLICY_REPO": "trace", "POLICY_TASK_DOMAIN": "devops"},
         ):
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
-        self.assertEqual(result, {"continue": True, "suppressOutput": True})
+        assert result == {"continue": True, "suppressOutput": True}
 
     def test_claude_pretool_hook_allows_readonly_diff_probe(self) -> None:
         payload = {
@@ -241,7 +241,7 @@ class ClaudeHooksTest(unittest.TestCase):
             "os.environ", {"POLICY_REPO": "thegent", "POLICY_TASK_DOMAIN": "devops"},
         ):
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
-        self.assertEqual(result, {"continue": True, "suppressOutput": True})
+        assert result == {"continue": True, "suppressOutput": True}
 
     def test_claude_pretool_hook_maps_notebook_edit_to_write(self) -> None:
         payload = {
@@ -255,15 +255,10 @@ class ClaudeHooksTest(unittest.TestCase):
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
         hook = result["hookSpecificOutput"]
         # Policy may return ask or deny depending on configuration
-        self.assertIn(hook["permissionDecision"], ["ask", "deny"])
+        assert hook["permissionDecision"] in ["ask", "deny"]
         # Check for any worktree-related rule
         reason = hook["permissionDecisionReason"]
-        self.assertTrue(
-            "worktree" in reason.lower()
-            or "write" in reason.lower()
-            or "policy-federation" in reason,
-            f"Reason should mention worktree/write/policy-federation, got: {reason}",
-        )
+        assert "worktree" in reason.lower() or "write" in reason.lower() or "policy-federation" in reason, f"Reason should mention worktree/write/policy-federation, got: {reason}"
 
     def test_claude_pretool_hook_allows_non_managed_tools_to_continue(self) -> None:
         payload = {
@@ -272,7 +267,7 @@ class ClaudeHooksTest(unittest.TestCase):
             "cwd": "/tmp",
         }
         result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
-        self.assertEqual(result, {"continue": True, "suppressOutput": True})
+        assert result == {"continue": True, "suppressOutput": True}
 
     def test_claude_pretool_hook_notifies_on_guardian_allow(self) -> None:
         payload = {
@@ -301,13 +296,11 @@ class ClaudeHooksTest(unittest.TestCase):
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
 
-        self.assertEqual(result["continue"], True)
-        self.assertEqual(result["suppressOutput"], False)
-        self.assertIn(
-            "Guardian (guardian): Reviewed and allowed", result["hookSpecificOutput"],
-        )
-        self.assertIn("Rule: suspicious-shell", result["hookSpecificOutput"])
-        self.assertIn("Reasoning: The command looks safe", result["hookSpecificOutput"])
+        assert result["continue"]
+        assert not result["suppressOutput"]
+        assert "Guardian (guardian): Reviewed and allowed" in result["hookSpecificOutput"]
+        assert "Rule: suspicious-shell" in result["hookSpecificOutput"]
+        assert "Reasoning: The command looks safe" in result["hookSpecificOutput"]
 
     def test_claude_pretool_hook_silent_on_direct_allow(self) -> None:
         payload = {
@@ -332,7 +325,7 @@ class ClaudeHooksTest(unittest.TestCase):
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
 
-        self.assertEqual(result, {"continue": True, "suppressOutput": True})
+        assert result == {"continue": True, "suppressOutput": True}
 
 
 class NormalizeBashCommandTest(unittest.TestCase):
@@ -341,60 +334,60 @@ class NormalizeBashCommandTest(unittest.TestCase):
     def test_strip_cd_prefix_with_and_separator(self) -> None:
         """Should extract cwd from 'cd /path && cmd' pattern."""
         cmd, cwd = _normalize_bash_command("cd /tmp && cargo test")
-        self.assertEqual(cmd, "cargo test")
-        self.assertEqual(cwd, "/tmp")
+        assert cmd == "cargo test"
+        assert cwd == "/tmp"
 
     def test_strip_cd_prefix_with_semicolon_separator(self) -> None:
         """Should extract cwd from 'cd /path; cmd' pattern."""
         cmd, cwd = _normalize_bash_command("cd /home/user ; python test.py")
-        self.assertEqual(cmd, "python test.py")
-        self.assertEqual(cwd, "/home/user")
+        assert cmd == "python test.py"
+        assert cwd == "/home/user"
 
     def test_cd_with_single_quoted_path(self) -> None:
         """Should handle single-quoted paths in cd prefix."""
         # The path extraction strips quotes, but single quotes with spaces
         # are handled by stripping the quote chars
         cmd, cwd = _normalize_bash_command("cd '/tmp/mydir' && ls -la")
-        self.assertEqual(cmd, "ls -la")
-        self.assertEqual(cwd, "/tmp/mydir")
+        assert cmd == "ls -la"
+        assert cwd == "/tmp/mydir"
 
     def test_cd_with_double_quoted_path(self) -> None:
         """Should handle double-quoted paths in cd prefix."""
         cmd, cwd = _normalize_bash_command('cd "/tmp/path" && cat file.txt')
-        self.assertEqual(cmd, "cat file.txt")
-        self.assertEqual(cwd, "/tmp/path")
+        assert cmd == "cat file.txt"
+        assert cwd == "/tmp/path"
 
     def test_strip_safe_trailing_pipes(self) -> None:
         """Should strip safe read-only postprocessor pipes."""
         # grep pipe should be stripped
         cmd, cwd = _normalize_bash_command("cargo test | grep error")
-        self.assertEqual(cmd, "cargo test")
-        self.assertIsNone(cwd)
+        assert cmd == "cargo test"
+        assert cwd is None
 
         # tail pipe should be stripped
         cmd, cwd = _normalize_bash_command("find . -name '*.py' | tail -5")
-        self.assertEqual(cmd, "find . -name '*.py'")
+        assert cmd == "find . -name '*.py'"
 
     def test_strip_stderr_redirect_and_pipe(self) -> None:
         """Should strip stderr redirect and pipe together."""
-        cmd, cwd = _normalize_bash_command("cargo build 2>&1 | tail -10")
+        cmd, _cwd = _normalize_bash_command("cargo build 2>&1 | tail -10")
         # Should strip both 2>&1 and the pipe
-        self.assertNotIn("2>&1", cmd)
+        assert "2>&1" not in cmd
         # The pipe is stripped separately
-        self.assertNotIn("|", cmd)
+        assert "|" not in cmd
 
     def test_strip_safe_stderr_redirects(self) -> None:
         """Should strip safe stderr/stdout redirects like 2>&1."""
         # Note: _SAFE_REDIRECT pattern only strips [12]>&[12], >/dev/null, etc.
-        cmd, cwd = _normalize_bash_command("ls 2>&1 /dev/null")
+        cmd, _cwd = _normalize_bash_command("ls 2>&1 /dev/null")
         # 2>&1 is stripped, leaving ls and /dev/null
-        self.assertNotIn("2>&1", cmd)
+        assert "2>&1" not in cmd
 
     def test_complex_cd_and_pipes(self) -> None:
         """Should handle both cd extraction and pipe stripping."""
         cmd, cwd = _normalize_bash_command("cd /app && npm test 2>&1 | tail -20")
-        self.assertEqual(cmd, "npm test")
-        self.assertEqual(cwd, "/app")
+        assert cmd == "npm test"
+        assert cwd == "/app"
 
 
 class SplitCompoundCommandTest(unittest.TestCase):
@@ -403,29 +396,29 @@ class SplitCompoundCommandTest(unittest.TestCase):
     def test_split_on_double_ampersand(self) -> None:
         """Should split on && separator."""
         segments = _split_compound_command("git add . && git commit -m test")
-        self.assertEqual(segments, ["git add .", "git commit -m test"])
+        assert segments == ["git add .", "git commit -m test"]
 
     def test_split_on_semicolon(self) -> None:
         """Should split on ; separator."""
         segments = _split_compound_command("cd /tmp; echo foo > /tmp/evil.txt")
-        self.assertEqual(len(segments), 2)
-        self.assertEqual(segments[0], "cd /tmp")
-        self.assertIn("echo", segments[1])
+        assert len(segments) == 2
+        assert segments[0] == "cd /tmp"
+        assert "echo" in segments[1]
 
     def test_split_on_or_operator(self) -> None:
         """Should split on || separator."""
         segments = _split_compound_command("git commit || cp policy.yaml /tmp")
-        self.assertEqual(segments, ["git commit", "cp policy.yaml /tmp"])
+        assert segments == ["git commit", "cp policy.yaml /tmp"]
 
     def test_multiple_separators(self) -> None:
         """Should split on mixed separators."""
         segments = _split_compound_command("cmd1 && cmd2 ; cmd3 || cmd4")
-        self.assertEqual(len(segments), 4)
+        assert len(segments) == 4
 
     def test_empty_segments_removed(self) -> None:
         """Should filter out empty segments."""
         segments = _split_compound_command("cmd1 && && cmd2")
-        self.assertNotIn("", segments)
+        assert "" not in segments
 
 
 class DetectEnvOverrideTest(unittest.TestCase):
@@ -434,38 +427,38 @@ class DetectEnvOverrideTest(unittest.TestCase):
     def test_detect_policy_repo_override(self) -> None:
         """Should detect POLICY_REPO=evil env override."""
         result = _detect_env_override("POLICY_REPO=evil git commit")
-        self.assertIn("POLICY_REPO", result)
+        assert "POLICY_REPO" in result
 
     def test_detect_policy_task_domain_override(self) -> None:
         """Should detect POLICY_TASK_DOMAIN=malicious override."""
         result = _detect_env_override("POLICY_TASK_DOMAIN=admin git push")
-        self.assertIn("POLICY_TASK_DOMAIN", result)
+        assert "POLICY_TASK_DOMAIN" in result
 
     def test_detect_with_env_prefix(self) -> None:
         """Should detect override with env prefix."""
         result = _detect_env_override("env POLICY_REPO=evil cargo test")
-        self.assertIn("POLICY_REPO", result)
+        assert "POLICY_REPO" in result
 
     def test_detect_with_export_prefix(self) -> None:
         """Should detect override with export prefix."""
         result = _detect_env_override("export POLICY_TASK_INSTANCE=x && cmd")
-        self.assertIn("POLICY_TASK_INSTANCE", result)
+        assert "POLICY_TASK_INSTANCE" in result
 
     def test_detect_policy_repo_and_domain_with_semicolon(self) -> None:
         """Should detect POLICY_REPO and POLICY_TASK_DOMAIN in compound commands."""
         result = _detect_env_override("export POLICY_REPO=x; POLICY_TASK_DOMAIN=y cmd")
-        self.assertIn("POLICY_REPO", result)
-        self.assertIn("POLICY_TASK_DOMAIN", result)
+        assert "POLICY_REPO" in result
+        assert "POLICY_TASK_DOMAIN" in result
 
     def test_ignore_non_policy_vars(self) -> None:
         """Should not flag non-POLICY_ env vars."""
         result = _detect_env_override("PATH=/evil/bin cmd")
-        self.assertEqual(result, [])
+        assert result == []
 
     def test_detect_in_compound_command(self) -> None:
         """Should detect override in compound command segments."""
         result = _detect_env_override("git add . && POLICY_REPO=evil git commit")
-        self.assertIn("POLICY_REPO", result)
+        assert "POLICY_REPO" in result
 
 
 class StripEnvOverridesTest(unittest.TestCase):
@@ -474,22 +467,22 @@ class StripEnvOverridesTest(unittest.TestCase):
     def test_strip_leading_policy_repo_override(self) -> None:
         """Should remove leading POLICY_REPO=value."""
         cmd = _strip_env_overrides("POLICY_REPO=evil git commit")
-        self.assertEqual(cmd, "git commit")
+        assert cmd == "git commit"
 
     def test_strip_with_env_prefix(self) -> None:
         """Should remove env POLICY_REPO=value prefix."""
         cmd = _strip_env_overrides("env POLICY_REPO=evil cargo test")
-        self.assertEqual(cmd, "cargo test")
+        assert cmd == "cargo test"
 
     def test_strip_multiple_overrides(self) -> None:
         """Should strip all leading POLICY_* assignments."""
         cmd = _strip_env_overrides("POLICY_REPO=x POLICY_TASK_DOMAIN=y actual_cmd")
-        self.assertEqual(cmd, "actual_cmd")
+        assert cmd == "actual_cmd"
 
     def test_preserve_non_policy_vars(self) -> None:
         """Should preserve non-POLICY_ env var assignments."""
         cmd = _strip_env_overrides("PATH=/usr/bin actual_cmd")
-        self.assertEqual(cmd, "PATH=/usr/bin actual_cmd")
+        assert cmd == "PATH=/usr/bin actual_cmd"
 
     def test_strip_export_with_space_and_separator(self) -> None:
         """Should handle export POLICY_*=value ; cmd syntax (with space before semicolon)."""
@@ -498,8 +491,8 @@ class StripEnvOverridesTest(unittest.TestCase):
         # But when there's no space after =, it stops at the first non-whitespace
         cmd = _strip_env_overrides("export POLICY_TASK_INSTANCE=123 ; cmd")
         # The leading export and POLICY_VAR assignment are stripped, leaving "; cmd"
-        self.assertNotIn("POLICY_TASK_INSTANCE", cmd)
-        self.assertNotIn("export", cmd)
+        assert "POLICY_TASK_INSTANCE" not in cmd
+        assert "export" not in cmd
 
 
 class DetectWriteViaExecTest(unittest.TestCase):
@@ -509,7 +502,7 @@ class DetectWriteViaExecTest(unittest.TestCase):
         """Should detect 'python3 -c \"open(...).write(...)\"' bypass."""
         cmd = "python3 -c \"open('/tmp/evil.txt').write('data')\""
         indicators = _detect_write_via_exec(cmd)
-        self.assertIn("python-file-write", indicators)
+        assert "python-file-write" in indicators
 
     def test_detect_shell_redirect_write_to_absolute_path(self) -> None:
         """Should detect redirect write pattern that starts command or follows delimiter."""
@@ -517,37 +510,37 @@ class DetectWriteViaExecTest(unittest.TestCase):
         # Plain "echo foo > /path" doesn't match, but "> /path" does match the pattern
         cmd = "> /tmp/policy.yaml"
         indicators = _detect_write_via_exec(cmd)
-        self.assertIn("shell-redirect-write", indicators)
+        assert "shell-redirect-write" in indicators
 
     def test_detect_tee_write(self) -> None:
         """Should detect 'tee /path' write bypass."""
         cmd = "cat policy.yaml | tee /tmp/backup.yaml"
         indicators = _detect_write_via_exec(cmd)
-        self.assertIn("tee-write", indicators)
+        assert "tee-write" in indicators
 
     def test_detect_cp_write(self) -> None:
         """Should detect 'cp src dst' write bypass."""
         cmd = "cp /original/policy.yaml /tmp/evil.yaml"
         indicators = _detect_write_via_exec(cmd)
-        self.assertIn("cp-write", indicators)
+        assert "cp-write" in indicators
 
     def test_detect_sed_inplace_write(self) -> None:
         """Should detect 'sed -i' write bypass."""
         cmd = "sed -i 's/allow/deny/' /tmp/policy.yaml"
         indicators = _detect_write_via_exec(cmd)
-        self.assertIn("sed-inplace-write", indicators)
+        assert "sed-inplace-write" in indicators
 
     def test_detect_mv_write(self) -> None:
         """Should detect 'mv src dst' write bypass."""
         cmd = "mv /tmp/policy.yaml /etc/policy.yaml"
         indicators = _detect_write_via_exec(cmd)
-        self.assertIn("mv-write", indicators)
+        assert "mv-write" in indicators
 
     def test_detect_dd_write(self) -> None:
         """Should detect 'dd of=' write bypass."""
         cmd = "dd if=/dev/zero of=/tmp/file bs=1M"
         indicators = _detect_write_via_exec(cmd)
-        self.assertIn("dd-write", indicators)
+        assert "dd-write" in indicators
 
     def test_detect_heredoc_write(self) -> None:
         """Should detect '<<EOF' heredoc write bypass."""
@@ -555,56 +548,56 @@ class DetectWriteViaExecTest(unittest.TestCase):
 some content
 EOF"""
         indicators = _detect_write_via_exec(cmd)
-        self.assertIn("heredoc-write", indicators)
+        assert "heredoc-write" in indicators
 
     def test_detect_in_compound_command_with_tee(self) -> None:
         """Should detect write bypasses in compound commands with tee."""
         cmd = "git commit && cat policy.yaml | tee /tmp/backup.yaml"
         indicators = _detect_write_via_exec(cmd)
-        self.assertIn("tee-write", indicators)
+        assert "tee-write" in indicators
 
     def test_detect_in_backtick_subshell(self) -> None:
         """Should detect write commands in backtick subshells."""
         cmd = "result=`cp /a /b`; echo $result"
         indicators = _detect_write_via_exec(cmd)
-        self.assertIn("subshell-write", indicators)
-        self.assertIn("subshell:cp-write", indicators)
+        assert "subshell-write" in indicators
+        assert "subshell:cp-write" in indicators
 
     def test_detect_xargs_write(self) -> None:
         """Should detect write commands via xargs pipe."""
         cmd = "find . -name file | xargs rm"
         indicators = _detect_write_via_exec(cmd)
-        self.assertIn("xargs-write", indicators)
+        assert "xargs-write" in indicators
 
     def test_no_false_positive_on_stderr_redirect(self) -> None:
         """Should not flag stderr-only redirects as writes."""
         cmd = "cargo build 2>&1"
         indicators = _detect_write_via_exec(cmd)
-        self.assertEqual(indicators, [])
+        assert indicators == []
 
     def test_no_false_positive_on_grep_in_pipe(self) -> None:
         """Should not flag grep-in-pipe patterns as writes."""
         cmd = "cat file.txt | grep pattern"
         indicators = _detect_write_via_exec(cmd)
-        self.assertEqual(indicators, [])
+        assert indicators == []
 
     def test_detect_ruby_file_write(self) -> None:
         """Should detect ruby -e File.write() bypass."""
         cmd = 'ruby -e \'File.write("/tmp/x.txt", "data")\''
         indicators = _detect_write_via_exec(cmd)
-        self.assertIn("ruby-file-write", indicators)
+        assert "ruby-file-write" in indicators
 
     def test_detect_perl_file_write(self) -> None:
         """Should detect perl -e open() write bypass."""
         cmd = 'perl -e \'open(F, ">/tmp/x"); print F "data"\''
         indicators = _detect_write_via_exec(cmd)
-        self.assertIn("perl-file-write", indicators)
+        assert "perl-file-write" in indicators
 
     def test_detect_node_file_write(self) -> None:
         """Should detect node -e writeFile() bypass."""
         cmd = 'node -e \'fs.writeFile("/tmp/x.txt", "data", () => {})\''
         indicators = _detect_write_via_exec(cmd)
-        self.assertIn("node-file-write", indicators)
+        assert "node-file-write" in indicators
 
 
 class EndToEndBypassDetectionTest(unittest.TestCase):
@@ -624,8 +617,8 @@ class EndToEndBypassDetectionTest(unittest.TestCase):
         hook = result.get("hookSpecificOutput", {})
         if hook:
             # Policy may return ask or deny depending on configuration
-            self.assertIn(hook["permissionDecision"], ["ask", "deny"])
-            self.assertIn("write-via-exec", hook["permissionDecisionReason"])
+            assert hook["permissionDecision"] in ["ask", "deny"]
+            assert "write-via-exec" in hook["permissionDecisionReason"]
 
     def test_bash_tool_tee_write_reclassified(self) -> None:
         """tee /path should be reclassified as write action."""
@@ -638,7 +631,7 @@ class EndToEndBypassDetectionTest(unittest.TestCase):
         hook = result.get("hookSpecificOutput", {})
         if hook:
             # Should be reclassified as write and denied
-            self.assertIn("write-via-exec", hook["permissionDecisionReason"])
+            assert "write-via-exec" in hook["permissionDecisionReason"]
 
     def test_bash_tool_env_override_detection(self) -> None:
         """POLICY_REPO=evil should be detected and stripped."""
@@ -650,7 +643,7 @@ class EndToEndBypassDetectionTest(unittest.TestCase):
         result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
         hook = result.get("hookSpecificOutput", {})
         if hook:
-            self.assertIn("env-override", hook["permissionDecisionReason"])
+            assert "env-override" in hook["permissionDecisionReason"]
 
     def test_bash_tool_cd_normalization(self) -> None:
         """cd /path && cmd should normalize cwd to /path."""
@@ -661,7 +654,7 @@ class EndToEndBypassDetectionTest(unittest.TestCase):
         }
         result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
         # Should use /tmp as cwd for policy evaluation
-        self.assertIsNotNone(result)
+        assert result is not None
 
 
 if __name__ == "__main__":

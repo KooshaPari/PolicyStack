@@ -12,7 +12,7 @@ from support import REPO_ROOT
 class PolicyResolutionTest(unittest.TestCase):
     def test_policy_file_with_authorization_block_validates(self) -> None:
         doc = validate_policy_file(REPO_ROOT / "policies" / "user" / "org-default.yaml")
-        self.assertIn("authorization", doc["policy"])
+        assert "authorization" in doc["policy"]
 
     def test_extends_contributes_shared_devops_rules(self) -> None:
         resolved = resolve(
@@ -22,8 +22,8 @@ class PolicyResolutionTest(unittest.TestCase):
             task_domain="devops",
         )
         rule_ids = {rule["id"] for rule in resolved["policy"]["authorization"]["rules"]}
-        self.assertIn("devops-ask-networked-installs", rule_ids)
-        self.assertIn("devops-ask-network-egress", rule_ids)
+        assert "devops-ask-networked-installs" in rule_ids
+        assert "devops-ask-network-egress" in rule_ids
 
     def test_append_unique_items_replaces_by_id(self) -> None:
         merged = _append_unique_items(
@@ -34,14 +34,7 @@ class PolicyResolutionTest(unittest.TestCase):
                 {"id": "c", "action": "ask"},
             ],
         )
-        self.assertEqual(
-            merged,
-            [
-                {"id": "a", "action": "deny"},
-                {"id": "b", "action": "deny"},
-                {"id": "c", "action": "ask"},
-            ],
-        )
+        assert merged == [{"id": "a", "action": "deny"}, {"id": "b", "action": "deny"}, {"id": "c", "action": "ask"}]
 
     def test_merge_maps_append_unique_replaces_matching_id_items(self) -> None:
         base = {
@@ -63,15 +56,8 @@ class PolicyResolutionTest(unittest.TestCase):
 
         conflicts: list[dict] = []
         merged = _merge_maps(base, overrides, "append_unique", conflicts)
-        self.assertEqual(
-            merged["authorization"]["rules"],
-            [
-                {"id": "r1", "action": "ask"},
-                {"id": "r2", "action": "deny"},
-                {"id": "r3", "action": "allow"},
-            ],
-        )
-        self.assertEqual(conflicts, [])
+        assert merged["authorization"]["rules"] == [{"id": "r1", "action": "ask"}, {"id": "r2", "action": "deny"}, {"id": "r3", "action": "allow"}]
+        assert conflicts == []
 
     def test_resolve_extends_overrides_authorization_rules_by_id(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -143,10 +129,10 @@ class PolicyResolutionTest(unittest.TestCase):
                 for rule in resolved["policy"]["authorization"]["rules"]
             }
 
-            self.assertEqual(rules["shared"]["effect"], "allow")
-            self.assertEqual(rules["shared"]["description"], "child override")
-            self.assertIn("child", rules)
-            self.assertEqual(len(rules), 2)
+            assert rules["shared"]["effect"] == "allow"
+            assert rules["shared"]["description"] == "child override"
+            assert "child" in rules
+            assert len(rules) == 2
 
 
 if __name__ == "__main__":

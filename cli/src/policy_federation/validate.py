@@ -25,15 +25,20 @@ def validate_policy_file(path: Path) -> dict:
     with Path(path).open("r", encoding="utf-8") as policy_file:
         doc = yaml.safe_load(policy_file)
     if not isinstance(doc, dict):
-        raise ValueError("Policy file must be a YAML mapping")
+        msg = "Policy file must be a YAML mapping"
+        raise ValueError(msg)
     if "version" not in doc:
-        raise ValueError("Missing required field: version")
+        msg = "Missing required field: version"
+        raise ValueError(msg)
     if "id" not in doc:
-        raise ValueError("Missing required field: id")
+        msg = "Missing required field: id"
+        raise ValueError(msg)
     if "scope" not in doc:
-        raise ValueError("Missing required field: scope")
+        msg = "Missing required field: scope"
+        raise ValueError(msg)
     if "policy" not in doc:
-        raise ValueError("Missing required field: policy")
+        msg = "Missing required field: policy"
+        raise ValueError(msg)
 
     schema = _load_schema()
     Draft202012Validator(schema).validate(doc)

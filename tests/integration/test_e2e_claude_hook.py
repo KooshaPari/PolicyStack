@@ -44,7 +44,7 @@ class SafeReadOnlyToolsTest(unittest.TestCase):
             "session_id": "session-1",
         }
         result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
-        self.assertEqual(result, {"continue": True, "suppressOutput": True})
+        assert result == {"continue": True, "suppressOutput": True}
 
     def test_grep_tool_returns_continue(self) -> None:
         """Grep tool is read-only and should not be blocked."""
@@ -54,7 +54,7 @@ class SafeReadOnlyToolsTest(unittest.TestCase):
             "cwd": "/tmp",
         }
         result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
-        self.assertEqual(result, {"continue": True, "suppressOutput": True})
+        assert result == {"continue": True, "suppressOutput": True}
 
     def test_read_tool_returns_continue(self) -> None:
         """Read tool is read-only and should not be blocked."""
@@ -64,7 +64,7 @@ class SafeReadOnlyToolsTest(unittest.TestCase):
             "cwd": "/tmp",
         }
         result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
-        self.assertEqual(result, {"continue": True, "suppressOutput": True})
+        assert result == {"continue": True, "suppressOutput": True}
 
 
 class AllowedBashCommandsTest(unittest.TestCase):
@@ -81,7 +81,7 @@ class AllowedBashCommandsTest(unittest.TestCase):
         result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
         hook = result.get("hookSpecificOutput")
         if hook:
-            self.assertEqual(hook["permissionDecision"], "allow")
+            assert hook["permissionDecision"] == "allow"
 
     def test_bash_go_test_allowed_by_build_test_rule(self) -> None:
         """Bash 'go test ./...' should be allowed by build-test rule."""
@@ -95,11 +95,7 @@ class AllowedBashCommandsTest(unittest.TestCase):
         hook = result.get("hookSpecificOutput")
         if hook:
             # Should allow or ask, but not deny
-            self.assertIn(
-                hook["permissionDecision"],
-                ["allow", "ask"],
-                f"Unexpected decision for go test: {hook}",
-            )
+            assert hook["permissionDecision"] in ["allow", "ask"], f"Unexpected decision for go test: {hook}"
 
     def test_bash_python_test_allowed_by_build_test_rule(self) -> None:
         """Bash 'python -m pytest' should be allowed by build-test rule."""
@@ -112,11 +108,7 @@ class AllowedBashCommandsTest(unittest.TestCase):
         result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
         hook = result.get("hookSpecificOutput")
         if hook:
-            self.assertIn(
-                hook["permissionDecision"],
-                ["allow", "ask"],
-                f"Unexpected decision for pytest: {hook}",
-            )
+            assert hook["permissionDecision"] in ["allow", "ask"], f"Unexpected decision for pytest: {hook}"
 
 
 class WorktreeWriteAllowedTest(unittest.TestCase):
@@ -137,11 +129,7 @@ class WorktreeWriteAllowedTest(unittest.TestCase):
         hook = result.get("hookSpecificOutput")
         if hook:
             # Should allow writes to worktree paths
-            self.assertIn(
-                hook["permissionDecision"],
-                ["allow", "ask"],
-                f"Expected allow/ask for worktree write, got: {hook}",
-            )
+            assert hook["permissionDecision"] in ["allow", "ask"], f"Expected allow/ask for worktree write, got: {hook}"
 
 
 class NonWorktreeWriteDeniedTest(unittest.TestCase):
@@ -159,13 +147,9 @@ class NonWorktreeWriteDeniedTest(unittest.TestCase):
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
-            self.assertIsNotNone(
-                hook, "Should have hookSpecificOutput for denied write",
-            )
-            self.assertEqual(hook["permissionDecision"], "deny")
-            self.assertIn(
-                "deny-write-outside-worktrees", hook["permissionDecisionReason"],
-            )
+            assert hook is not None, "Should have hookSpecificOutput for denied write"
+            assert hook["permissionDecision"] == "deny"
+            assert "deny-write-outside-worktrees" in hook["permissionDecisionReason"]
 
     def test_write_tool_to_tmp_path_denied(self) -> None:
         """Write tool to /tmp path should be blocked."""
@@ -179,8 +163,8 @@ class NonWorktreeWriteDeniedTest(unittest.TestCase):
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
-            self.assertIsNotNone(hook)
-            self.assertEqual(hook["permissionDecision"], "deny")
+            assert hook is not None
+            assert hook["permissionDecision"] == "deny"
 
 
 class BashWriteReclassificationTest(unittest.TestCase):
@@ -200,9 +184,9 @@ class BashWriteReclassificationTest(unittest.TestCase):
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
-            self.assertIsNotNone(hook)
-            self.assertEqual(hook["permissionDecision"], "deny")
-            self.assertIn("write-via-exec", hook["permissionDecisionReason"])
+            assert hook is not None
+            assert hook["permissionDecision"] == "deny"
+            assert "write-via-exec" in hook["permissionDecisionReason"]
 
     def test_bash_shell_redirect_write_reclassified_and_blocked(self) -> None:
         """Bash shell redirect to /path should be reclassified as write and gated.
@@ -220,15 +204,11 @@ class BashWriteReclassificationTest(unittest.TestCase):
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
-            self.assertIsNotNone(hook)
+            assert hook is not None
             # Should be gated (either ask or deny)
-            self.assertIn(
-                hook["permissionDecision"],
-                ["ask", "deny"],
-                f"Expected ask or deny, got: {hook['permissionDecision']}",
-            )
+            assert hook["permissionDecision"] in ["ask", "deny"], f"Expected ask or deny, got: {hook['permissionDecision']}"
             # Should indicate write-via-exec
-            self.assertIn("write-via-exec", hook["permissionDecisionReason"])
+            assert "write-via-exec" in hook["permissionDecisionReason"]
 
     def test_bash_cp_write_reclassified_and_blocked(self) -> None:
         """Bash 'cp src /etc/evil' should be reclassified as write and blocked."""
@@ -242,9 +222,9 @@ class BashWriteReclassificationTest(unittest.TestCase):
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
-            self.assertIsNotNone(hook)
-            self.assertEqual(hook["permissionDecision"], "deny")
-            self.assertIn("write-via-exec", hook["permissionDecisionReason"])
+            assert hook is not None
+            assert hook["permissionDecision"] == "deny"
+            assert "write-via-exec" in hook["permissionDecisionReason"]
 
     def test_bash_compound_command_with_write_detected(self) -> None:
         """Bash 'git commit && echo x > /tmp/evil' should detect write in compound command."""
@@ -258,8 +238,8 @@ class BashWriteReclassificationTest(unittest.TestCase):
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
-            self.assertIsNotNone(hook)
-            self.assertEqual(hook["permissionDecision"], "deny")
+            assert hook is not None
+            assert hook["permissionDecision"] == "deny"
 
 
 class EnvironmentOverrideDetectionTest(unittest.TestCase):
@@ -278,9 +258,9 @@ class EnvironmentOverrideDetectionTest(unittest.TestCase):
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
-            self.assertIsNotNone(hook)
+            assert hook is not None
             # Should be detected as a policy threat (env-override will be in reason)
-            self.assertIn("env-override", hook["permissionDecisionReason"])
+            assert "env-override" in hook["permissionDecisionReason"]
 
     def test_bash_export_policy_task_domain_override_detected(self) -> None:
         """Bash with export POLICY_TASK_DOMAIN override should be detected."""
@@ -297,9 +277,9 @@ class EnvironmentOverrideDetectionTest(unittest.TestCase):
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
-            self.assertIsNotNone(hook)
+            assert hook is not None
             # env override should be flagged
-            self.assertIn("env-override", hook["permissionDecisionReason"])
+            assert "env-override" in hook["permissionDecisionReason"]
 
 
 class PolicyEditTest(unittest.TestCase):
@@ -322,11 +302,7 @@ class PolicyEditTest(unittest.TestCase):
             hook = result.get("hookSpecificOutput")
             if hook:
                 # Policy edits should ask, not silently allow
-                self.assertEqual(
-                    hook["permissionDecision"],
-                    "ask",
-                    "Policy file writes should require ask decision",
-                )
+                assert hook["permissionDecision"] == "ask", "Policy file writes should require ask decision"
 
 
 class CwdNormalizationTest(unittest.TestCase):
@@ -342,7 +318,7 @@ class CwdNormalizationTest(unittest.TestCase):
         }
         result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
         # Should evaluate against /path, not /tmp
-        self.assertIsNotNone(result)
+        assert result is not None
 
 
 class IntegrationPayloadStructureTest(unittest.TestCase):
@@ -357,7 +333,7 @@ class IntegrationPayloadStructureTest(unittest.TestCase):
             "session_id": "session-123",
         }
         result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
-        self.assertEqual(result, {"continue": True, "suppressOutput": True})
+        assert result == {"continue": True, "suppressOutput": True}
 
     def test_payload_missing_cwd_defaults_to_cwd(self) -> None:
         """Payload without cwd should use current working directory."""
@@ -366,7 +342,7 @@ class IntegrationPayloadStructureTest(unittest.TestCase):
             "tool_input": {"file_path": "/tmp/x"},
         }
         result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
-        self.assertEqual(result, {"continue": True, "suppressOutput": True})
+        assert result == {"continue": True, "suppressOutput": True}
 
     def test_deny_decision_includes_hook_specific_output(self) -> None:
         """Deny decision should include hookSpecificOutput with full details."""
@@ -379,13 +355,13 @@ class IntegrationPayloadStructureTest(unittest.TestCase):
                 "cwd": "/tmp",
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
-            self.assertIn("hookSpecificOutput", result)
+            assert "hookSpecificOutput" in result
             hook = result["hookSpecificOutput"]
-            self.assertIn("hookEventName", hook)
-            self.assertEqual(hook["hookEventName"], "PreToolUse")
-            self.assertIn("permissionDecision", hook)
-            self.assertIn("permissionDecisionReason", hook)
-            self.assertEqual(hook["permissionDecision"], "deny")
+            assert "hookEventName" in hook
+            assert hook["hookEventName"] == "PreToolUse"
+            assert "permissionDecision" in hook
+            assert "permissionDecisionReason" in hook
+            assert hook["permissionDecision"] == "deny"
 
 
 class ComplexScenarioTest(unittest.TestCase):
@@ -410,8 +386,8 @@ class ComplexScenarioTest(unittest.TestCase):
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
-            self.assertIsNotNone(hook)
-            self.assertEqual(hook["permissionDecision"], "deny")
+            assert hook is not None
+            assert hook["permissionDecision"] == "deny"
 
     def test_nested_subshell_write_detected(self) -> None:
         """Write command in subshell should be detected."""
@@ -425,8 +401,8 @@ class ComplexScenarioTest(unittest.TestCase):
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
-            self.assertIsNotNone(hook)
-            self.assertEqual(hook["permissionDecision"], "deny")
+            assert hook is not None
+            assert hook["permissionDecision"] == "deny"
 
     def test_tee_pipe_write_detected(self) -> None:
         """Tee pipe should be detected as write."""
@@ -440,8 +416,8 @@ class ComplexScenarioTest(unittest.TestCase):
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
-            self.assertIsNotNone(hook)
-            self.assertEqual(hook["permissionDecision"], "deny")
+            assert hook is not None
+            assert hook["permissionDecision"] == "deny"
 
 
 class BypassClosureVerificationTest(unittest.TestCase):
@@ -473,19 +449,9 @@ class BypassClosureVerificationTest(unittest.TestCase):
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
-            self.assertIsNotNone(
-                hook, "Should have hookSpecificOutput for python3 write attempt",
-            )
-            self.assertEqual(
-                hook["permissionDecision"],
-                "deny",
-                f"python3 file write should be denied, got: {hook}",
-            )
-            self.assertIn(
-                "write-via-exec",
-                hook["permissionDecisionReason"],
-                f"Should indicate write-via-exec, got reason: {hook['permissionDecisionReason']}",
-            )
+            assert hook is not None, "Should have hookSpecificOutput for python3 write attempt"
+            assert hook["permissionDecision"] == "deny", f"python3 file write should be denied, got: {hook}"
+            assert "write-via-exec" in hook["permissionDecisionReason"], f"Should indicate write-via-exec, got reason: {hook['permissionDecisionReason']}"
 
     def test_python3_pathlib_write_blocked(self) -> None:
         """python3 -c "from pathlib import Path; Path('/tmp/x').write_text('y')" should be blocked or asked."""
@@ -501,15 +467,9 @@ class BypassClosureVerificationTest(unittest.TestCase):
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
-            self.assertIsNotNone(
-                hook, "Should have hookSpecificOutput for pathlib write attempt",
-            )
+            assert hook is not None, "Should have hookSpecificOutput for pathlib write attempt"
             # pathlib write should be gated (deny or ask)
-            self.assertIn(
-                hook["permissionDecision"],
-                ["ask", "deny"],
-                f"pathlib write should be ask/deny, got: {hook}",
-            )
+            assert hook["permissionDecision"] in ["ask", "deny"], f"pathlib write should be ask/deny, got: {hook}"
 
     def test_node_file_write_blocked(self) -> None:
         """node -e "require('fs').writeFileSync('/tmp/x','y')" should be blocked."""
@@ -525,19 +485,9 @@ class BypassClosureVerificationTest(unittest.TestCase):
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
-            self.assertIsNotNone(
-                hook, "Should have hookSpecificOutput for node write attempt",
-            )
-            self.assertEqual(
-                hook["permissionDecision"],
-                "deny",
-                f"node file write should be denied, got: {hook}",
-            )
-            self.assertIn(
-                "write-via-exec",
-                hook["permissionDecisionReason"],
-                f"Should indicate write-via-exec, got reason: {hook['permissionDecisionReason']}",
-            )
+            assert hook is not None, "Should have hookSpecificOutput for node write attempt"
+            assert hook["permissionDecision"] == "deny", f"node file write should be denied, got: {hook}"
+            assert "write-via-exec" in hook["permissionDecisionReason"], f"Should indicate write-via-exec, got reason: {hook['permissionDecisionReason']}"
 
     def test_perl_file_write_blocked(self) -> None:
         """perl -e 'open(F,">/tmp/x");print F "y"' should be blocked."""
@@ -551,19 +501,9 @@ class BypassClosureVerificationTest(unittest.TestCase):
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
-            self.assertIsNotNone(
-                hook, "Should have hookSpecificOutput for perl write attempt",
-            )
-            self.assertEqual(
-                hook["permissionDecision"],
-                "deny",
-                f"perl file write should be denied, got: {hook}",
-            )
-            self.assertIn(
-                "write-via-exec",
-                hook["permissionDecisionReason"],
-                f"Should indicate write-via-exec, got reason: {hook['permissionDecisionReason']}",
-            )
+            assert hook is not None, "Should have hookSpecificOutput for perl write attempt"
+            assert hook["permissionDecision"] == "deny", f"perl file write should be denied, got: {hook}"
+            assert "write-via-exec" in hook["permissionDecisionReason"], f"Should indicate write-via-exec, got reason: {hook['permissionDecisionReason']}"
 
     def test_sed_inplace_blocked(self) -> None:
         """sed -i 's/x/y/' /etc/important should be blocked."""
@@ -577,19 +517,9 @@ class BypassClosureVerificationTest(unittest.TestCase):
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
-            self.assertIsNotNone(
-                hook, "Should have hookSpecificOutput for sed -i attempt",
-            )
-            self.assertEqual(
-                hook["permissionDecision"],
-                "deny",
-                f"sed -i inplace edit should be denied, got: {hook}",
-            )
-            self.assertIn(
-                "write-via-exec",
-                hook["permissionDecisionReason"],
-                f"Should indicate write-via-exec, got reason: {hook['permissionDecisionReason']}",
-            )
+            assert hook is not None, "Should have hookSpecificOutput for sed -i attempt"
+            assert hook["permissionDecision"] == "deny", f"sed -i inplace edit should be denied, got: {hook}"
+            assert "write-via-exec" in hook["permissionDecisionReason"], f"Should indicate write-via-exec, got reason: {hook['permissionDecisionReason']}"
 
     def test_cp_to_sensitive_path_blocked(self) -> None:
         """cp /tmp/evil /etc/passwd should be blocked."""
@@ -603,19 +533,9 @@ class BypassClosureVerificationTest(unittest.TestCase):
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
-            self.assertIsNotNone(
-                hook, "Should have hookSpecificOutput for cp to /etc attempt",
-            )
-            self.assertEqual(
-                hook["permissionDecision"],
-                "deny",
-                f"cp to /etc/passwd should be denied, got: {hook}",
-            )
-            self.assertIn(
-                "write-via-exec",
-                hook["permissionDecisionReason"],
-                f"Should indicate write-via-exec, got reason: {hook['permissionDecisionReason']}",
-            )
+            assert hook is not None, "Should have hookSpecificOutput for cp to /etc attempt"
+            assert hook["permissionDecision"] == "deny", f"cp to /etc/passwd should be denied, got: {hook}"
+            assert "write-via-exec" in hook["permissionDecisionReason"], f"Should indicate write-via-exec, got reason: {hook['permissionDecisionReason']}"
 
     def test_compound_hidden_write_blocked(self) -> None:
         """ls && echo evil > /etc/shadow should detect and block the write."""
@@ -629,16 +549,9 @@ class BypassClosureVerificationTest(unittest.TestCase):
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
-            self.assertIsNotNone(
-                hook,
-                "Should have hookSpecificOutput for compound command with hidden write",
-            )
+            assert hook is not None, "Should have hookSpecificOutput for compound command with hidden write"
             # Compound command with write should be gated (ask or deny)
-            self.assertIn(
-                hook["permissionDecision"],
-                ["ask", "deny"],
-                f"Compound command with write should be gated (ask/deny), got: {hook}",
-            )
+            assert hook["permissionDecision"] in ["ask", "deny"], f"Compound command with write should be gated (ask/deny), got: {hook}"
 
 
 if __name__ == "__main__":

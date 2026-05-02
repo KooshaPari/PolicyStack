@@ -21,8 +21,8 @@ class AuthorizationDecisionTest(unittest.TestCase):
             command="ps aux | grep -i claude | grep -v grep | head -20",
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos/trace",
         )
-        self.assertEqual(result["decision"], "allow")
-        self.assertEqual(result["winning_rule"]["effect"], "allow")
+        assert result["decision"] == "allow"
+        assert result["winning_rule"]["effect"] == "allow"
 
     def test_repo_scaffolding_mkdir_is_allowed_in_phenotype_repos(self) -> None:
         resolved = resolve(
@@ -41,8 +41,8 @@ class AuthorizationDecisionTest(unittest.TestCase):
             ),
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos",
         )
-        self.assertEqual(result["decision"], "allow")
-        self.assertEqual(result["winning_rule"]["effect"], "allow")
+        assert result["decision"] == "allow"
+        assert result["winning_rule"]["effect"] == "allow"
 
     def test_repo_coordination_loop_is_allowed(self) -> None:
         resolved = resolve(
@@ -61,8 +61,8 @@ class AuthorizationDecisionTest(unittest.TestCase):
             ),
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos",
         )
-        self.assertEqual(result["decision"], "allow")
-        self.assertEqual(result["winning_rule"]["effect"], "allow")
+        assert result["decision"] == "allow"
+        assert result["winning_rule"]["effect"] == "allow"
 
     def test_go_cache_cleanup_is_allowed(self) -> None:
         resolved = resolve(
@@ -77,8 +77,8 @@ class AuthorizationDecisionTest(unittest.TestCase):
             command="go clean -cache",
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos/trace",
         )
-        self.assertEqual(result["decision"], "allow")
-        self.assertEqual(result["winning_rule"]["effect"], "allow")
+        assert result["decision"] == "allow"
+        assert result["winning_rule"]["effect"] == "allow"
 
     def test_homebrew_cache_cleanup_is_allowed(self) -> None:
         resolved = resolve(
@@ -93,8 +93,8 @@ class AuthorizationDecisionTest(unittest.TestCase):
             command="rm -rf ~/Library/Caches/Homebrew/downloads/*",
             cwd="/Users/kooshapari",
         )
-        self.assertEqual(result["decision"], "allow")
-        self.assertEqual(result["winning_rule"]["effect"], "allow")
+        assert result["decision"] == "allow"
+        assert result["winning_rule"]["effect"] == "allow"
 
     def test_git_symbolic_ref_is_allowed(self) -> None:
         resolved = resolve(
@@ -109,8 +109,8 @@ class AuthorizationDecisionTest(unittest.TestCase):
             command="git symbolic-ref refs/remotes/origin/HEAD",
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos/trace",
         )
-        self.assertEqual(result["decision"], "allow")
-        self.assertEqual(result["winning_rule"]["effect"], "allow")
+        assert result["decision"] == "allow"
+        assert result["winning_rule"]["effect"] == "allow"
 
     def test_git_worktree_list_is_allowed(self) -> None:
         resolved = resolve(
@@ -125,8 +125,8 @@ class AuthorizationDecisionTest(unittest.TestCase):
             command="git worktree list",
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos",
         )
-        self.assertEqual(result["decision"], "allow")
-        self.assertEqual(result["winning_rule"]["effect"], "allow")
+        assert result["decision"] == "allow"
+        assert result["winning_rule"]["effect"] == "allow"
 
     def test_pwd_is_allowed(self) -> None:
         resolved = resolve(
@@ -141,8 +141,8 @@ class AuthorizationDecisionTest(unittest.TestCase):
             command="pwd",
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos",
         )
-        self.assertEqual(result["decision"], "allow")
-        self.assertEqual(result["winning_rule"]["effect"], "allow")
+        assert result["decision"] == "allow"
+        assert result["winning_rule"]["effect"] == "allow"
 
     def test_readlink_realpath_probe_is_allowed(self) -> None:
         resolved = resolve(
@@ -163,8 +163,8 @@ class AuthorizationDecisionTest(unittest.TestCase):
             ),
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos",
         )
-        self.assertEqual(result["decision"], "allow")
-        self.assertEqual(result["winning_rule"]["effect"], "allow")
+        assert result["decision"] == "allow"
+        assert result["winning_rule"]["effect"] == "allow"
 
     def test_diff_probe_is_allowed(self) -> None:
         resolved = resolve(
@@ -184,8 +184,8 @@ class AuthorizationDecisionTest(unittest.TestCase):
             ),
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos",
         )
-        self.assertEqual(result["decision"], "allow")
-        self.assertEqual(result["winning_rule"]["effect"], "allow")
+        assert result["decision"] == "allow"
+        assert result["winning_rule"]["effect"] == "allow"
 
     def test_repo_inventory_prefix_is_allowed(self) -> None:
         resolved = resolve(
@@ -206,8 +206,8 @@ class AuthorizationDecisionTest(unittest.TestCase):
             ),
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos",
         )
-        self.assertEqual(result["decision"], "allow")
-        self.assertEqual(result["winning_rule"]["effect"], "allow")
+        assert result["decision"] == "allow"
+        assert result["winning_rule"]["effect"] == "allow"
 
     def test_repo_metadata_inventory_is_allowed(self) -> None:
         resolved = resolve(
@@ -230,8 +230,8 @@ class AuthorizationDecisionTest(unittest.TestCase):
             ),
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos",
         )
-        self.assertEqual(result["decision"], "allow")
-        self.assertEqual(result["winning_rule"]["effect"], "allow")
+        assert result["decision"] == "allow"
+        assert result["winning_rule"]["effect"] == "allow"
 
     def test_git_commit_is_allowed_from_thegent_worktree(self) -> None:
         resolved = resolve(
@@ -246,14 +246,8 @@ class AuthorizationDecisionTest(unittest.TestCase):
             command="git commit -m test",
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos/thegent-wtrees/demo",
         )
-        self.assertEqual(result["decision"], "allow")
-        self.assertIn(
-            result["winning_rule"]["id"],
-            {
-                "thegent-allow-git-write-in-worktrees",
-                "phenotype-allow-worktree-git-ops",
-            },
-        )
+        assert result["decision"] == "allow"
+        assert result["winning_rule"]["id"] in {"thegent-allow-git-write-in-worktrees", "phenotype-allow-worktree-git-ops"}
 
     def test_git_commit_is_denied_outside_thegent_worktree(self) -> None:
         resolved = resolve(
@@ -268,10 +262,8 @@ class AuthorizationDecisionTest(unittest.TestCase):
             command="git commit -m test",
             cwd="/tmp",
         )
-        self.assertEqual(result["decision"], "deny")
-        self.assertEqual(
-            result["winning_rule"]["id"], "thegent-deny-git-write-outside-worktrees",
-        )
+        assert result["decision"] == "deny"
+        assert result["winning_rule"]["id"] == "thegent-deny-git-write-outside-worktrees"
 
     def test_no_verify_bypass_is_denied_even_inside_worktree(self) -> None:
         resolved = resolve(
@@ -286,8 +278,8 @@ class AuthorizationDecisionTest(unittest.TestCase):
             command="git commit --no-verify -m test",
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos/thegent-wtrees/demo",
         )
-        self.assertEqual(result["decision"], "deny")
-        self.assertEqual(result["winning_rule"]["id"], "user-deny-no-verify-bypass")
+        assert result["decision"] == "deny"
+        assert result["winning_rule"]["id"] == "user-deny-no-verify-bypass"
 
     def test_network_request_is_asked(self) -> None:
         resolved = resolve(
@@ -302,8 +294,8 @@ class AuthorizationDecisionTest(unittest.TestCase):
             command="curl https://example.com",
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos/trace",
         )
-        self.assertEqual(result["decision"], "ask")
-        self.assertIsNone(result["winning_rule"])
+        assert result["decision"] == "ask"
+        assert result["winning_rule"] is None
 
 
 if __name__ == "__main__":

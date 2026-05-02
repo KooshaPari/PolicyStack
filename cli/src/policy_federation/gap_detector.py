@@ -5,11 +5,14 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from fnmatch import fnmatch
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from .authorization import normalize_authorization_rules
 from .resolver import resolve
 from .runtime_artifacts import read_audit_log
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @dataclass

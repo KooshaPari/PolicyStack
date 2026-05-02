@@ -220,7 +220,7 @@ def _cache_decision(command: str, result: DelegateResult) -> None:
         pattern = _extract_pattern(command)
 
         conn.execute(
-            """INSERT OR REPLACE INTO decision_cache 
+            """INSERT OR REPLACE INTO decision_cache
                (command_hash, command_pattern, decision, source, confidence, timestamp)
                VALUES (?, ?, ?, ?, ?, ?)""",
             (
@@ -249,8 +249,7 @@ def _extract_pattern(command: str) -> str:
     """Extract pattern from command for fuzzy matching."""
     # Remove specific file paths, keeping only the command structure
     pattern = re.sub(r"\s+/[^\s]+", " <PATH>", command)
-    pattern = re.sub(r"\s+\d+", " <NUM>", pattern)
-    return pattern
+    return re.sub(r"\s+\d+", " <NUM>", pattern)
 
 
 def render_delegate_prompt(context: DelegateContext) -> str:
@@ -492,7 +491,7 @@ def delegate_ask(
         )
 
     # Get fallback chain
-    fallback_chain = [harness] + HARNESS_FALLBACK.get(harness, ["local-fast"])
+    fallback_chain = [harness, *HARNESS_FALLBACK.get(harness, ["local-fast"])]
 
     # Step 4: Try harnesses in order
     prompt = render_delegate_prompt(context)
@@ -657,5 +656,7 @@ def clear_cache() -> bool:
 
 
 # Backward compatibility - keep old function names
-_invoke_forge = lambda prompt: _invoke_harness("forge", prompt)
-_invoke_cursor = lambda prompt: _invoke_harness("cursor", prompt)
+def _invoke_forge(prompt):
+    return _invoke_harness("forge", prompt)
+def _invoke_cursor(prompt):
+    return _invoke_harness("cursor", prompt)

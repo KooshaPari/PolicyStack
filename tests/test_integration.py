@@ -285,7 +285,7 @@ class TestHeadlessReviewIntegration:
             "reason": "Legacy allowed",
         }
 
-        result = run_headless_review(
+        run_headless_review(
             repo_root=repo_root,
             action="exec",
             command="some-command",
@@ -433,7 +433,7 @@ class TestPerformanceTargets:
         times = []
         for _ in range(100):
             start = time.perf_counter()
-            result = _local_fast_evaluate(ctx)
+            _local_fast_evaluate(ctx)
             elapsed = (time.perf_counter() - start) * 1000  # Convert to ms
             times.append(elapsed)
 
@@ -454,7 +454,7 @@ class TestPerformanceTargets:
         times = []
         for _ in range(100):
             start = time.perf_counter()
-            result = assess_risk_tiered(
+            assess_risk_tiered(
                 command="git status", cwd="/tmp", is_worktree=False,
             )
             elapsed = (time.perf_counter() - start) * 1000

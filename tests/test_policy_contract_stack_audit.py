@@ -14,7 +14,8 @@ def _load_audit_module():
         "lane4_policy_contract_pr_stack_audit", SCRIPT_PATH,
     )
     module = importlib.util.module_from_spec(spec)
-    assert spec and spec.loader
+    assert spec
+    assert spec.loader
     sys.modules.setdefault(spec.name, module)
     spec.loader.exec_module(module)  # type: ignore[union-attr]
     return module
@@ -192,7 +193,7 @@ def test_find_stacked_records_collects_mixed_comment_error_with_partial_data(
         ),
     )
 
-    stacked, missing, summary = MOD.find_stacked_and_token_findings(
+    _stacked, missing, summary = MOD.find_stacked_and_token_findings(
         [
             _fake_pr(7, head="stack/feature-7", base="main"),
             _fake_pr(8, head="stack/feature-8", base="stack/feature-7"),

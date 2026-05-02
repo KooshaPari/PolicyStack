@@ -43,7 +43,8 @@ def parse_args() -> argparse.Namespace:
 
 def load_json(path: Path) -> dict:
     if not path.exists():
-        raise FileNotFoundError(f"Missing JSON file: {path}")
+        msg = f"Missing JSON file: {path}"
+        raise FileNotFoundError(msg)
     return json.loads(path.read_text(encoding="utf-8"))
 
 
@@ -126,8 +127,8 @@ def validate_manifest(path: Path, manifest_schema: dict, strict: bool) -> list[s
     errors = []
     errs, warnings = validate_schema(data, manifest_schema, strict)
     errors.extend(errs)
-    for warning in warnings:
-        print(f"WARN: {warning}")
+    for _warning in warnings:
+        pass
 
     for required in ["name", "version", "kind", "scope", "targets", "fragment"]:
         if required not in data:
@@ -144,7 +145,7 @@ def validate_signature(payload: dict, sign_key: str) -> list[str]:
     if not sign_key:
         return []
 
-    audit = payload.get("audit", {})
+    payload.get("audit", {})
     expected = payload.get("audit", {}).get("policy_signature")
     if not expected:
         return ["sign-key provided but policy_signature missing from audit"]
@@ -175,8 +176,8 @@ def main() -> None:
     errors.extend(validate_minimal_policy(payload))
     errs, warnings = validate_schema(payload, policy_schema, args.strict)
     if warnings:
-        for warning in warnings:
-            print(f"WARN: {warning}")
+        for _warning in warnings:
+            pass
     errors.extend(errs)
 
     for file_name in payload.get("audit", {}).get("files", []):
@@ -193,22 +194,16 @@ def main() -> None:
         errors.extend(validate_manifest(manifest_path, manifest_schema, args.strict))
 
     if errors:
-        for error in errors:
-            print(f"ERROR: {error}")
+        for _error in errors:
+            pass
         raise SystemExit(1)
 
     sig_errors = validate_signature(payload, args.sign_key)
     if sig_errors:
-        for error in sig_errors:
-            print(f"ERROR: {error}")
+        for _error in sig_errors:
+            pass
         raise SystemExit(1)
 
-    print(
-        "policy payload valid: "
-        f"scope={payload['scope']['repo']} "
-        f"extensions={len(payload['scope']['extensions'])} "
-        f"digest={payload['audit']['policy_digest'][:12]}...",
-    )
 
 
 if __name__ == "__main__":

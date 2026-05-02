@@ -5,7 +5,10 @@ from __future__ import annotations
 import datetime
 import json
 import shutil
-from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 INSTALL_MARKER_START = "# policy-federation runtime start"
 INSTALL_MARKER_END = "# policy-federation runtime end"

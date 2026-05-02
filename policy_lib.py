@@ -284,27 +284,32 @@ def _parse_condition_group(value: Any) -> ConditionGroup | None:
     if isinstance(value, list):
         return ConditionGroup(items=tuple(_parse_condition(v) for v in value))
     if not isinstance(value, dict):
-        raise ValueError(f"unsupported condition type: {type(value).__name__}")
+        msg = f"unsupported condition type: {type(value).__name__}"
+        raise ValueError(msg)
 
     if "all" in value:
         conditions = value["all"]
         if not isinstance(conditions, list):
-            raise ValueError("'all' must be a list")
+            msg = "'all' must be a list"
+            raise ValueError(msg)
         return ConditionGroup(mode="all", items=tuple(_parse_condition(v) for v in conditions))
 
     if "any" in value:
         conditions = value["any"]
         if not isinstance(conditions, list):
-            raise ValueError("'any' must be a list")
+            msg = "'any' must be a list"
+            raise ValueError(msg)
         return ConditionGroup(mode="any", items=tuple(_parse_condition(v) for v in conditions))
 
     if "mode" in value and "conditions" in value:
         mode = value["mode"]
         if mode not in {"all", "any"}:
-            raise ValueError(f"unsupported condition mode: {mode!r}")
+            msg = f"unsupported condition mode: {mode!r}"
+            raise ValueError(msg)
         conditions = value["conditions"]
         if not isinstance(conditions, list):
-            raise ValueError("'conditions' must be a list when 'mode' is set")
+            msg = "'conditions' must be a list when 'mode' is set"
+            raise ValueError(msg)
         return ConditionGroup(mode=mode, items=tuple(_parse_condition(v) for v in conditions))
 
     return ConditionGroup(items=(_parse_condition(value),))
@@ -320,64 +325,81 @@ def _parse_condition(value: Any) -> Condition | ConditionGroup:
     ):
         return _parse_condition_group(value)
     elif isinstance(value, dict) and "name" not in value:
-        raise ValueError(f"condition dict must include name: {value!r}")
+        msg = f"condition dict must include name: {value!r}"
+        raise ValueError(msg)
     elif isinstance(value, dict):
         explicit = True
         name = str(value["name"])
         if "required" in value and not isinstance(value["required"], bool):
-            raise ValueError(f"condition.required must be boolean: {value!r}")
+            msg = f"condition.required must be boolean: {value!r}"
+            raise ValueError(msg)
         required = bool(value.get("required", True))
     else:
-        raise ValueError(f"unsupported condition type: {type(value).__name__}")
+        msg = f"unsupported condition type: {type(value).__name__}"
+        raise ValueError(msg)
     if name not in CONDITION_EVALUATORS:
-        raise ValueError(f"unsupported condition: {name}")
+        msg = f"unsupported condition: {name}"
+        raise ValueError(msg)
     return Condition(name, required=required, explicit=explicit)
 
 
 def _parse_match(match: Any) -> tuple[str, str]:
     if isinstance(match, str):
         if not match.strip():
-            raise ValueError("match pattern must be a non-empty string")
+            msg = "match pattern must be a non-empty string"
+            raise ValueError(msg)
         return "glob", match
     if match is None:
-        raise ValueError("match or pattern must be a non-empty string")
+        msg = "match or pattern must be a non-empty string"
+        raise ValueError(msg)
     if not isinstance(match, dict):
-        raise ValueError(f"matcher pattern must be string, got {type(match).__name__}: {match!r}")
+        msg = f"matcher pattern must be string, got {type(match).__name__}: {match!r}"
+        raise ValueError(msg)
     if not match:
-        raise ValueError(f"invalid match block: {match!r}")
+        msg = f"invalid match block: {match!r}"
+        raise ValueError(msg)
     if len(match) != 1:
-        raise ValueError(f"match block must have one key: {match!r}")
+        msg = f"match block must have one key: {match!r}"
+        raise ValueError(msg)
     matcher, pattern = next(iter(match.items()))
     if matcher not in ALLOWED_MATCHERS:
-        raise ValueError(f"unsupported matcher: {matcher}")
+        msg = f"unsupported matcher: {matcher}"
+        raise ValueError(msg)
     if not isinstance(pattern, str):
-        raise ValueError(f"matcher pattern must be string: {pattern!r}")
+        msg = f"matcher pattern must be string: {pattern!r}"
+        raise ValueError(msg)
     if not pattern.strip():
-        raise ValueError("matcher pattern must be a non-empty string")
+        msg = "matcher pattern must be a non-empty string"
+        raise ValueError(msg)
     return matcher, pattern
 
 
 def normalize_payload(payload: dict[str, Any], cwd: Path | None = None) -> list[CommandRule]:
     if not isinstance(payload, dict):
-        raise ValueError("policy payload must be a mapping")
+        msg = "policy payload must be a mapping"
+        raise ValueError(msg)
 
     policy = payload.get("policy", payload)
     if not isinstance(policy, dict):
-        raise ValueError("'policy' must be a mapping")
+        msg = "'policy' must be a mapping"
+        raise ValueError(msg)
 
     def _as_command_list(name: str) -> list[str]:
         rules = commands.get(name, [])
         if not isinstance(rules, list):
-            raise ValueError(f"policy.commands.{name} must be a list")
+            msg = f"policy.commands.{name} must be a list"
+            raise ValueError(msg)
         normalized_patterns: list[str] = []
         for idx, value in enumerate(rules):
             if not isinstance(value, str):
+                msg = f"policy.commands.{name}[{idx}] must be a non-empty string"
                 raise ValueError(
-                    f"policy.commands.{name}[{idx}] must be a non-empty string",
+                    msg,
                 )
             if not value.strip():
+                msg = f"policy.commands.{name}[{idx}] must be a non-empty string"
                 raise ValueError(
-                    f"policy.commands.{name}[{idx}] must be a non-empty string",
+                    msg,
                 )
             normalized_patterns.append(value)
         return normalized_patterns
@@ -386,7 +408,8 @@ def normalize_payload(payload: dict[str, Any], cwd: Path | None = None) -> list[
 
     commands = policy.get("commands", {})
     if not isinstance(commands, dict):
-        raise ValueError("policy.commands must be a map")
+        msg = "policy.commands must be a map"
+        raise ValueError(msg)
 
     allow_rules = _as_command_list("allow")
     deny_rules = _as_command_list("deny")
@@ -427,26 +450,31 @@ def normalize_payload(payload: dict[str, Any], cwd: Path | None = None) -> list[
 
     command_rules = policy.get("command_rules", [])
     if not isinstance(command_rules, list):
-        raise ValueError("policy.command_rules must be a list")
+        msg = "policy.command_rules must be a list"
+        raise ValueError(msg)
 
     for idx, entry in enumerate(command_rules):
         if not isinstance(entry, dict):
-            raise ValueError(f"command_rule[{idx}] must be a map")
+            msg = f"command_rule[{idx}] must be a map"
+            raise ValueError(msg)
         rule_id = str(entry.get("id") or f"cmd-rule-{idx}")
         action = entry.get("action")
         if action not in ALLOWED_ACTIONS:
-            raise ValueError(f"command_rule[{idx}] invalid action: {action}")
+            msg = f"command_rule[{idx}] invalid action: {action}"
+            raise ValueError(msg)
         match = entry.get("match")
         if match is None and "pattern" in entry:
             match = entry.get("pattern")
         matcher, pattern = _parse_match(match)
         if not isinstance(pattern, str) or not pattern.strip():
-            raise ValueError(f"command_rule[{idx}] pattern must be a non-empty string")
+            msg = f"command_rule[{idx}] pattern must be a non-empty string"
+            raise ValueError(msg)
         conditions = _parse_condition_group(entry.get("conditions"))
         on_mismatch = entry.get("on_mismatch")
         if on_mismatch is not None and on_mismatch not in ALLOWED_ACTIONS:
+            msg = f"command_rule[{idx}] invalid on_mismatch action: {on_mismatch}"
             raise ValueError(
-                f"command_rule[{idx}] invalid on_mismatch action: {on_mismatch}",
+                msg,
             )
         rules.append(
             CommandRule(

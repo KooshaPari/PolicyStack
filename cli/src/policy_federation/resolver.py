@@ -5,12 +5,15 @@ from __future__ import annotations
 import datetime
 import hashlib
 import json
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from . import resolver_merge as _resolver_merge
 from .authorization import normalize_authorization_rules
 from .resolver_extensions import _resolve_extensions
 from .resolver_layers import _policy_layers
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 _append_unique_items = _resolver_merge._append_unique_items
 _load_policy_document = _resolver_merge._load_policy_document
@@ -71,7 +74,7 @@ def resolve(
 
     default_effects, authorization_rules = normalize_authorization_rules(merged_policy)
 
-    payload = {
+    return {
         "policy_hash": hashlib.sha256(
             json.dumps(merged_policy, sort_keys=True).encode(),
         ).hexdigest(),
@@ -92,7 +95,6 @@ def resolve(
             repo_root=repo_root, scope_chain=scope_chain, contract_ids=contract_ids,
         ),
     }
-    return payload
 
 
 def hash_policy_sources(source_files: list[Path]) -> str:

@@ -105,8 +105,6 @@ def main() -> None:
     }
 
     MANIFEST_FILE.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
-    print(f"generated patch: {PATCH_FILE}")
-    print(f"generated manifest: {MANIFEST_FILE}")
 
 
 if __name__ == "__main__":

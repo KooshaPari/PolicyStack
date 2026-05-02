@@ -266,7 +266,7 @@ class TestHarnessConfiguration:
 
     def test_harness_fallback_chains(self):
         """All harnesses should have fallback chains."""
-        for harness in HARNESS_CONFIG.keys():
+        for harness in HARNESS_CONFIG:
             assert harness in HARNESS_FALLBACK, f"{harness} should have fallback chain"
 
     def test_harness_config_complete(self):

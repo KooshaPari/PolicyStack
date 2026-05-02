@@ -21,10 +21,8 @@ class AuthorizationRepoOperationsTest(unittest.TestCase):
             command="timeout 30 bun test apps/desktop/tests/unit 2>&1 | tail -10",
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos/heliosApp-wtrees/tech-debt-wave",
         )
-        self.assertEqual(result["decision"], "allow")
-        self.assertEqual(
-            result["winning_rule"]["id"], "phenotype-allow-timeout-wrapped-tests",
-        )
+        assert result["decision"] == "allow"
+        assert result["winning_rule"]["id"] == "phenotype-allow-timeout-wrapped-tests"
 
     def test_timeout_wrapped_pytest_is_allowed(self) -> None:
         resolved = resolve(
@@ -39,10 +37,8 @@ class AuthorizationRepoOperationsTest(unittest.TestCase):
             command="timeout 30 pytest --tb=short -q 2>&1 | tail -15",
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos/portage-composite-actions",
         )
-        self.assertEqual(result["decision"], "allow")
-        self.assertEqual(
-            result["winning_rule"]["id"], "phenotype-allow-timeout-wrapped-tests",
-        )
+        assert result["decision"] == "allow"
+        assert result["winning_rule"]["id"] == "phenotype-allow-timeout-wrapped-tests"
 
     def test_worktree_package_add_is_allowed(self) -> None:
         resolved = resolve(
@@ -57,10 +53,8 @@ class AuthorizationRepoOperationsTest(unittest.TestCase):
             command="bun add -d happy-dom",
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos/heliosApp-wtrees/tech-debt-wave",
         )
-        self.assertEqual(result["decision"], "allow")
-        self.assertEqual(
-            result["winning_rule"]["id"], "phenotype-allow-worktree-package-adds",
-        )
+        assert result["decision"] == "allow"
+        assert result["winning_rule"]["id"] == "phenotype-allow-worktree-package-adds"
 
     def test_trace_cli_stub_alias_write_is_allowed(self) -> None:
         resolved = resolve(
@@ -83,14 +77,8 @@ class AuthorizationRepoOperationsTest(unittest.TestCase):
                 "src/tracertm/cli/aliases.py",
             ],
         )
-        self.assertEqual(result["decision"], "allow")
-        self.assertIn(
-            result["winning_rule"]["id"],
-            [
-                "phenotype-allow-worktree-writes",
-                "phenotype-allow-worktree-writes-any-cwd",
-            ],
-        )
+        assert result["decision"] == "allow"
+        assert result["winning_rule"]["id"] in ["phenotype-allow-worktree-writes", "phenotype-allow-worktree-writes-any-cwd"]
 
     def test_trace_cli_stub_storage_write_is_allowed(self) -> None:
         resolved = resolve(
@@ -113,14 +101,8 @@ class AuthorizationRepoOperationsTest(unittest.TestCase):
                 "src/tracertm/cli/storage_helper.py",
             ],
         )
-        self.assertEqual(result["decision"], "allow")
-        self.assertIn(
-            result["winning_rule"]["id"],
-            [
-                "phenotype-allow-worktree-writes",
-                "phenotype-allow-worktree-writes-any-cwd",
-            ],
-        )
+        assert result["decision"] == "allow"
+        assert result["winning_rule"]["id"] in ["phenotype-allow-worktree-writes", "phenotype-allow-worktree-writes-any-cwd"]
 
     def test_pwd_is_allowed_in_worktree(self) -> None:
         resolved = resolve(
@@ -135,7 +117,7 @@ class AuthorizationRepoOperationsTest(unittest.TestCase):
             command="pwd",
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos/bifrost-extensions-wtrees/fix-build-blockers",
         )
-        self.assertEqual(result["decision"], "allow")
+        assert result["decision"] == "allow"
 
     def test_web_search_is_allowed_for_docs_research(self) -> None:
         resolved = resolve(
@@ -150,10 +132,8 @@ class AuthorizationRepoOperationsTest(unittest.TestCase):
             command="WebSearch Plane.so REST API endpoints issues cycles modules documentation",
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos",
         )
-        self.assertEqual(result["decision"], "allow")
-        self.assertEqual(
-            result["winning_rule"]["id"], "phenotype-allow-docs-web-search",
-        )
+        assert result["decision"] == "allow"
+        assert result["winning_rule"]["id"] == "phenotype-allow-docs-web-search"
 
     def test_destructive_repo_removal_is_denied(self) -> None:
         resolved = resolve(
@@ -168,10 +148,8 @@ class AuthorizationRepoOperationsTest(unittest.TestCase):
             command="rm -rf /Users/kooshapari/CodeProjects/Phenotype/repos/phenotype-go-kit",
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos",
         )
-        self.assertEqual(result["decision"], "deny")
-        self.assertEqual(
-            result["winning_rule"]["id"], "phenotype-deny-destructive-repo-removal",
-        )
+        assert result["decision"] == "deny"
+        assert result["winning_rule"]["id"] == "phenotype-deny-destructive-repo-removal"
 
     def test_archive_repo_move_is_allowed(self) -> None:
         resolved = resolve(
@@ -189,10 +167,8 @@ class AuthorizationRepoOperationsTest(unittest.TestCase):
             ),
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos",
         )
-        self.assertEqual(result["decision"], "allow")
-        self.assertEqual(
-            result["winning_rule"]["id"], "phenotype-allow-archive-repo-moves",
-        )
+        assert result["decision"] == "allow"
+        assert result["winning_rule"]["id"] == "phenotype-allow-archive-repo-moves"
 
 
 if __name__ == "__main__":

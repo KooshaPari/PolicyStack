@@ -3,9 +3,9 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-import pytest
-
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from typing import TYPE_CHECKING
 
 from scripts.policy_common import (
     discover_default_policy_paths,
@@ -13,6 +13,9 @@ from scripts.policy_common import (
     normalize_input_paths,
     required_default_policy_paths,
 )
+
+if TYPE_CHECKING:
+    import pytest
 
 
 def test_discover_policy_paths_orders_scopes_and_dedupes_with_extension_precedence(

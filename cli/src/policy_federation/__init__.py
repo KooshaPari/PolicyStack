@@ -29,21 +29,21 @@ from .risk import (
 )
 
 __all__ = [
-    # Version
-    "__version__",
+    "HARNESS_CONFIG",
+    "HARNESS_FALLBACK",
     # Delegation
     "DelegateContext",
     "DelegateResult",
-    "delegate_ask",
-    "get_cache_stats",
-    "clear_cache",
-    "HARNESS_FALLBACK",
-    "HARNESS_CONFIG",
+    "RiskAssessment",
     # Risk
     "RiskTier",
-    "RiskAssessment",
+    # Version
+    "__version__",
     "assess_risk_tiered",
+    "clear_cache",
+    "delegate_ask",
+    "get_cache_stats",
     "get_tiered_decision_path",
-    "is_read_operation",
     "is_destructive_pattern",
+    "is_read_operation",
 ]

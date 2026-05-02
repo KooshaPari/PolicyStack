@@ -16,17 +16,12 @@ class CompilerTest(unittest.TestCase):
             task_domain="devops",
         )
         compiled = compile_target("codex", resolved)
-        self.assertIn(
-            "git commit --no-verify*",
-            compiled["native_config"]["permissions"]["deny_prefixes"],
-        )
-        self.assertIn(
-            "git commit*", compiled["native_config"]["permissions"]["deny_prefixes"],
-        )
+        assert "git commit --no-verify*" in compiled["native_config"]["permissions"]["deny_prefixes"]
+        assert "git commit*" in compiled["native_config"]["permissions"]["deny_prefixes"]
         shim_ids = {rule["id"] for rule in compiled["shim_rules"]}
-        self.assertIn("thegent-allow-git-write-in-worktrees", shim_ids)
-        self.assertIn("thegent-deny-write-outside-worktrees", shim_ids)
-        self.assertIn("devops-ask-network-egress", shim_ids)
+        assert "thegent-allow-git-write-in-worktrees" in shim_ids
+        assert "thegent-deny-write-outside-worktrees" in shim_ids
+        assert "devops-ask-network-egress" in shim_ids
 
     def test_codex_compile_surfaces_host_safe_allow_prefixes(self) -> None:
         resolved = resolve(
@@ -37,36 +32,24 @@ class CompilerTest(unittest.TestCase):
         )
         compiled = compile_target("codex", resolved)
         permissions = compiled["native_config"]["permissions"]
-        self.assertIn("ps*", permissions["allow_prefixes"])
-        self.assertIn(
-            "mkdir -p /Users/kooshapari/CodeProjects/Phenotype/repos/*",
-            permissions["allow_prefixes"],
-        )
-        self.assertIn("go clean -cache*", permissions["allow_prefixes"])
-        self.assertIn(
-            "rm -rf ~/Library/Caches/Homebrew/downloads/*",
-            permissions["allow_prefixes"],
-        )
-        self.assertIn("timeout * bun test*", permissions["allow_prefixes"])
-        self.assertIn("timeout * pytest*", permissions["allow_prefixes"])
-        self.assertIn("timeout * python -m pytest*", permissions["allow_prefixes"])
-        self.assertIn("timeout * python3 -m pytest*", permissions["allow_prefixes"])
-        self.assertIn(
-            "mv /Users/kooshapari/CodeProjects/Phenotype/repos/* /Users/kooshapari/CodeProjects/Phenotype/repos/.archive/*",
-            permissions["allow_prefixes"],
-        )
-        self.assertIn(
-            "rm -rf /Users/kooshapari/CodeProjects/Phenotype/repos/*",
-            permissions["deny_prefixes"],
-        )
-        self.assertIn("git symbolic-ref*", permissions["allow_prefixes"])
-        self.assertIn("git worktree add*", permissions["allow_prefixes"])
-        self.assertIn("diff*", permissions["allow_prefixes"])
-        self.assertIn("command -v *", permissions["allow_prefixes"])
-        self.assertIn("basename *", permissions["allow_prefixes"])
-        self.assertIn("pwd", permissions["allow_prefixes"])
-        self.assertIn("readlink -f *", permissions["allow_prefixes"])
-        self.assertIn("realpath *", permissions["allow_prefixes"])
+        assert "ps*" in permissions["allow_prefixes"]
+        assert "mkdir -p /Users/kooshapari/CodeProjects/Phenotype/repos/*" in permissions["allow_prefixes"]
+        assert "go clean -cache*" in permissions["allow_prefixes"]
+        assert "rm -rf ~/Library/Caches/Homebrew/downloads/*" in permissions["allow_prefixes"]
+        assert "timeout * bun test*" in permissions["allow_prefixes"]
+        assert "timeout * pytest*" in permissions["allow_prefixes"]
+        assert "timeout * python -m pytest*" in permissions["allow_prefixes"]
+        assert "timeout * python3 -m pytest*" in permissions["allow_prefixes"]
+        assert "mv /Users/kooshapari/CodeProjects/Phenotype/repos/* /Users/kooshapari/CodeProjects/Phenotype/repos/.archive/*" in permissions["allow_prefixes"]
+        assert "rm -rf /Users/kooshapari/CodeProjects/Phenotype/repos/*" in permissions["deny_prefixes"]
+        assert "git symbolic-ref*" in permissions["allow_prefixes"]
+        assert "git worktree add*" in permissions["allow_prefixes"]
+        assert "diff*" in permissions["allow_prefixes"]
+        assert "command -v *" in permissions["allow_prefixes"]
+        assert "basename *" in permissions["allow_prefixes"]
+        assert "pwd" in permissions["allow_prefixes"]
+        assert "readlink -f *" in permissions["allow_prefixes"]
+        assert "realpath *" in permissions["allow_prefixes"]
 
     def test_cursor_compile_includes_runtime_wrappers(self) -> None:
         resolved = resolve(
@@ -77,10 +60,8 @@ class CompilerTest(unittest.TestCase):
         )
         compiled = compile_target("cursor-agent", resolved)
         wrapper = compiled["native_config"]["runtime_wrapper"]
-        self.assertEqual(wrapper["exec"], "./scripts/runtime/cursor_exec_guard.sh")
-        self.assertEqual(
-            wrapper["write_check"], "./scripts/runtime/cursor_write_guard.sh",
-        )
+        assert wrapper["exec"] == "./scripts/runtime/cursor_exec_guard.sh"
+        assert wrapper["write_check"] == "./scripts/runtime/cursor_write_guard.sh"
 
     def test_factory_compile_includes_runtime_wrappers(self) -> None:
         resolved = resolve(
@@ -91,11 +72,9 @@ class CompilerTest(unittest.TestCase):
         )
         compiled = compile_target("factory-droid", resolved)
         wrapper = compiled["native_config"]["runtime_wrapper"]
-        self.assertEqual(wrapper["exec"], "./scripts/runtime/factory_exec_guard.sh")
-        self.assertEqual(
-            wrapper["network_check"], "./scripts/runtime/factory_network_guard.sh",
-        )
-        self.assertEqual(compiled["native_config"]["approvalMode"], "review")
+        assert wrapper["exec"] == "./scripts/runtime/factory_exec_guard.sh"
+        assert wrapper["network_check"] == "./scripts/runtime/factory_network_guard.sh"
+        assert compiled["native_config"]["approvalMode"] == "review"
 
     def test_claude_compile_includes_pretool_hook(self) -> None:
         resolved = resolve(
@@ -106,15 +85,10 @@ class CompilerTest(unittest.TestCase):
         )
         compiled = compile_target("claude-code", resolved)
         wrapper = compiled["native_config"]["runtime_wrapper"]
-        self.assertEqual(wrapper["exec"], "./scripts/runtime/claude_exec_guard.sh")
-        self.assertEqual(
-            wrapper["pretool_hook"], "./scripts/runtime/claude_pretool_hook.py",
-        )
+        assert wrapper["exec"] == "./scripts/runtime/claude_exec_guard.sh"
+        assert wrapper["pretool_hook"] == "./scripts/runtime/claude_pretool_hook.py"
         pretool = compiled["native_config"]["hooks"]["PreToolUse"][0]
-        self.assertEqual(
-            pretool["matcher"],
-            "Bash|Write|Edit|MultiEdit|WebFetch|WebSearch|NotebookEdit",
-        )
+        assert pretool["matcher"] == "Bash|Write|Edit|MultiEdit|WebFetch|WebSearch|NotebookEdit"
 
     def test_all_targets_share_parity_for_native_and_runtime_actions(self) -> None:
         resolved_payload = {
@@ -204,45 +178,40 @@ class CompilerTest(unittest.TestCase):
         }
         for target, wrapper_path in target_wrappers.items():
             compiled = compile_target(target, resolved_payload)
-            self.assertEqual(
-                compiled["native_config"]["runtime_wrapper"]["exec"], wrapper_path,
-            )
+            assert compiled["native_config"]["runtime_wrapper"]["exec"] == wrapper_path
 
             shim_ids = {rule["id"] for rule in compiled["shim_rules"]}
-            self.assertIn("test-deny-write-any", shim_ids)
-            self.assertIn("test-ask-network", shim_ids)
-            self.assertIn("test-deny-shutdown", shim_ids)
-            self.assertIn("test-allow-exec-conditional", shim_ids)
-            self.assertIn("test-allow-exec-no-command", shim_ids)
+            assert "test-deny-write-any" in shim_ids
+            assert "test-ask-network" in shim_ids
+            assert "test-deny-shutdown" in shim_ids
+            assert "test-allow-exec-conditional" in shim_ids
+            assert "test-allow-exec-no-command" in shim_ids
 
             shim_index = {rule["id"]: rule for rule in compiled["shim_rules"]}
             for rule_id, actions in expected_runtime_only_flags.items():
-                self.assertIn(rule_id, shim_index)
+                assert rule_id in shim_index
                 rule = shim_index[rule_id]
-                self.assertIn("actions", rule)
-                self.assertEqual(rule["actions"], actions)
-                self.assertTrue(
-                    rule["requires_runtime_check"],
-                    f"Expected runtime-check marker for {rule_id}",
-                )
+                assert "actions" in rule
+                assert rule["actions"] == actions
+                assert rule["requires_runtime_check"], f"Expected runtime-check marker for {rule_id}"
             if target == "factory-droid":
                 factory_ask_shim = shim_index["ask::npm publish*"]
-                self.assertIn("requires_runtime_check", factory_ask_shim)
-                self.assertEqual(factory_ask_shim["actions"], ["ask"])
+                assert "requires_runtime_check" in factory_ask_shim
+                assert factory_ask_shim["actions"] == ["ask"]
 
             if target == "codex":
                 permissions = compiled["native_config"]["permissions"]
-                self.assertIn("echo*", permissions["allow_prefixes"])
-                self.assertIn("npm publish*", permissions["ask_prefixes"])
+                assert "echo*" in permissions["allow_prefixes"]
+                assert "npm publish*" in permissions["ask_prefixes"]
             elif target == "factory-droid":
-                self.assertIn("echo*", compiled["native_config"]["commandAllowlist"])
-                self.assertIn("ask::npm publish*", shim_ids)
+                assert "echo*" in compiled["native_config"]["commandAllowlist"]
+                assert "ask::npm publish*" in shim_ids
             elif target == "claude-code":
                 permissions = compiled["native_config"]["permissions"]
-                self.assertIn("Bash(echo*)", permissions["allow"])
+                assert "Bash(echo*)" in permissions["allow"]
             else:
                 permissions = compiled["native_config"]["permissions"]
-                self.assertIn("Shell(echo*)", permissions["allow"])
+                assert "Shell(echo*)" in permissions["allow"]
 
 
 if __name__ == "__main__":

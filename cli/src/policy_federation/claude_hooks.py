@@ -217,10 +217,7 @@ def _extract_sed_target_paths(command: str, cwd: str) -> list[str]:
     target_paths: list[str] = []
     for part in reversed(parts):
         if (
-            part == "sed"
-            or part == "-i"
-            or part.startswith("-")
-            or part.startswith("s/")
+            part in {"sed", "-i"} or part.startswith(("-", "s/"))
         ):
             continue
         target_paths.append(_resolve_target_path(part, cwd))

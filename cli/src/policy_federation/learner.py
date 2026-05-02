@@ -6,11 +6,14 @@ import datetime
 import re
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import yaml
 
 from .runtime_artifacts import filter_audit_events, read_audit_log
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @dataclass

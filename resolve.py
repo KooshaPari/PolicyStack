@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""Resolve layered agent policy scopes.
-"""
+"""Resolve layered agent policy scopes."""
 
 from __future__ import annotations
 
@@ -82,12 +81,14 @@ def load_yaml(path: Path, *, required: bool = False, scope: str | None = None) -
     if not path.exists():
         if required:
             scope_label = f" for scope '{scope}'" if scope else ""
-            raise FileNotFoundError(f"missing required policy file{scope_label}: {path}")
+            msg = f"missing required policy file{scope_label}: {path}"
+            raise FileNotFoundError(msg)
         return {}
     with path.open("r", encoding="utf-8") as f:
         data = yaml.safe_load(f) or {}
     if not isinstance(data, dict):
-        raise ValueError(f"policy at {path} must be a YAML map")
+        msg = f"policy at {path} must be a YAML map"
+        raise ValueError(msg)
     return data
 
 
@@ -95,24 +96,32 @@ def validate_policy(
     data: dict[str, Any], path: Path, *, expected_scope: str | None = None,
 ) -> None:
     if "policy_version" not in data or not isinstance(data["policy_version"], str):
-        raise ValueError(f"{path}: policy_version missing or invalid")
+        msg = f"{path}: policy_version missing or invalid"
+        raise ValueError(msg)
     if data["policy_version"] != "v1":
-        raise ValueError(f"{path}: policy_version must be 'v1'")
+        msg = f"{path}: policy_version must be 'v1'"
+        raise ValueError(msg)
     scope_name = data.get("scope")
     if scope_name not in SCOPE_ORDER:
-        raise ValueError(f"{path}: invalid scope {scope_name}")
+        msg = f"{path}: invalid scope {scope_name}"
+        raise ValueError(msg)
     if expected_scope is not None and scope_name != expected_scope:
-        raise ValueError(
+        msg = (
             f"{path}: scope mismatch in chain: expected "
-            f"{expected_scope}, got {scope_name}",
+            f"{expected_scope}, got {scope_name}"
+        )
+        raise ValueError(
+            msg,
         )
 
 
 def _validate_scope_identifier(value: str, flag: str) -> None:
     if "/" in value or "\\" in value or value != Path(value).name:
-        raise _ArgumentParseError(f"{flag} must not contain path separators")
+        msg = f"{flag} must not contain path separators"
+        raise _ArgumentParseError(msg)
     if not SAFE_SCOPE_RE.fullmatch(value):
-        raise _ArgumentParseError(f"{flag} must match {SAFE_SCOPE_RE.pattern}")
+        msg = f"{flag} must match {SAFE_SCOPE_RE.pattern}"
+        raise _ArgumentParseError(msg)
 
 
 def _get_nested_value(data: dict[str, Any], dotted_key: str) -> Any:
@@ -121,7 +130,8 @@ def _get_nested_value(data: dict[str, Any], dotted_key: str) -> Any:
     for idx, part in enumerate(parts):
         if not isinstance(value, dict):
             parent = ".".join(parts[:idx]) or "policy"
-            raise TypeError(f"{dotted_key}: expected mapping at {parent}")
+            msg = f"{dotted_key}: expected mapping at {parent}"
+            raise TypeError(msg)
         if part not in value:
             return None
         value = value[part]
@@ -133,16 +143,19 @@ def _validate_policy_payload_types(data: dict[str, Any], path: Path) -> None:
         try:
             value = _get_nested_value(data, dotted_key)
         except TypeError as exc:
-            raise TypeError(f"{path}: {exc}") from exc
+            msg = f"{path}: {exc}"
+            raise TypeError(msg) from exc
         if value is not None and not isinstance(value, list):
-            raise TypeError(f"{path}: {dotted_key} must be a list")
+            msg = f"{path}: {dotted_key} must be a list"
+            raise TypeError(msg)
 
 
 def _ensure_list(value: Any, label: str) -> list[Any]:
     if value is None:
         return []
     if not isinstance(value, list):
-        raise TypeError(f"{label} must be a list")
+        msg = f"{label} must be a list"
+        raise TypeError(msg)
     return list(value)
 
 
@@ -170,29 +183,37 @@ def _validate_scope_chain(chain: list[tuple[str, str]]) -> None:
         if index < len(REQUIRED_SCOPES):
             expected_scope = REQUIRED_SCOPES[index]
             if scope_name != expected_scope:
-                raise ValueError(
+                msg = (
                     "scope progression mismatch: expected "
-                    f"{expected_scope}, got {scope_name} at position {index + 1}",
+                    f"{expected_scope}, got {scope_name} at position {index + 1}"
+                )
+                raise ValueError(
+                    msg,
                 )
             continue
 
         if scope_name != "task_instance":
-            raise ValueError(
+            msg = (
                 f"scope progression mismatch: unexpected scope {scope_name} "
-                f"at position {index + 1}; expected task_instance",
+                f"at position {index + 1}; expected task_instance"
+            )
+            raise ValueError(
+                msg,
             )
 
     if not set(REQUIRED_SCOPES).issubset(scope_names):
         missing_scopes = ", ".join(
             sorted(set(REQUIRED_SCOPES) - set(scope_names)),
         )
+        msg = f"required scopes missing from final resolved policy: {missing_scopes}"
         raise ValueError(
-            f"required scopes missing from final resolved policy: {missing_scopes}",
+            msg,
         )
 
     task_instance_count = scope_names.count("task_instance")
     if task_instance_count > 1:
-        raise ValueError("duplicate scope in chain: task_instance")
+        msg = "duplicate scope in chain: task_instance"
+        raise ValueError(msg)
 
 
 def _normalized_scope_chain(chain: list[tuple[str, str]]) -> list[tuple[str, str]]:
@@ -232,9 +253,11 @@ def _merge_dict(base: dict[str, Any], override: dict[str, Any], base_path: str =
             continue
         base_value = out[key]
         if isinstance(base_value, dict) and not isinstance(value, dict):
-            raise TypeError(f"{key_path}: expected mapping but got {type(value).__name__}")
+            msg = f"{key_path}: expected mapping but got {type(value).__name__}"
+            raise TypeError(msg)
         if isinstance(base_value, list) and not isinstance(value, list):
-            raise TypeError(f"{key_path}: expected list but got {type(value).__name__}")
+            msg = f"{key_path}: expected list but got {type(value).__name__}"
+            raise TypeError(msg)
         if isinstance(base_value, dict) and isinstance(value, dict):
             out[key] = _merge_dict(base_value, value, key_path)
             continue
@@ -257,7 +280,8 @@ def _load_host_rules_emitter():
     script_path = Path(__file__).resolve().parent / "scripts" / "sync_host_rules.py"
     spec = importlib.util.spec_from_file_location("policy_contract_host_sync", script_path)
     if spec is None or spec.loader is None:
-        raise RuntimeError(f"unable to load host sync script: {script_path}")
+        msg = f"unable to load host sync script: {script_path}"
+        raise RuntimeError(msg)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -275,12 +299,14 @@ def _validate_host_artifacts(out_dir: Path, rendered: dict[str, Any]) -> None:
     ]
     missing = [str(path) for path in required_files if not path.exists()]
     if missing:
-        raise FileNotFoundError(f"missing host artifacts: {', '.join(missing)}")
+        msg = f"missing host artifacts: {', '.join(missing)}"
+        raise FileNotFoundError(msg)
 
     with (out_dir / "policy-wrapper-dispatch.manifest.json").open("r", encoding="utf-8") as fp:
         manifest = json.load(fp)
     if manifest.get("bundle_path") != str(out_dir / "policy-wrapper-rules.json"):
-        raise ValueError("dispatch manifest bundle_path does not match output directory")
+        msg = "dispatch manifest bundle_path does not match output directory"
+        raise ValueError(msg)
 
     required_fallbacks = (
         "fallback_missing_policy",
@@ -289,38 +315,49 @@ def _validate_host_artifacts(out_dir: Path, rendered: dict[str, Any]) -> None:
     )
     for key in required_fallbacks:
         if key not in manifest:
-            raise ValueError(f"dispatch manifest missing fallback field: {key}")
+            msg = f"dispatch manifest missing fallback field: {key}"
+            raise ValueError(msg)
         decision = manifest.get(key)
         if decision not in {"allow", "request", "deny"}:
+            msg = f"dispatch manifest field {key} has invalid decision: {decision}"
             raise ValueError(
-                f"dispatch manifest field {key} has invalid decision: {decision}",
+                msg,
             )
 
     wrapper_rules = rendered.get("wrapper_rules")
     if not isinstance(wrapper_rules, list):
-        raise ValueError("rendered wrapper_rules missing or invalid")
+        msg = "rendered wrapper_rules missing or invalid"
+        raise ValueError(msg)
     payload_count = len(wrapper_rules)
 
     expected_wrapper_rules = rendered.get("wrapper_rule_count", payload_count)
     if not isinstance(expected_wrapper_rules, int):
-        raise ValueError("rendered wrapper_rule_count must be an integer when provided")
+        msg = "rendered wrapper_rule_count must be an integer when provided"
+        raise ValueError(msg)
     if expected_wrapper_rules != payload_count:
-        raise ValueError(
+        msg = (
             "rendered wrapper rule count mismatch: "
-            f"{expected_wrapper_rules} != {payload_count}",
+            f"{expected_wrapper_rules} != {payload_count}"
+        )
+        raise ValueError(
+            msg,
         )
 
     manifest_wrapper_count = manifest.get("wrapper_rule_count")
     if manifest_wrapper_count != expected_wrapper_rules:
-        raise ValueError(
+        msg = (
             "dispatch manifest wrapper_rule_count mismatch: "
-            f"{manifest_wrapper_count} != {expected_wrapper_rules}",
+            f"{manifest_wrapper_count} != {expected_wrapper_rules}"
+        )
+        raise ValueError(
+            msg,
         )
 
     with (out_dir / "policy-wrapper-rules.json").open("r", encoding="utf-8") as fp:
         policy_wrapper_payload = json.load(fp)
     if len(policy_wrapper_payload.get("commands", [])) != payload_count:
-        raise ValueError("policy-wrapper command payload count mismatch")
+        msg = "policy-wrapper command payload count mismatch"
+        raise ValueError(msg)
 
 
 def resolve(policies: list[tuple[str, Path]], output: Path | None = None) -> dict[str, Any]:
@@ -332,22 +369,28 @@ def resolve(policies: list[tuple[str, Path]], output: Path | None = None) -> dic
         policy = load_yaml(path, required=scope in required_scopes, scope=scope)
         if not policy:
             if scope in required_scopes:
+                msg = f"{path}: required scope '{scope}' file is empty or missing payload"
                 raise ValueError(
-                    f"{path}: required scope '{scope}' file is empty or missing payload",
+                    msg,
                 )
             continue
         _validate_policy_payload_types(policy, path)
         validate_policy(policy, path)
         scope_name = policy["scope"]
         if scope_name in seen_scopes and scope in {"task_domain", "task_instance"}:
-            raise ValueError(f"duplicate scope in chain: {scope_name}")
+            msg = f"duplicate scope in chain: {scope_name}"
+            raise ValueError(msg)
         if scope_name != scope:
-            raise ValueError(
+            msg = (
                 f"{path}: scope mismatch in chain: expected "
-                f"{scope}, got {scope_name}",
+                f"{scope}, got {scope_name}"
+            )
+            raise ValueError(
+                msg,
             )
         if scope_name in seen_scopes:
-            raise ValueError(f"duplicate scope in chain: {scope_name}")
+            msg = f"duplicate scope in chain: {scope_name}"
+            raise ValueError(msg)
         seen_scopes.add(scope_name)
         chain.append((scope_name, str(path)))
         merged = _merge_dict(merged, policy)
@@ -370,9 +413,12 @@ def _resolve_config_root(root: Path) -> Path:
         return repo_layout
     if nested_layout.exists():
         return nested_layout
-    raise FileNotFoundError(
+    msg = (
         "no supported config root layout exists; expected one of "
-        f"{repo_layout} or {nested_layout}",
+        f"{repo_layout} or {nested_layout}"
+    )
+    raise FileNotFoundError(
+        msg,
     )
 
 
@@ -411,7 +457,6 @@ def _print_failure_json(code: str, message: str, details: dict[str, Any] | None 
     payload: dict[str, Any] = {"code": code, "message": message}
     if details:
         payload["details"] = details
-    print(json.dumps(payload, indent=2))
 
 
 def _print_success_json(
@@ -431,13 +476,6 @@ def _print_success_json(
         details["emit_path"] = str(emit_path)
     if scopes_ordering_assertion_path is not None:
         details["scopes_ordering_assertion_path"] = scopes_ordering_assertion_path
-    payload = {
-        "code": ERROR_CODE_OK,
-        "message": message,
-        "details": details,
-        "result": result,
-    }
-    print(json.dumps(payload, indent=2))
 
 
 def _build_parser() -> _ResolverArgumentParser:
@@ -486,7 +524,8 @@ def main(argv: list[str] | None = None) -> int:
         args = parser.parse_args(argv)
         json_mode = json_mode or args.json
         if args.host_out_dir and not args.emit_host_rules:
-            raise _ArgumentParseError("--host-out-dir requires --emit-host-rules")
+            msg = "--host-out-dir requires --emit-host-rules"
+            raise _ArgumentParseError(msg)
 
         chain = _build_chain(args)
         emit_path = Path(args.emit) if args.emit else None
@@ -550,7 +589,7 @@ def main(argv: list[str] | None = None) -> int:
                     scopes_ordering_assertion_path="result.policy.scopes",
                 )
             else:
-                print(json.dumps(success_payload, indent=2))
+                pass
         else:
             success_payload = {"policy": resolved_payload}
             if json_mode:
@@ -563,7 +602,7 @@ def main(argv: list[str] | None = None) -> int:
                     scopes_ordering_assertion_path="result.policy.scopes",
                 )
             else:
-                print(json.dumps(success_payload, indent=2))
+                pass
         return EXIT_CODE_OK
     except SystemExit as exc:
         if int(exc.code) == EXIT_CODE_OK:
@@ -579,19 +618,19 @@ def main(argv: list[str] | None = None) -> int:
         if json_mode:
             _print_failure_json(ERROR_CODE_ARG, str(exc))
         else:
-            print(str(exc), file=sys.stderr)
+            pass
         return EXIT_CODE_ARG
     except FileNotFoundError as exc:
         if json_mode:
             _print_failure_json(ERROR_CODE_MISSING, str(exc))
         else:
-            print(str(exc), file=sys.stderr)
+            pass
         return EXIT_CODE_MISSING
     except (TypeError, ValueError) as exc:
         if json_mode:
             _print_failure_json(ERROR_CODE_INVALID, str(exc))
         else:
-            print(str(exc), file=sys.stderr)
+            pass
         return EXIT_CODE_INVALID
     except Exception as exc:  # pragma: no cover
         if json_mode:
@@ -601,7 +640,7 @@ def main(argv: list[str] | None = None) -> int:
                 {"exception_type": type(exc).__name__, "exception_message": str(exc)},
             )
         else:
-            print(f"internal resolver error: {exc}", file=sys.stderr)
+            pass
         return EXIT_CODE_INTERNAL
 
 

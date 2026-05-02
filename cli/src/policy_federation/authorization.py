@@ -39,7 +39,7 @@ def normalize_authorization_rules(
     raw_rules = authorization.get("rules") or []
     rules: list[AuthorizationRule] = []
 
-    for index, raw_rule in enumerate(raw_rules):
+    for _index, raw_rule in enumerate(raw_rules):
         match = raw_rule.get("match") or {}
         rules.append(
             AuthorizationRule(
@@ -69,38 +69,46 @@ def validate_authorization_block(doc: dict) -> None:
 
     defaults = authorization.get("defaults") or {}
     if not isinstance(defaults, dict):
-        raise ValueError("policy.authorization.defaults must be a mapping")
+        msg = "policy.authorization.defaults must be a mapping"
+        raise ValueError(msg)
     for action, effect in defaults.items():
         if not isinstance(action, str) or not action:
+            msg = "policy.authorization.defaults keys must be non-empty strings"
             raise ValueError(
-                "policy.authorization.defaults keys must be non-empty strings",
+                msg,
             )
         if effect not in ALLOWED_EFFECTS:
+            msg = f"policy.authorization.defaults[{action!r}] must be allow|deny|ask"
             raise ValueError(
-                f"policy.authorization.defaults[{action!r}] must be allow|deny|ask",
+                msg,
             )
 
     raw_rules = authorization.get("rules") or []
     if not isinstance(raw_rules, list):
-        raise ValueError("policy.authorization.rules must be a list")
+        msg = "policy.authorization.rules must be a list"
+        raise ValueError(msg)
 
     seen_rule_ids: set[str] = set()
     for raw_rule in raw_rules:
         if not isinstance(raw_rule, dict):
-            raise ValueError("policy.authorization.rules entries must be mappings")
+            msg = "policy.authorization.rules entries must be mappings"
+            raise ValueError(msg)
         rule_id = raw_rule.get("id")
         if not isinstance(rule_id, str) or not rule_id:
+            msg = "policy.authorization.rules entries require a non-empty id"
             raise ValueError(
-                "policy.authorization.rules entries require a non-empty id",
+                msg,
             )
         if rule_id in seen_rule_ids:
-            raise ValueError(f"duplicate authorization rule id: {rule_id}")
+            msg = f"duplicate authorization rule id: {rule_id}"
+            raise ValueError(msg)
         seen_rule_ids.add(rule_id)
 
         effect = raw_rule.get("effect")
         if effect not in ALLOWED_EFFECTS:
+            msg = f"authorization rule {rule_id} effect must be allow|deny|ask"
             raise ValueError(
-                f"authorization rule {rule_id} effect must be allow|deny|ask",
+                msg,
             )
 
         actions = raw_rule.get("actions")
@@ -109,19 +117,22 @@ def validate_authorization_block(doc: dict) -> None:
             or not actions
             or not all(isinstance(action, str) and action for action in actions)
         ):
+            msg = f"authorization rule {rule_id} actions must be a non-empty string list"
             raise ValueError(
-                f"authorization rule {rule_id} actions must be a non-empty string list",
+                msg,
             )
 
         priority = raw_rule.get("priority", 0)
         if not isinstance(priority, int):
+            msg = f"authorization rule {rule_id} priority must be an integer"
             raise ValueError(
-                f"authorization rule {rule_id} priority must be an integer",
+                msg,
             )
 
         match = raw_rule.get("match") or {}
         if match and not isinstance(match, dict):
-            raise ValueError(f"authorization rule {rule_id} match must be a mapping")
+            msg = f"authorization rule {rule_id} match must be a mapping"
+            raise ValueError(msg)
         for key in (
             "command_patterns",
             "cwd_patterns",
@@ -133,8 +144,9 @@ def validate_authorization_block(doc: dict) -> None:
                 not isinstance(values, list)
                 or not all(isinstance(value, str) and value for value in values)
             ):
+                msg = f"authorization rule {rule_id} {key} must be a non-empty string list"
                 raise ValueError(
-                    f"authorization rule {rule_id} {key} must be a non-empty string list",
+                    msg,
                 )
 
 
@@ -155,21 +167,18 @@ def evaluate_authorization(
     for rule in rules:
         if action not in rule.actions and "*" not in rule.actions:
             continue
-        if rule.command_patterns:
-            if not command or not any(
-                fnmatch(command, pattern) for pattern in rule.command_patterns
-            ):
-                continue
-        if rule.cwd_patterns:
-            if not cwd or not any(
-                fnmatch(cwd, pattern) for pattern in rule.cwd_patterns
-            ):
-                continue
-        if rule.actor_patterns:
-            if not actor or not any(
-                fnmatch(actor, pattern) for pattern in rule.actor_patterns
-            ):
-                continue
+        if rule.command_patterns and (not command or not any(
+            fnmatch(command, pattern) for pattern in rule.command_patterns
+        )):
+            continue
+        if rule.cwd_patterns and (not cwd or not any(
+            fnmatch(cwd, pattern) for pattern in rule.cwd_patterns
+        )):
+            continue
+        if rule.actor_patterns and (not actor or not any(
+            fnmatch(actor, pattern) for pattern in rule.actor_patterns
+        )):
+            continue
         if rule.target_path_patterns:
             if not target_paths:
                 continue

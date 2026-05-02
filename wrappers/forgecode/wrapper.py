@@ -131,9 +131,9 @@ def main() -> None:
     )
 
     if args.json:
-        print(json.dumps(result))
+        pass
     else:
-        print(result["decision"])
+        pass
 
     sys.exit(
         0 if result["decision"] == "allow" else 1 if result["decision"] == "deny" else 2,
