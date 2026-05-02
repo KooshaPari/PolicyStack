@@ -1,3 +1,5 @@
+[![License](https://img.shields.io/github/license/KooshaPari/PolicyStack)](LICENSE)
+
 # Policy scope stack for multi-harness AgentOps
 
 This folder contains a concrete policy scope model:
