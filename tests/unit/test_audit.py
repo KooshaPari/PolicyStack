@@ -1,4 +1,5 @@
 """Tests for audit log reading, filtering, and verification."""
+
 from __future__ import annotations
 
 import datetime
@@ -8,11 +9,10 @@ import unittest
 from pathlib import Path
 
 import support  # noqa: F401 -- setup sys.path
-
 from policy_federation.runtime_artifacts import (
+    filter_audit_events,
     read_audit_log,
     verify_audit_chain,
-    filter_audit_events,
 )
 
 
@@ -145,9 +145,7 @@ class VerifyAuditChainTest(unittest.TestCase):
         ]
         result = verify_audit_chain(events)
         self.assertFalse(result["valid"])
-        self.assertIn(
-            "final_decision", result["invalid_events"][0]["missing_fields"]
-        )
+        self.assertIn("final_decision", result["invalid_events"][0]["missing_fields"])
 
 
 class FilterAuditEventsTest(unittest.TestCase):
@@ -206,7 +204,9 @@ class FilterAuditEventsTest(unittest.TestCase):
 
     def test_filter_by_actor_regex(self) -> None:
         """Should filter by actor regex pattern."""
-        filtered = filter_audit_events(self.events, actor_pattern="^[ab]")  # alice or bob
+        filtered = filter_audit_events(
+            self.events, actor_pattern="^[ab]",
+        )  # alice or bob
         self.assertEqual(len(filtered), 3)
 
     def test_filter_by_since(self) -> None:

@@ -1,4 +1,5 @@
 """Policy gap detection: find missing rules, dead rules, and conflicts."""
+
 from __future__ import annotations
 
 from collections import Counter, defaultdict
@@ -49,12 +50,14 @@ def detect_gaps(
 
     for prefix, count in ask_commands.most_common():
         if count >= min_ask_frequency:
-            report.high_frequency_asks.append({
-                "command_prefix": prefix,
-                "count": count,
-                "severity": "HIGH" if count > 10 else "MEDIUM",
-                "suggestion": f"Consider adding allow rule for '{prefix}*'",
-            })
+            report.high_frequency_asks.append(
+                {
+                    "command_prefix": prefix,
+                    "count": count,
+                    "severity": "HIGH" if count > 10 else "MEDIUM",
+                    "suggestion": f"Consider adding allow rule for '{prefix}*'",
+                },
+            )
 
     # 2. Commands matching no explicit rule (falling to defaults)
     try:
@@ -86,27 +89,33 @@ def detect_gaps(
                 if rule.command_patterns:
                     if any(fnmatch(cmd, p) for p in rule.command_patterns):
                         matched = True
-                        rule_match_counts[rule.rule_id] = rule_match_counts.get(rule.rule_id, 0) + count
+                        rule_match_counts[rule.rule_id] = (
+                            rule_match_counts.get(rule.rule_id, 0) + count
+                        )
                         break
 
             if not matched and count >= min_ask_frequency:
-                report.no_rule_matches.append({
-                    "action": action,
-                    "command": cmd,
-                    "count": count,
-                    "severity": "MEDIUM",
-                    "suggestion": f"No explicit rule matches '{cmd}' (seen {count} times)",
-                })
+                report.no_rule_matches.append(
+                    {
+                        "action": action,
+                        "command": cmd,
+                        "count": count,
+                        "severity": "MEDIUM",
+                        "suggestion": f"No explicit rule matches '{cmd}' (seen {count} times)",
+                    },
+                )
 
         # 3. Dead rules (rules with zero audit matches)
         for rule in rules:
             if rule_match_counts.get(rule.rule_id, 0) == 0:
-                report.dead_rules.append({
-                    "rule_id": rule.rule_id,
-                    "effect": rule.effect,
-                    "severity": "LOW",
-                    "suggestion": f"Rule '{rule.rule_id}' has 0 matches in audit log - verify still needed",
-                })
+                report.dead_rules.append(
+                    {
+                        "rule_id": rule.rule_id,
+                        "effect": rule.effect,
+                        "severity": "LOW",
+                        "suggestion": f"Rule '{rule.rule_id}' has 0 matches in audit log - verify still needed",
+                    },
+                )
 
         # 4. Priority conflicts (multiple rules at same priority with different effects)
         priority_groups: dict[int, list] = defaultdict(list)
@@ -116,12 +125,14 @@ def detect_gaps(
         for priority, group in priority_groups.items():
             effects = {r.effect for r in group}
             if len(effects) > 1:
-                report.priority_conflicts.append({
-                    "priority": priority,
-                    "rules": [{"id": r.rule_id, "effect": r.effect} for r in group],
-                    "severity": "MEDIUM",
-                    "suggestion": f"Priority {priority} has conflicting effects: {effects}",
-                })
+                report.priority_conflicts.append(
+                    {
+                        "priority": priority,
+                        "rules": [{"id": r.rule_id, "effect": r.effect} for r in group],
+                        "severity": "MEDIUM",
+                        "suggestion": f"Priority {priority} has conflicting effects: {effects}",
+                    },
+                )
 
     except Exception:
         pass  # If resolution fails, skip rule analysis
@@ -136,29 +147,44 @@ def format_gap_report(report: GapReport) -> str:
     if report.high_frequency_asks:
         lines.append("## High-Frequency Ask Commands")
         for item in report.high_frequency_asks:
-            lines.append(f"  {item['severity']}: {item['count']}x asks for '{item['command_prefix']}*' - {item['suggestion']}")
+            lines.append(
+                f"  {item['severity']}: {item['count']}x asks for '{item['command_prefix']}*' - {item['suggestion']}",
+            )
         lines.append("")
 
     if report.no_rule_matches:
         lines.append("## Commands With No Explicit Rule")
         for item in report.no_rule_matches:
-            lines.append(f"  {item['severity']}: '{item['command']}' ({item['count']}x) - {item['suggestion']}")
+            lines.append(
+                f"  {item['severity']}: '{item['command']}' ({item['count']}x) - {item['suggestion']}",
+            )
         lines.append("")
 
     if report.dead_rules:
         lines.append("## Dead Rules (Zero Matches)")
         for item in report.dead_rules:
-            lines.append(f"  {item['severity']}: {item['rule_id']} ({item['effect']}) - {item['suggestion']}")
+            lines.append(
+                f"  {item['severity']}: {item['rule_id']} ({item['effect']}) - {item['suggestion']}",
+            )
         lines.append("")
 
     if report.priority_conflicts:
         lines.append("## Priority Conflicts")
         for item in report.priority_conflicts:
             rule_desc = ", ".join(f"{r['id']}={r['effect']}" for r in item["rules"])
-            lines.append(f"  {item['severity']}: Priority {item['priority']}: {rule_desc}")
+            lines.append(
+                f"  {item['severity']}: Priority {item['priority']}: {rule_desc}",
+            )
         lines.append("")
 
-    if not any([report.high_frequency_asks, report.no_rule_matches, report.dead_rules, report.priority_conflicts]):
+    if not any(
+        [
+            report.high_frequency_asks,
+            report.no_rule_matches,
+            report.dead_rules,
+            report.priority_conflicts,
+        ],
+    ):
         lines.append("No gaps detected.")
 
     return "\n".join(lines)

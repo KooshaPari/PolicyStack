@@ -1,4 +1,5 @@
 """Runtime sidecar and audit artifact helpers."""
+
 from __future__ import annotations
 
 import datetime
@@ -141,7 +142,9 @@ def write_sidecar(
 ) -> None:
     """Write a session sidecar JSON artifact."""
     sidecar_path.parent.mkdir(parents=True, exist_ok=True)
-    sidecar_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    sidecar_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8",
+    )
 
 
 def read_audit_log(audit_log_path: Path) -> list[dict]:
@@ -253,13 +256,15 @@ def filter_audit_events(
         try:
             pattern = re.compile(actor_pattern)
             filtered = [
-                e for e in filtered
+                e
+                for e in filtered
                 if e.get("actor") and pattern.search(e.get("actor", ""))
             ]
         except re.error:
             # If pattern is invalid, just do string matching
             filtered = [
-                e for e in filtered
+                e
+                for e in filtered
                 if e.get("actor") and actor_pattern in e.get("actor", "")
             ]
 

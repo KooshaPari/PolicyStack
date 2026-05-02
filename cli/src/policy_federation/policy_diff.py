@@ -1,13 +1,10 @@
 """Policy diffing and comparison utilities."""
-from __future__ import annotations
 
-import json
-from typing import Any
+from __future__ import annotations
 
 
 def diff_policies(before: dict, after: dict) -> dict:
-    """
-    Compare two resolved policies and identify differences.
+    """Compare two resolved policies and identify differences.
 
     Args:
         before: The first (original) policy dictionary
@@ -47,12 +44,14 @@ def diff_policies(before: dict, after: dict) -> dict:
 
                 # Check for effect changes specifically
                 if before_rule.get("effect") != after_rule.get("effect"):
-                    effect_changes.append({
-                        "id": rule_id,
-                        "before_effect": before_rule.get("effect"),
-                        "after_effect": after_rule.get("effect"),
-                        "description": after_rule.get("description", ""),
-                    })
+                    effect_changes.append(
+                        {
+                            "id": rule_id,
+                            "before_effect": before_rule.get("effect"),
+                            "after_effect": after_rule.get("effect"),
+                            "description": after_rule.get("description", ""),
+                        },
+                    )
 
     # Find removed rules
     for rule_id, before_rule in before_ids.items():

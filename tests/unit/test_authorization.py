@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import unittest
 
-from support import REPO_ROOT
-
 from policy_federation.authorization import evaluate_authorization
 from policy_federation.resolver import resolve
+from support import REPO_ROOT
 
 
 class AuthorizationDecisionTest(unittest.TestCase):
@@ -57,8 +56,8 @@ class AuthorizationDecisionTest(unittest.TestCase):
             action="exec",
             command=(
                 "for repo in trace cliproxyapi++ heliosCLI agentapi-plusplus thegent; do "
-                "echo \"=== $repo ===\" && "
-                "[ -d \"$repo/.github/workflows\" ] && ls \"$repo/.github/workflows/\""
+                'echo "=== $repo ===" && '
+                '[ -d "$repo/.github/workflows" ] && ls "$repo/.github/workflows/"'
             ),
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos",
         )
@@ -181,7 +180,7 @@ class AuthorizationDecisionTest(unittest.TestCase):
                 "diff /Users/kooshapari/CodeProjects/Phenotype/repos/worktrees/heliosApp/"
                 "claude-md-standardize/biome.json "
                 "/Users/kooshapari/CodeProjects/Phenotype/repos/heliosApp-wtrees/"
-                "claude-md-standardize/biome.json 2>/dev/null || echo \"DIFFERENT or one missing\""
+                'claude-md-standardize/biome.json 2>/dev/null || echo "DIFFERENT or one missing"'
             ),
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos",
         )
@@ -202,8 +201,8 @@ class AuthorizationDecisionTest(unittest.TestCase):
                 "for repo in agentapi-plusplus-composite-actions "
                 "bifrost-extensions-composite-actions cliproxyapi++-composite-actions "
                 "agentapi-plusplus-governance bifrost-extensions-governance; do "
-                "echo \"=== $repo ===\"; if [ -d \"$repo\" ]; then [ -d \"$repo/.github\" ] && "
-                "echo \"Has .github:\" && ls \"$repo/.github/\""
+                'echo "=== $repo ==="; if [ -d "$repo" ]; then [ -d "$repo/.github" ] && '
+                'echo "Has .github:" && ls "$repo/.github/"'
             ),
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos",
         )
@@ -222,12 +221,12 @@ class AuthorizationDecisionTest(unittest.TestCase):
             action="exec",
             command=(
                 "for repo in phenotype-go-kit phenotype-shared template-commons thegent; do "
-                "echo \"=== $repo ===\"; [ -f \"$repo/go.mod\" ] && echo \"go.mod: YES\" || "
-                "echo \"go.mod: NO\"; [ -f \"$repo/CLAUDE.md\" ] && echo \"CLAUDE.md: YES\" || "
-                "echo \"CLAUDE.md: NO\"; [ -d \"$repo/.github/workflows\" ] && "
-                "echo \"Workflows: $(ls $repo/.github/workflows 2>/dev/null | wc -l)\" || "
-                "echo \"Workflows: 0\"; [ -f \"$repo/.pre-commit-config.yaml\" ] && "
-                "echo \"Pre-commit: YES\" || echo \"Pre-commit: NO\"; echo \"\"; done"
+                'echo "=== $repo ==="; [ -f "$repo/go.mod" ] && echo "go.mod: YES" || '
+                'echo "go.mod: NO"; [ -f "$repo/CLAUDE.md" ] && echo "CLAUDE.md: YES" || '
+                'echo "CLAUDE.md: NO"; [ -d "$repo/.github/workflows" ] && '
+                'echo "Workflows: $(ls $repo/.github/workflows 2>/dev/null | wc -l)" || '
+                'echo "Workflows: 0"; [ -f "$repo/.pre-commit-config.yaml" ] && '
+                'echo "Pre-commit: YES" || echo "Pre-commit: NO"; echo ""; done'
             ),
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos",
         )
@@ -248,7 +247,13 @@ class AuthorizationDecisionTest(unittest.TestCase):
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos/thegent-wtrees/demo",
         )
         self.assertEqual(result["decision"], "allow")
-        self.assertIn(result["winning_rule"]["id"], {"thegent-allow-git-write-in-worktrees", "phenotype-allow-worktree-git-ops"})
+        self.assertIn(
+            result["winning_rule"]["id"],
+            {
+                "thegent-allow-git-write-in-worktrees",
+                "phenotype-allow-worktree-git-ops",
+            },
+        )
 
     def test_git_commit_is_denied_outside_thegent_worktree(self) -> None:
         resolved = resolve(
@@ -264,7 +269,9 @@ class AuthorizationDecisionTest(unittest.TestCase):
             cwd="/tmp",
         )
         self.assertEqual(result["decision"], "deny")
-        self.assertEqual(result["winning_rule"]["id"], "thegent-deny-git-write-outside-worktrees")
+        self.assertEqual(
+            result["winning_rule"]["id"], "thegent-deny-git-write-outside-worktrees",
+        )
 
     def test_no_verify_bypass_is_denied_even_inside_worktree(self) -> None:
         resolved = resolve(

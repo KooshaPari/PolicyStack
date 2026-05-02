@@ -83,7 +83,9 @@ class TestPolicyVersionGovernanceScript(TestCase):
                 text=True,
                 check=False,
             )
-            self.assertEqual(json_result.returncode, 0, json_result.stdout + json_result.stderr)
+            self.assertEqual(
+                json_result.returncode, 0, json_result.stdout + json_result.stderr,
+            )
             payload = json.loads(json_result.stdout)
             self.assertEqual(set(payload.keys()), {"code", "message", "details"})
             self.assertEqual(payload["code"], "ok")
@@ -148,7 +150,9 @@ class TestPolicyVersionGovernanceScript(TestCase):
             self._write_policy(config_root / "user.yaml", "v1")
             self._write_policy(config_root / "repo.yaml", "v1")
             self._write_policy(config_root / "harness" / "codex.yaml", "v1")
-            self._write_policy_json(config_root / "task-domain" / "deployment.json", "v2")
+            self._write_policy_json(
+                config_root / "task-domain" / "deployment.json", "v2",
+            )
 
             result = subprocess.run(
                 [
@@ -177,7 +181,9 @@ class TestPolicyVersionGovernanceScript(TestCase):
             self._write_policy(config_root / "repo.yaml", "v1")
             self._write_policy_json(config_root / "harness" / "codex.json", "v1")
             self._write_policy(config_root / "task-domain" / "deployment.yaml", "v1")
-            self._write_policy_json(config_root / "task-instance" / "daily-sync.json", "v1")
+            self._write_policy_json(
+                config_root / "task-instance" / "daily-sync.json", "v1",
+            )
 
             result = subprocess.run(
                 [
@@ -238,7 +244,9 @@ class TestPolicyVersionGovernanceScript(TestCase):
             self.assertEqual(payload["code"], "missing-required")
             self.assertIn("message", payload)
             self.assertIn("details", payload)
-            self.assertIn("policy-config/system.yaml", payload["details"]["missing_required"])
+            self.assertIn(
+                "policy-config/system.yaml", payload["details"]["missing_required"],
+            )
 
     def test_missing_required_default_file_can_be_allowed(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -262,7 +270,9 @@ class TestPolicyVersionGovernanceScript(TestCase):
             )
 
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertIn("[skip-required] policy-config/system.yaml (missing)", result.stdout)
+            self.assertIn(
+                "[skip-required] policy-config/system.yaml (missing)", result.stdout,
+            )
             self.assertIn("policy version governance passed: v1", result.stdout)
 
             json_result = subprocess.run(
@@ -278,7 +288,9 @@ class TestPolicyVersionGovernanceScript(TestCase):
                 text=True,
                 check=False,
             )
-            self.assertEqual(json_result.returncode, 0, json_result.stdout + json_result.stderr)
+            self.assertEqual(
+                json_result.returncode, 0, json_result.stdout + json_result.stderr,
+            )
             payload = json.loads(json_result.stdout)
             self.assertEqual(payload["code"], "ok")
             self.assertEqual(payload["details"]["version"], "v1")
@@ -286,7 +298,9 @@ class TestPolicyVersionGovernanceScript(TestCase):
                 payload["details"]["summary"],
                 {"checked": 3, "missing_required": 1, "invalid_versions": 0},
             )
-            self.assertIn("policy-config/system.yaml", payload["details"]["missing_required"])
+            self.assertIn(
+                "policy-config/system.yaml", payload["details"]["missing_required"],
+            )
 
     def test_allow_missing_json_success_envelope_includes_json_discovery(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -310,7 +324,9 @@ class TestPolicyVersionGovernanceScript(TestCase):
                 text=True,
                 check=False,
             )
-            self.assertEqual(json_result.returncode, 0, json_result.stdout + json_result.stderr)
+            self.assertEqual(
+                json_result.returncode, 0, json_result.stdout + json_result.stderr,
+            )
             payload = json.loads(json_result.stdout)
             self.assertEqual(payload["code"], "ok")
             self.assertEqual(payload["message"], "policy version governance passed")
@@ -319,7 +335,9 @@ class TestPolicyVersionGovernanceScript(TestCase):
                 payload["details"]["summary"],
                 {"checked": 4, "missing_required": 1, "invalid_versions": 0},
             )
-            self.assertIn("policy-config/system.yaml", payload["details"]["missing_required"])
+            self.assertIn(
+                "policy-config/system.yaml", payload["details"]["missing_required"],
+            )
 
     def test_default_discovery_order_is_deterministic_and_deduplicated(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -350,7 +368,9 @@ class TestPolicyVersionGovernanceScript(TestCase):
                 check=False,
             )
 
-            self.assertEqual(json_result.returncode, 0, json_result.stdout + json_result.stderr)
+            self.assertEqual(
+                json_result.returncode, 0, json_result.stdout + json_result.stderr,
+            )
             payload = json.loads(json_result.stdout)
             self.assertEqual(payload["code"], "ok")
             self.assertEqual(

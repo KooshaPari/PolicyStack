@@ -1,4 +1,5 @@
 """Policy merge and inheritance helpers."""
+
 from __future__ import annotations
 
 import copy
@@ -34,7 +35,13 @@ def _append_unique_items(values: list) -> list:
     return unique_values
 
 
-def _merge_maps(base: dict, overrides: dict, strategy: str, conflicts: list[dict], node: str = "root") -> dict:
+def _merge_maps(
+    base: dict,
+    overrides: dict,
+    strategy: str,
+    conflicts: list[dict],
+    node: str = "root",
+) -> dict:
     if not isinstance(base, dict) or not isinstance(overrides, dict):
         if strategy == "replace":
             return copy.deepcopy(overrides)
@@ -43,7 +50,7 @@ def _merge_maps(base: dict, overrides: dict, strategy: str, conflicts: list[dict
                 "node": node,
                 "strategy": strategy,
                 "reason": "Type mismatch during merge_map",
-            }
+            },
         )
         return copy.deepcopy(overrides)
 
@@ -74,10 +81,16 @@ def _merge_maps(base: dict, overrides: dict, strategy: str, conflicts: list[dict
     return merged
 
 
-def _resolve_extend_reference(repo_root: Path, reference: str, current_path: Path) -> Path:
+def _resolve_extend_reference(
+    repo_root: Path, reference: str, current_path: Path,
+) -> Path:
     """Resolve an extends reference to a concrete policy path."""
     if reference.endswith(".yaml"):
-        candidate = (current_path.parent / reference).resolve() if not Path(reference).is_absolute() else Path(reference)
+        candidate = (
+            (current_path.parent / reference).resolve()
+            if not Path(reference).is_absolute()
+            else Path(reference)
+        )
         return candidate
 
     if "/" not in reference:
@@ -99,7 +112,9 @@ def _resolve_extend_reference(repo_root: Path, reference: str, current_path: Pat
     return repo_root / "policies" / scope_dir / f"{name}.yaml"
 
 
-def _load_policy_document(repo_root: Path, policy_path: Path, stack: tuple[Path, ...] = ()) -> dict:
+def _load_policy_document(
+    repo_root: Path, policy_path: Path, stack: tuple[Path, ...] = (),
+) -> dict:
     """Load one policy document and resolve any local inheritance chain."""
     normalized_path = policy_path.resolve()
     if normalized_path in stack:
@@ -115,7 +130,9 @@ def _load_policy_document(repo_root: Path, policy_path: Path, stack: tuple[Path,
     conflicts: list[dict] = []
     for reference in extends:
         parent_path = _resolve_extend_reference(repo_root, reference, normalized_path)
-        parent_doc = _load_policy_document(repo_root, parent_path, stack + (normalized_path,))
+        parent_doc = _load_policy_document(
+            repo_root, parent_path, stack + (normalized_path,),
+        )
         parent_strategy = parent_doc.get("merge", {}).get("strategy", "merge_map")
         inherited_policy = _merge_maps(
             inherited_policy,
@@ -138,4 +155,3 @@ def _load_policy_document(repo_root: Path, policy_path: Path, stack: tuple[Path,
     if conflicts:
         resolved_doc.setdefault("_extends_conflicts", []).extend(conflicts)
     return resolved_doc
-

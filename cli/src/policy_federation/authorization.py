@@ -1,9 +1,9 @@
 """Authorization rule normalization and evaluation."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from fnmatch import fnmatch
-
 
 ALLOWED_EFFECTS = {"allow", "deny", "ask"}
 EFFECT_RANK = {"allow": 0, "ask": 1, "deny": 2}
@@ -25,10 +25,14 @@ class AuthorizationRule:
 
     @property
     def has_conditions(self) -> bool:
-        return bool(self.cwd_patterns or self.actor_patterns or self.target_path_patterns)
+        return bool(
+            self.cwd_patterns or self.actor_patterns or self.target_path_patterns,
+        )
 
 
-def normalize_authorization_rules(policy: dict) -> tuple[dict[str, str], list[AuthorizationRule]]:
+def normalize_authorization_rules(
+    policy: dict,
+) -> tuple[dict[str, str], list[AuthorizationRule]]:
     """Extract and normalize authorization defaults and rules from a merged policy."""
     authorization = policy.get("authorization") or {}
     defaults = dict(authorization.get("defaults") or {})
@@ -48,10 +52,12 @@ def normalize_authorization_rules(policy: dict) -> tuple[dict[str, str], list[Au
                 cwd_patterns=tuple(match.get("cwd_patterns") or ()),
                 actor_patterns=tuple(match.get("actor_patterns") or ()),
                 target_path_patterns=tuple(match.get("target_path_patterns") or ()),
-            )
+            ),
         )
 
-    rules.sort(key=lambda rule: (-rule.priority, -EFFECT_RANK[rule.effect], rule.rule_id))
+    rules.sort(
+        key=lambda rule: (-rule.priority, -EFFECT_RANK[rule.effect], rule.rule_id),
+    )
     return defaults, rules
 
 
@@ -66,9 +72,13 @@ def validate_authorization_block(doc: dict) -> None:
         raise ValueError("policy.authorization.defaults must be a mapping")
     for action, effect in defaults.items():
         if not isinstance(action, str) or not action:
-            raise ValueError("policy.authorization.defaults keys must be non-empty strings")
+            raise ValueError(
+                "policy.authorization.defaults keys must be non-empty strings",
+            )
         if effect not in ALLOWED_EFFECTS:
-            raise ValueError(f"policy.authorization.defaults[{action!r}] must be allow|deny|ask")
+            raise ValueError(
+                f"policy.authorization.defaults[{action!r}] must be allow|deny|ask",
+            )
 
     raw_rules = authorization.get("rules") or []
     if not isinstance(raw_rules, list):
@@ -80,30 +90,52 @@ def validate_authorization_block(doc: dict) -> None:
             raise ValueError("policy.authorization.rules entries must be mappings")
         rule_id = raw_rule.get("id")
         if not isinstance(rule_id, str) or not rule_id:
-            raise ValueError("policy.authorization.rules entries require a non-empty id")
+            raise ValueError(
+                "policy.authorization.rules entries require a non-empty id",
+            )
         if rule_id in seen_rule_ids:
             raise ValueError(f"duplicate authorization rule id: {rule_id}")
         seen_rule_ids.add(rule_id)
 
         effect = raw_rule.get("effect")
         if effect not in ALLOWED_EFFECTS:
-            raise ValueError(f"authorization rule {rule_id} effect must be allow|deny|ask")
+            raise ValueError(
+                f"authorization rule {rule_id} effect must be allow|deny|ask",
+            )
 
         actions = raw_rule.get("actions")
-        if not isinstance(actions, list) or not actions or not all(isinstance(action, str) and action for action in actions):
-            raise ValueError(f"authorization rule {rule_id} actions must be a non-empty string list")
+        if (
+            not isinstance(actions, list)
+            or not actions
+            or not all(isinstance(action, str) and action for action in actions)
+        ):
+            raise ValueError(
+                f"authorization rule {rule_id} actions must be a non-empty string list",
+            )
 
         priority = raw_rule.get("priority", 0)
         if not isinstance(priority, int):
-            raise ValueError(f"authorization rule {rule_id} priority must be an integer")
+            raise ValueError(
+                f"authorization rule {rule_id} priority must be an integer",
+            )
 
         match = raw_rule.get("match") or {}
         if match and not isinstance(match, dict):
             raise ValueError(f"authorization rule {rule_id} match must be a mapping")
-        for key in ("command_patterns", "cwd_patterns", "actor_patterns", "target_path_patterns"):
+        for key in (
+            "command_patterns",
+            "cwd_patterns",
+            "actor_patterns",
+            "target_path_patterns",
+        ):
             values = match.get(key) or []
-            if values and (not isinstance(values, list) or not all(isinstance(value, str) and value for value in values)):
-                raise ValueError(f"authorization rule {rule_id} {key} must be a non-empty string list")
+            if values and (
+                not isinstance(values, list)
+                or not all(isinstance(value, str) and value for value in values)
+            ):
+                raise ValueError(
+                    f"authorization rule {rule_id} {key} must be a non-empty string list",
+                )
 
 
 def evaluate_authorization(
@@ -124,13 +156,19 @@ def evaluate_authorization(
         if action not in rule.actions and "*" not in rule.actions:
             continue
         if rule.command_patterns:
-            if not command or not any(fnmatch(command, pattern) for pattern in rule.command_patterns):
+            if not command or not any(
+                fnmatch(command, pattern) for pattern in rule.command_patterns
+            ):
                 continue
         if rule.cwd_patterns:
-            if not cwd or not any(fnmatch(cwd, pattern) for pattern in rule.cwd_patterns):
+            if not cwd or not any(
+                fnmatch(cwd, pattern) for pattern in rule.cwd_patterns
+            ):
                 continue
         if rule.actor_patterns:
-            if not actor or not any(fnmatch(actor, pattern) for pattern in rule.actor_patterns):
+            if not actor or not any(
+                fnmatch(actor, pattern) for pattern in rule.actor_patterns
+            ):
                 continue
         if rule.target_path_patterns:
             if not target_paths:

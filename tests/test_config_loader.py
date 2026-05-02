@@ -2,21 +2,21 @@
 
 from __future__ import annotations
 
-import pytest
-import tempfile
 import os
+import tempfile
 from pathlib import Path
-from unittest.mock import patch, mock_open
+from unittest.mock import patch
 
+import pytest
 from policy_federation.config_loader import (
     PolicyConfig,
-    load_config,
-    get_active_harness,
-    is_tier_enabled,
-    get_cache_db_path,
-    get_audit_log_path,
     _apply_env_overrides,
     _merge_dict_into_config,
+    get_active_harness,
+    get_audit_log_path,
+    get_cache_db_path,
+    is_tier_enabled,
+    load_config,
 )
 
 
@@ -138,7 +138,7 @@ class TestConfigMerging:
             "platform": {
                 "auto_detect": False,
                 "preferred_harness": "cursor",
-            }
+            },
         }
 
         _merge_dict_into_config(config, data)
@@ -154,7 +154,7 @@ class TestConfigMerging:
                 "enabled": False,
                 "tier_1": {"enabled": False},
                 "tier_4": {"enabled": True},
-            }
+            },
         }
 
         _merge_dict_into_config(config, data)
@@ -175,7 +175,7 @@ class TestConfigMerging:
             "cache": {
                 "enabled": False,
                 # ttl_seconds not specified - should remain unchanged
-            }
+            },
         }
 
         _merge_dict_into_config(config, data)
@@ -216,7 +216,7 @@ class TestHelperFunctions:
         config.delegation.primary = "kilo"
 
         with patch(
-            "policy_federation.config_loader._auto_detect_harness", return_value=None
+            "policy_federation.config_loader._auto_detect_harness", return_value=None,
         ):
             harness = get_active_harness(config)
             assert harness == "kilo"

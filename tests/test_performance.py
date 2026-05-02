@@ -5,20 +5,20 @@ Run benchmarks: python -m pytest tests/test_performance.py -v
 
 from __future__ import annotations
 
-import pytest
-import time
 import statistics
-from pathlib import Path
-from typing import Callable, Any
+import time
+from collections.abc import Callable
+from typing import Any
 
-from policy_federation.risk import assess_risk_tiered, RiskTier
+import pytest
 from policy_federation.delegate import (
-    _local_fast_evaluate,
     DelegateContext,
-    _get_cached_decision,
     _cache_decision,
+    _get_cached_decision,
+    _local_fast_evaluate,
     delegate_ask,
 )
+from policy_federation.risk import assess_risk_tiered
 
 
 class PerformanceMetrics:
@@ -72,7 +72,7 @@ class PerformanceMetrics:
 
 
 def benchmark_function(
-    func: Callable[..., Any], iterations: int = 100, *args, **kwargs
+    func: Callable[..., Any], iterations: int = 100, *args, **kwargs,
 ) -> PerformanceMetrics:
     """Benchmark a function over multiple iterations."""
     metrics = PerformanceMetrics()
@@ -207,7 +207,7 @@ class TestCachePerformance:
 
             # Benchmark reads
             metrics = benchmark_function(
-                _get_cached_decision, iterations=1000, command="test command"
+                _get_cached_decision, iterations=1000, command="test command",
             )
 
             print(f"\nCache Read: {metrics}")
@@ -221,8 +221,8 @@ class TestCachePerformance:
     @pytest.mark.benchmark
     def test_cache_write_speed(self, tmp_path):
         """Cache writes should be <10ms."""
-        from unittest.mock import patch
         import uuid
+        from unittest.mock import patch
 
         cache_db = tmp_path / "perf_cache.db"
 
@@ -247,7 +247,6 @@ class TestAutoApprovalRate:
 
     def test_auto_approval_rate_simulation(self):
         """Simulate command mix and verify auto-approval rate."""
-        from policy_federation.risk import RiskTier
 
         # Typical development command mix
         commands = {
@@ -321,7 +320,7 @@ class TestAutoApprovalRate:
         auto_approval_rate = (auto_approvals / total) * 100
 
         print(f"\nSimulated Auto-Approval Rate: {auto_approval_rate:.1f}%")
-        print(f"Target: >= 70%")
+        print("Target: >= 70%")
 
         assert auto_approval_rate >= 70.0, (
             f"Auto-approval rate {auto_approval_rate:.1f}% below target"
@@ -399,28 +398,28 @@ class TestOverallSystemPerformance:
 
         if risk_metrics.median > baselines["risk_assessment"]["median_ms"] * 2:
             regressions.append(
-                f"Risk assessment median {risk_metrics.median:.2f}ms > baseline {baselines['risk_assessment']['median_ms']:.2f}ms"
+                f"Risk assessment median {risk_metrics.median:.2f}ms > baseline {baselines['risk_assessment']['median_ms']:.2f}ms",
             )
 
         if local_fast_metrics.median > baselines["local_fast"]["median_ms"] * 2:
             regressions.append(
-                f"Local-fast median {local_fast_metrics.median:.2f}ms > baseline {baselines['local_fast']['median_ms']:.2f}ms"
+                f"Local-fast median {local_fast_metrics.median:.2f}ms > baseline {baselines['local_fast']['median_ms']:.2f}ms",
             )
 
         if risk_metrics.max > baselines["risk_assessment"]["max_ms"] * 3:
             regressions.append(
-                f"Risk assessment max {risk_metrics.max:.2f}ms > baseline {baselines['risk_assessment']['max_ms']:.2f}ms"
+                f"Risk assessment max {risk_metrics.max:.2f}ms > baseline {baselines['risk_assessment']['max_ms']:.2f}ms",
             )
 
         if regressions:
             pytest.fail("Performance regressions detected:\n" + "\n".join(regressions))
 
-        print(f"\nPerformance regression check: PASSED")
+        print("\nPerformance regression check: PASSED")
         print(
-            f"  Risk Assessment: {risk_metrics.median:.2f}ms (baseline: {baselines['risk_assessment']['median_ms']:.2f}ms)"
+            f"  Risk Assessment: {risk_metrics.median:.2f}ms (baseline: {baselines['risk_assessment']['median_ms']:.2f}ms)",
         )
         print(
-            f"  Local-Fast: {local_fast_metrics.median:.2f}ms (baseline: {baselines['local_fast']['median_ms']:.2f}ms)"
+            f"  Local-Fast: {local_fast_metrics.median:.2f}ms (baseline: {baselines['local_fast']['median_ms']:.2f}ms)",
         )
 
 

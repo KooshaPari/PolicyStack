@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import unittest
 
-from support import REPO_ROOT
-
 from policy_federation.runtime_context import infer_repo_name_from_cwd
+from support import REPO_ROOT
 
 
 class RuntimeContextTest(unittest.TestCase):
@@ -12,7 +11,7 @@ class RuntimeContextTest(unittest.TestCase):
         self.assertTrue(REPO_ROOT.exists())
         self.assertEqual(
             infer_repo_name_from_cwd(
-                "/Users/kooshapari/CodeProjects/Phenotype/repos/trace-wtrees/cli-stubs"
+                "/Users/kooshapari/CodeProjects/Phenotype/repos/trace-wtrees/cli-stubs",
             ),
             "trace",
         )
@@ -20,7 +19,7 @@ class RuntimeContextTest(unittest.TestCase):
     def test_infer_repo_name_from_nested_worktrees_layout(self) -> None:
         self.assertEqual(
             infer_repo_name_from_cwd(
-                "/Users/kooshapari/CodeProjects/Phenotype/repos/worktrees/heliosApp/claude-md-standardize"
+                "/Users/kooshapari/CodeProjects/Phenotype/repos/worktrees/heliosApp/claude-md-standardize",
             ),
             "heliosApp",
         )

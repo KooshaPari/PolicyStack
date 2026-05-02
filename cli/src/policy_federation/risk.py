@@ -16,7 +16,6 @@ from pathlib import Path
 
 from .runtime_artifacts import read_audit_log
 
-
 # ============================================================================
 # 4-Tier Risk Assessment System
 # ============================================================================
@@ -261,7 +260,6 @@ def score_risk(
     audit_log_path: Path | None = None,
 ) -> dict:
     """Score the risk of an ask decision. Returns dict with score (0.0-1.0), factors, and delegation_eligible."""
-
     factors = {}
 
     # Factor 1: Action type (weight 0.3)

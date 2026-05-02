@@ -1,4 +1,5 @@
 """Runtime context helpers shared by CLI, hooks, and launchers."""
+
 from __future__ import annotations
 
 from pathlib import Path

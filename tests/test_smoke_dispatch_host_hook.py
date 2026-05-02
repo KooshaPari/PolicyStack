@@ -6,7 +6,6 @@ import subprocess
 import textwrap
 from pathlib import Path
 
-
 SCRIPT_UNDER_TEST = (
     Path(__file__).resolve().parents[1] / "scripts" / "smoke_dispatch_host_hook.sh"
 )
@@ -44,7 +43,7 @@ def _setup_synthetic_root(tmp_path: Path, include_snapshots: bool) -> Path:
                 raise SystemExit(2)
             output.parent.mkdir(parents=True, exist_ok=True)
             output.write_text("{}", encoding="utf-8")
-            """
+            """,
         ),
         encoding="utf-8",
     )
@@ -74,7 +73,7 @@ def _setup_synthetic_root(tmp_path: Path, include_snapshots: bool) -> Path:
                 json.dumps({"rules": []}),
                 encoding="utf-8",
             )
-            """
+            """,
         ),
         encoding="utf-8",
     )
@@ -123,11 +122,18 @@ def _setup_synthetic_root(tmp_path: Path, include_snapshots: bool) -> Path:
     )
 
     if include_snapshots:
-        (root / "policy-config" / "snapshots" / "policy_snapshot_codex_deployment.json").write_text(
+        (
+            root
+            / "policy-config"
+            / "snapshots"
+            / "policy_snapshot_codex_deployment.json"
+        ).write_text(
             "{}",
             encoding="utf-8",
         )
-        (root / "policy-config" / "snapshots" / "policy_snapshot_codex_query.json").write_text(
+        (
+            root / "policy-config" / "snapshots" / "policy_snapshot_codex_query.json"
+        ).write_text(
             "{}",
             encoding="utf-8",
         )

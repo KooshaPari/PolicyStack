@@ -1,4 +1,5 @@
 """Claude Code hook helpers for policy-enforced tool gating."""
+
 from __future__ import annotations
 
 import json
@@ -8,10 +9,8 @@ import shlex
 import sys
 from pathlib import Path
 
-from .constants import ASK_MODE_REVIEW
 from .interceptor import intercept_command
 from .runtime_context import infer_repo_name_from_cwd
-
 
 READ_ONLY_TOOLS = {"Glob", "Grep", "LS", "Read"}
 WRITE_TOOLS = {"Write", "Edit", "MultiEdit", "NotebookEdit"}
@@ -36,6 +35,10 @@ _WRITE_VIA_EXEC_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("ruby-file-write", re.compile(r"ruby\s+-e.*(?:File\.write|open.*w)")),
     ("node-file-write", re.compile(r"node\s+-e.*(?:writeFile|createWriteStream)")),
     ("sed-inline-write", re.compile(r"\bsed\s+-i\b")),
+    ("sed-inplace-write", re.compile(r"\bsed\s+-i\b")),
+    ("xargs-write", re.compile(r"\bxargs\b.*(?:rm|cp|mv|tee|dd|install)")),
+    ("mv-write", re.compile(r"\bmv\b")),
+    ("cp-write", re.compile(r"\bcp\b")),
 ]
 
 # Patterns for detecting write commands inside subshell expansions
@@ -49,16 +52,18 @@ _SUBSHELL_WRITE = re.compile(
 _SAFE_REDIRECT = re.compile(r"[12]>&[12]|[12]>/dev/null|>&/dev/null")
 
 # Protected env vars that must not be overridden via command prefixes
-_PROTECTED_ENV_VARS = frozenset({
-    "POLICY_REPO",
-    "POLICY_TASK_DOMAIN",
-    "POLICY_TASK_INSTANCE",
-    "POLICY_TASK_OVERLAY",
-    "POLICY_ACTOR",
-    "POLICY_ASK_MODE",
-    "POLICY_SIDECAR_PATH",
-    "POLICY_AUDIT_LOG_PATH",
-})
+_PROTECTED_ENV_VARS = frozenset(
+    {
+        "POLICY_REPO",
+        "POLICY_TASK_DOMAIN",
+        "POLICY_TASK_INSTANCE",
+        "POLICY_TASK_OVERLAY",
+        "POLICY_ACTOR",
+        "POLICY_ASK_MODE",
+        "POLICY_SIDECAR_PATH",
+        "POLICY_AUDIT_LOG_PATH",
+    },
+)
 
 # Patterns for env var overrides as command prefixes:
 #   VAR=value cmd ...
@@ -95,7 +100,7 @@ def _strip_env_overrides(command: str) -> str:
     cmd = command.strip()
     prefix_re = re.compile(
         r"^(?:env\s+|export\s+)?"
-        r"POLICY_\w+=\S*\s*"
+        r"POLICY_\w+=\S*\s*",
     )
     while prefix_re.match(cmd):
         cmd = prefix_re.sub("", cmd, count=1).strip()
@@ -211,7 +216,12 @@ def _extract_sed_target_paths(command: str, cwd: str) -> list[str]:
 
     target_paths: list[str] = []
     for part in reversed(parts):
-        if part == "sed" or part == "-i" or part.startswith("-") or part.startswith("s/"):
+        if (
+            part == "sed"
+            or part == "-i"
+            or part.startswith("-")
+            or part.startswith("s/")
+        ):
             continue
         target_paths.append(_resolve_target_path(part, cwd))
         break
@@ -256,9 +266,7 @@ def _extract_request(payload: dict) -> dict | None:
         # Check for write-via-exec bypasses
         bypass_indicators = _detect_write_via_exec(command)
         if env_overrides:
-            bypass_indicators.extend(
-                f"env-override:{v}" for v in env_overrides
-            )
+            bypass_indicators.extend(f"env-override:{v}" for v in env_overrides)
         if bypass_indicators:
             # Reclassify as a write action so write-action rules apply.
             # Extract target paths from the command where possible.
@@ -323,7 +331,9 @@ def _extract_request(payload: dict) -> dict | None:
     }
 
 
-def evaluate_claude_pretool_payload(payload: dict, repo_root: Path | None = None) -> dict:
+def evaluate_claude_pretool_payload(
+    payload: dict, repo_root: Path | None = None,
+) -> dict:
     """Evaluate Claude hook payload and return Claude-compatible hook output."""
     request = _extract_request(payload)
     if request is None:
@@ -350,14 +360,17 @@ def evaluate_claude_pretool_payload(payload: dict, repo_root: Path | None = None
         headless_review = evaluation.get("headless_review")
         if headless_review:
             winning_rule = evaluation.get("winning_rule") or {}
-            rule_id = winning_rule.get("id") or evaluation.get("reason", "default-allow")
-            if rule_id.startswith("matched rule "):
-                rule_id = rule_id[len("matched rule "):]
+            rule_id = winning_rule.get("id") or evaluation.get(
+                "reason", "default-allow",
+            )
+            rule_id = rule_id.removeprefix("matched rule ")
 
             reasoning = headless_review.get("reason", "No specific reasoning provided.")
             command = request.get("command", payload.get("tool_name", "unknown tool"))
             reviewer = headless_review.get("reviewer", "guardian")
-            reviewer_name = "Guardian" if "codex" in reviewer.lower() else f"Guardian ({reviewer})"
+            reviewer_name = (
+                "Guardian" if "codex" in reviewer.lower() else f"Guardian ({reviewer})"
+            )
 
             return {
                 "continue": True,
@@ -394,9 +407,9 @@ def evaluate_claude_pretool_payload(payload: dict, repo_root: Path | None = None
         # Check if this is a tool that should provide a reason for the 'ask'
         command = request.get("command", "")
         if command and any(cmd in command for cmd in ["ruff", "pip", "npm", "cargo"]):
-             reason = f"policy-federation:{reason}{guardian_suffix} [reason: Check for safe flags or local targets]"
+            reason = f"policy-federation:{reason}{guardian_suffix} [reason: Check for safe flags or local targets]"
         else:
-             reason = f"policy-federation:{reason}{guardian_suffix}"
+            reason = f"policy-federation:{reason}{guardian_suffix}"
 
     # Include delegation metadata when present
     evaluation = result.get("evaluation", {})

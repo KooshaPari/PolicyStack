@@ -19,7 +19,6 @@ from .runtime_artifacts import (
     write_sidecar,
 )
 
-
 ALLOW_EXIT_CODE = 0
 DENY_EXIT_CODE = 2
 ASK_EXIT_CODE = 3
@@ -75,169 +74,140 @@ def intercept_command(
         exit_code = DENY_EXIT_CODE
         allowed = False
         final_decision = "deny"
-    else:
-        if ask_mode == "allow":
+    elif ask_mode == "allow":
+        exit_code = ALLOW_EXIT_CODE
+        allowed = True
+        final_decision = "allow"
+    elif ask_mode == "review":
+        review = run_headless_review(
+            repo_root=repo_root,
+            action=action,
+            command=command,
+            cwd=cwd,
+            actor=actor,
+            target_paths=target_paths,
+            policy_decision=decision,
+            policy_reason=evaluation.get("reason", "default policy"),
+            matched_rules=evaluation.get("matched_rules", []),
+        )
+        final_decision = review["decision"]
+        # Add headless_review to evaluation for test compatibility
+        evaluation["headless_review"] = review
+        if final_decision == "allow":
+            exit_code = ALLOW_EXIT_CODE
+            allowed = True
+        elif final_decision == "deny":
+            exit_code = DENY_EXIT_CODE
+            allowed = False
+        else:
+            exit_code = ASK_EXIT_CODE
+            allowed = False
+            final_decision = "ask"
+    elif ask_mode == "delegate":
+        from .delegate import DelegateContext, delegate_ask
+        from .risk import RiskTier, assess_risk_tiered, get_tiered_decision_path
+
+        # Detect worktree vs canonical for risk assessment
+        is_worktree = cwd and (
+            ".worktrees" in cwd or "worktrees" in cwd or "-wtrees/" in cwd
+        )
+        is_canonical = cwd and not is_worktree
+
+        # Use tiered risk assessment (4-tier system)
+        risk_assessment = assess_risk_tiered(
+            command=command,
+            cwd=cwd,
+            target_paths=target_paths,
+            is_worktree=is_worktree,
+            is_canonical=is_canonical,
+        )
+
+        tier = risk_assessment.tier
+        decision_path = get_tiered_decision_path(risk_assessment)
+
+        winning_rule = evaluation.get("winning_rule") or {}
+        ctx = DelegateContext(
+            action=action,
+            command=command,
+            cwd=cwd,
+            target_paths=target_paths or [],
+            risk_score=risk_assessment.score,
+            risk_factors={"factors": risk_assessment.factors, "tier": tier.name},
+            rule_id=winning_rule.get("id"),
+            rule_description=winning_rule.get("description"),
+            scope_chain=resolved["scope_chain"],
+        )
+
+        # Tier 1: Auto-allow (read ops, safe patterns) - ~60% of commands
+        if tier == RiskTier.TIER_1_NONE:
             exit_code = ALLOW_EXIT_CODE
             allowed = True
             final_decision = "allow"
-        elif ask_mode == "review":
-            review = run_headless_review(
-                repo_root=repo_root,
-                action=action,
-                command=command,
-                cwd=cwd,
-                actor=actor,
-                target_paths=target_paths,
-                policy_decision=decision,
-                policy_reason=evaluation.get("reason", "default policy"),
-                matched_rules=evaluation.get("matched_rules", []),
-            )
-            final_decision = review["decision"]
-            if final_decision == "allow":
-                exit_code = ALLOW_EXIT_CODE
-                allowed = True
-            elif final_decision == "deny":
-                exit_code = DENY_EXIT_CODE
-                allowed = False
-            else:
-                exit_code = ASK_EXIT_CODE
-                allowed = False
-                final_decision = "ask"
-        elif ask_mode == "delegate":
-            from .risk import assess_risk_tiered, RiskTier, get_tiered_decision_path
-            from .delegate import delegate_ask, DelegateContext
+            evaluation = {
+                **evaluation,
+                "risk_tier": tier.name,
+                "risk_score": risk_assessment.score,
+                "risk_factors": risk_assessment.factors,
+                "decision_path": decision_path,
+                "auto_allowed": True,
+            }
 
-            # Detect worktree vs canonical for risk assessment
-            is_worktree = cwd and (
-                ".worktrees" in cwd or "worktrees" in cwd or "-wtrees/" in cwd
-            )
-            is_canonical = cwd and not is_worktree
-
-            # Use tiered risk assessment (4-tier system)
-            risk_assessment = assess_risk_tiered(
-                command=command,
-                cwd=cwd,
-                target_paths=target_paths,
-                is_worktree=is_worktree,
-                is_canonical=is_canonical,
+        # Tier 2: Cache-allow (low-risk, use cache) - ~15% of commands
+        elif tier == RiskTier.TIER_2_LOW:
+            # Check cache first via delegate_ask with cache only
+            delegate_result = delegate_ask(
+                ctx, use_local_fast=False, use_cache=True,
             )
 
-            tier = risk_assessment.tier
-            decision_path = get_tiered_decision_path(risk_assessment)
-
-            winning_rule = evaluation.get("winning_rule") or {}
-            ctx = DelegateContext(
-                action=action,
-                command=command,
-                cwd=cwd,
-                target_paths=target_paths or [],
-                risk_score=risk_assessment.score,
-                risk_factors={"factors": risk_assessment.factors, "tier": tier.name},
-                rule_id=winning_rule.get("id"),
-                rule_description=winning_rule.get("description"),
-                scope_chain=resolved["scope_chain"],
-            )
-
-            # Tier 1: Auto-allow (read ops, safe patterns) - ~60% of commands
-            if tier == RiskTier.TIER_1_NONE:
+            if (
+                delegate_result.decision == "allow"
+                and delegate_result.source.startswith("cache")
+            ):
                 exit_code = ALLOW_EXIT_CODE
                 allowed = True
                 final_decision = "allow"
-                evaluation = {
-                    **evaluation,
-                    "risk_tier": tier.name,
-                    "risk_score": risk_assessment.score,
-                    "risk_factors": risk_assessment.factors,
-                    "decision_path": decision_path,
-                    "auto_allowed": True,
-                }
-
-            # Tier 2: Cache-allow (low-risk, use cache) - ~15% of commands
-            elif tier == RiskTier.TIER_2_LOW:
-                # Check cache first via delegate_ask with cache only
+            else:
+                # Cache miss - use local-fast evaluator
                 delegate_result = delegate_ask(
-                    ctx, use_local_fast=False, use_cache=True
+                    ctx, use_local_fast=True, use_cache=False,
                 )
-
-                if (
-                    delegate_result.decision == "allow"
-                    and delegate_result.source.startswith("cache")
-                ):
-                    exit_code = ALLOW_EXIT_CODE
-                    allowed = True
-                    final_decision = "allow"
-                else:
-                    # Cache miss - use local-fast evaluator
-                    delegate_result = delegate_ask(
-                        ctx, use_local_fast=True, use_cache=False
-                    )
-                    if delegate_result.decision == "allow":
-                        exit_code = ALLOW_EXIT_CODE
-                        allowed = True
-                        final_decision = "allow"
-                    else:
-                        exit_code = ASK_EXIT_CODE
-                        allowed = False
-                        final_decision = "ask"
-
-                evaluation = {
-                    **evaluation,
-                    "risk_tier": tier.name,
-                    "risk_score": risk_assessment.score,
-                    "risk_factors": risk_assessment.factors,
-                    "decision_path": decision_path,
-                    "delegate_source": delegate_result.source,
-                    "delegate_reasoning": delegate_result.reasoning,
-                }
-
-            # Tier 3: Fast-check (medium risk, quick validation) - ~10% of commands
-            elif tier == RiskTier.TIER_3_MEDIUM:
-                # Use local-fast evaluator first
-                delegate_result = delegate_ask(ctx, use_local_fast=True, use_cache=True)
-
                 if delegate_result.decision == "allow":
                     exit_code = ALLOW_EXIT_CODE
                     allowed = True
                     final_decision = "allow"
-                elif delegate_result.decision == "deny":
-                    exit_code = DENY_EXIT_CODE
-                    allowed = False
-                    final_decision = "deny"
                 else:
-                    # Need full delegation
-                    delegate_result = delegate_ask(
-                        ctx, use_local_fast=False, use_cache=True
-                    )
-                    if delegate_result.decision == "allow":
-                        exit_code = ALLOW_EXIT_CODE
-                        allowed = True
-                        final_decision = "allow"
-                    elif delegate_result.decision == "deny":
-                        exit_code = DENY_EXIT_CODE
-                        allowed = False
-                        final_decision = "deny"
-                    else:
-                        exit_code = ASK_EXIT_CODE
-                        allowed = False
-                        final_decision = "ask"
+                    exit_code = ASK_EXIT_CODE
+                    allowed = False
+                    final_decision = "ask"
 
-                evaluation = {
-                    **evaluation,
-                    "risk_tier": tier.name,
-                    "risk_score": risk_assessment.score,
-                    "risk_factors": risk_assessment.factors,
-                    "decision_path": decision_path,
-                    "delegate_source": delegate_result.source,
-                    "delegate_reasoning": delegate_result.reasoning,
-                    "delegate_confidence": delegate_result.confidence,
-                }
+            evaluation = {
+                **evaluation,
+                "risk_tier": tier.name,
+                "risk_score": risk_assessment.score,
+                "risk_factors": risk_assessment.factors,
+                "decision_path": decision_path,
+                "delegate_source": delegate_result.source,
+                "delegate_reasoning": delegate_result.reasoning,
+            }
 
-            # Tier 4: Full delegation (high risk) - ~15% of commands
-            else:  # RiskTier.TIER_4_HIGH
+        # Tier 3: Fast-check (medium risk, quick validation) - ~10% of commands
+        elif tier == RiskTier.TIER_3_MEDIUM:
+            # Use local-fast evaluator first
+            delegate_result = delegate_ask(ctx, use_local_fast=True, use_cache=True)
+
+            if delegate_result.decision == "allow":
+                exit_code = ALLOW_EXIT_CODE
+                allowed = True
+                final_decision = "allow"
+            elif delegate_result.decision == "deny":
+                exit_code = DENY_EXIT_CODE
+                allowed = False
+                final_decision = "deny"
+            else:
+                # Need full delegation
                 delegate_result = delegate_ask(
-                    ctx, use_local_fast=False, use_cache=True
+                    ctx, use_local_fast=False, use_cache=True,
                 )
-
                 if delegate_result.decision == "allow":
                     exit_code = ALLOW_EXIT_CODE
                     allowed = True
@@ -251,20 +221,50 @@ def intercept_command(
                     allowed = False
                     final_decision = "ask"
 
-                evaluation = {
-                    **evaluation,
-                    "risk_tier": tier.name,
-                    "risk_score": risk_assessment.score,
-                    "risk_factors": risk_assessment.factors,
-                    "decision_path": decision_path,
-                    "delegate_source": delegate_result.source,
-                    "delegate_reasoning": delegate_result.reasoning,
-                    "delegate_confidence": delegate_result.confidence,
-                }
-        else:
-            exit_code = ASK_EXIT_CODE
-            allowed = False
-            final_decision = "ask"
+            evaluation = {
+                **evaluation,
+                "risk_tier": tier.name,
+                "risk_score": risk_assessment.score,
+                "risk_factors": risk_assessment.factors,
+                "decision_path": decision_path,
+                "delegate_source": delegate_result.source,
+                "delegate_reasoning": delegate_result.reasoning,
+                "delegate_confidence": delegate_result.confidence,
+            }
+
+        # Tier 4: Full delegation (high risk) - ~15% of commands
+        else:  # RiskTier.TIER_4_HIGH
+            delegate_result = delegate_ask(
+                ctx, use_local_fast=False, use_cache=True,
+            )
+
+            if delegate_result.decision == "allow":
+                exit_code = ALLOW_EXIT_CODE
+                allowed = True
+                final_decision = "allow"
+            elif delegate_result.decision == "deny":
+                exit_code = DENY_EXIT_CODE
+                allowed = False
+                final_decision = "deny"
+            else:
+                exit_code = ASK_EXIT_CODE
+                allowed = False
+                final_decision = "ask"
+
+            evaluation = {
+                **evaluation,
+                "risk_tier": tier.name,
+                "risk_score": risk_assessment.score,
+                "risk_factors": risk_assessment.factors,
+                "decision_path": decision_path,
+                "delegate_source": delegate_result.source,
+                "delegate_reasoning": delegate_result.reasoning,
+                "delegate_confidence": delegate_result.confidence,
+            }
+    else:
+        exit_code = ASK_EXIT_CODE
+        allowed = False
+        final_decision = "ask"
 
     result = {
         "allowed": allowed,

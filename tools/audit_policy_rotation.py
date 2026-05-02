@@ -11,7 +11,7 @@ from pathlib import Path
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Track and compare policy digest rotation per repository."
+        description="Track and compare policy digest rotation per repository.",
     )
     parser.add_argument(
         "--repo-list",
@@ -80,7 +80,7 @@ def main() -> None:
                 "previous_digest": prev_digest,
                 "changed": changed,
                 "first_seen": created,
-            }
+            },
         )
 
         previous[repo] = {

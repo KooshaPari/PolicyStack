@@ -9,7 +9,6 @@ Loads and validates configuration from:
 from __future__ import annotations
 
 import os
-import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -41,12 +40,12 @@ class RiskAssessmentConfig:
     tier_1: RiskTierConfig = field(default_factory=lambda: RiskTierConfig(enabled=True))
     tier_2: RiskTierConfig = field(default_factory=lambda: RiskTierConfig(enabled=True))
     tier_3: RiskTierConfig = field(
-        default_factory=lambda: RiskTierConfig(enabled=True, max_risk_score=0.5)
+        default_factory=lambda: RiskTierConfig(enabled=True, max_risk_score=0.5),
     )
     tier_4: RiskTierConfig = field(default_factory=lambda: RiskTierConfig(enabled=True))
     safe_paths: list[str] = field(default_factory=lambda: [".worktrees/", "worktrees/"])
     high_risk_paths: list[str] = field(
-        default_factory=lambda: ["/etc/", "/usr/bin/", "/usr/sbin/", "/bin/", "/sbin/"]
+        default_factory=lambda: ["/etc/", "/usr/bin/", "/usr/sbin/", "/bin/", "/sbin/"],
     )
 
 
@@ -78,11 +77,11 @@ class DelegationConfig:
     enabled: bool = True
     primary: str = "opencode"
     fallback_chain: list[str] = field(
-        default_factory=lambda: ["opencode", "forge", "cursor", "local-fast"]
+        default_factory=lambda: ["opencode", "forge", "cursor", "local-fast"],
     )
     harnesses: dict[str, HarnessConfig] = field(default_factory=dict)
     local_fast: dict[str, Any] = field(
-        default_factory=lambda: {"enabled": True, "max_eval_time_ms": 100}
+        default_factory=lambda: {"enabled": True, "max_eval_time_ms": 100},
     )
 
 
@@ -138,7 +137,7 @@ def _load_yaml_file(path: Path) -> dict[str, Any]:
         import yaml
 
         if path.exists():
-            with open(path, "r") as f:
+            with open(path) as f:
                 return yaml.safe_load(f) or {}
     except ImportError:
         pass

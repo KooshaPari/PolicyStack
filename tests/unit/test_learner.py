@@ -1,14 +1,13 @@
 """Tests for audit-driven policy learning."""
+
 from __future__ import annotations
 
 import json
 import tempfile
 from pathlib import Path
 
-import yaml
-
 import support  # noqa: F401 -- setup sys.path
-
+import yaml
 from policy_federation.learner import (
     RuleSuggestion,
     _extract_command_prefix,
@@ -35,14 +34,16 @@ class TestAnalyzeAudit:
         with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False) as f:
             for i in range(10):
                 f.write(
-                    json.dumps({
-                        "run_id": f"r{i}",
-                        "action": "exec",
-                        "command": f"ls -la /some/path/{i}",
-                        "cwd": "/repos/project-wtrees/feat/",
-                        "final_decision": "ask",
-                    })
-                    + "\n"
+                    json.dumps(
+                        {
+                            "run_id": f"r{i}",
+                            "action": "exec",
+                            "command": f"ls -la /some/path/{i}",
+                            "cwd": "/repos/project-wtrees/feat/",
+                            "final_decision": "ask",
+                        },
+                    )
+                    + "\n",
                 )
             audit_path = Path(f.name)
 
@@ -56,13 +57,15 @@ class TestAnalyzeAudit:
         with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False) as f:
             for i in range(3):
                 f.write(
-                    json.dumps({
-                        "run_id": f"r{i}",
-                        "action": "exec",
-                        "command": "rare-cmd",
-                        "final_decision": "ask",
-                    })
-                    + "\n"
+                    json.dumps(
+                        {
+                            "run_id": f"r{i}",
+                            "action": "exec",
+                            "command": "rare-cmd",
+                            "final_decision": "ask",
+                        },
+                    )
+                    + "\n",
                 )
             audit_path = Path(f.name)
 
@@ -76,19 +79,19 @@ class TestAnalyzeAudit:
             for i in range(10):
                 decision = "ask" if i % 2 == 0 else "allow"
                 f.write(
-                    json.dumps({
-                        "run_id": f"r{i}",
-                        "action": "exec",
-                        "command": f"mixed-cmd {i}",
-                        "final_decision": decision,
-                    })
-                    + "\n"
+                    json.dumps(
+                        {
+                            "run_id": f"r{i}",
+                            "action": "exec",
+                            "command": f"mixed-cmd {i}",
+                            "final_decision": decision,
+                        },
+                    )
+                    + "\n",
                 )
             audit_path = Path(f.name)
 
-        suggestions = analyze_audit(
-            audit_path, min_cluster_size=5, min_confidence=0.9
-        )
+        suggestions = analyze_audit(audit_path, min_cluster_size=5, min_confidence=0.9)
         assert len(suggestions) == 0
         audit_path.unlink()
 

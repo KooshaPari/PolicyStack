@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-"""
-Resolve layered agent policy scopes.
+"""Resolve layered agent policy scopes.
 """
 
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import hashlib
+import importlib.util
 import json
 import re
 import sys
@@ -15,7 +14,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-
 
 SCOPE_ORDER = [
     "system",
@@ -94,7 +92,7 @@ def load_yaml(path: Path, *, required: bool = False, scope: str | None = None) -
 
 
 def validate_policy(
-    data: dict[str, Any], path: Path, *, expected_scope: str | None = None
+    data: dict[str, Any], path: Path, *, expected_scope: str | None = None,
 ) -> None:
     if "policy_version" not in data or not isinstance(data["policy_version"], str):
         raise ValueError(f"{path}: policy_version missing or invalid")
@@ -106,7 +104,7 @@ def validate_policy(
     if expected_scope is not None and scope_name != expected_scope:
         raise ValueError(
             f"{path}: scope mismatch in chain: expected "
-            f"{expected_scope}, got {scope_name}"
+            f"{expected_scope}, got {scope_name}",
         )
 
 
@@ -174,22 +172,22 @@ def _validate_scope_chain(chain: list[tuple[str, str]]) -> None:
             if scope_name != expected_scope:
                 raise ValueError(
                     "scope progression mismatch: expected "
-                    f"{expected_scope}, got {scope_name} at position {index + 1}"
+                    f"{expected_scope}, got {scope_name} at position {index + 1}",
                 )
             continue
 
         if scope_name != "task_instance":
             raise ValueError(
                 f"scope progression mismatch: unexpected scope {scope_name} "
-                f"at position {index + 1}; expected task_instance"
+                f"at position {index + 1}; expected task_instance",
             )
 
     if not set(REQUIRED_SCOPES).issubset(scope_names):
         missing_scopes = ", ".join(
-            sorted(set(REQUIRED_SCOPES) - set(scope_names))
+            sorted(set(REQUIRED_SCOPES) - set(scope_names)),
         )
         raise ValueError(
-            f"required scopes missing from final resolved policy: {missing_scopes}"
+            f"required scopes missing from final resolved policy: {missing_scopes}",
         )
 
     task_instance_count = scope_names.count("task_instance")
@@ -203,7 +201,7 @@ def _normalized_scope_chain(chain: list[tuple[str, str]]) -> list[tuple[str, str
         key=lambda entry: (
             _scope_priority(entry[1][0]),
             entry[0],
-        )
+        ),
     )
     return [item for _, item in indexed_chain]
 
@@ -214,7 +212,7 @@ def _build_resolved_payload(
 ) -> dict[str, Any]:
     normalized_scopes = _normalized_scope_chain(scope_chain)
     digest = hashlib.sha256(
-        json.dumps(merged_policy, sort_keys=True).encode("utf-8")
+        json.dumps(merged_policy, sort_keys=True).encode("utf-8"),
     ).hexdigest()
     return {
         "policy_hash": digest,
@@ -295,7 +293,7 @@ def _validate_host_artifacts(out_dir: Path, rendered: dict[str, Any]) -> None:
         decision = manifest.get(key)
         if decision not in {"allow", "request", "deny"}:
             raise ValueError(
-                f"dispatch manifest field {key} has invalid decision: {decision}"
+                f"dispatch manifest field {key} has invalid decision: {decision}",
             )
 
     wrapper_rules = rendered.get("wrapper_rules")
@@ -309,14 +307,14 @@ def _validate_host_artifacts(out_dir: Path, rendered: dict[str, Any]) -> None:
     if expected_wrapper_rules != payload_count:
         raise ValueError(
             "rendered wrapper rule count mismatch: "
-            f"{expected_wrapper_rules} != {payload_count}"
+            f"{expected_wrapper_rules} != {payload_count}",
         )
 
     manifest_wrapper_count = manifest.get("wrapper_rule_count")
     if manifest_wrapper_count != expected_wrapper_rules:
         raise ValueError(
             "dispatch manifest wrapper_rule_count mismatch: "
-            f"{manifest_wrapper_count} != {expected_wrapper_rules}"
+            f"{manifest_wrapper_count} != {expected_wrapper_rules}",
         )
 
     with (out_dir / "policy-wrapper-rules.json").open("r", encoding="utf-8") as fp:
@@ -335,7 +333,7 @@ def resolve(policies: list[tuple[str, Path]], output: Path | None = None) -> dic
         if not policy:
             if scope in required_scopes:
                 raise ValueError(
-                    f"{path}: required scope '{scope}' file is empty or missing payload"
+                    f"{path}: required scope '{scope}' file is empty or missing payload",
                 )
             continue
         _validate_policy_payload_types(policy, path)
@@ -346,7 +344,7 @@ def resolve(policies: list[tuple[str, Path]], output: Path | None = None) -> dic
         if scope_name != scope:
             raise ValueError(
                 f"{path}: scope mismatch in chain: expected "
-                f"{scope}, got {scope_name}"
+                f"{scope}, got {scope_name}",
             )
         if scope_name in seen_scopes:
             raise ValueError(f"duplicate scope in chain: {scope_name}")
@@ -374,7 +372,7 @@ def _resolve_config_root(root: Path) -> Path:
         return nested_layout
     raise FileNotFoundError(
         "no supported config root layout exists; expected one of "
-        f"{repo_layout} or {nested_layout}"
+        f"{repo_layout} or {nested_layout}",
     )
 
 

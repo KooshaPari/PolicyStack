@@ -11,11 +11,15 @@ from unittest.mock import MagicMock
 import pytest
 
 # Mock wrapper libraries and their submodules to unblock import errors
-for wrapper in ["opencode", "codex", "cursor", "kilo", "forgecode", "droid"]:
+# Only mock wrappers that don't exist as real modules
+_EXTERNAL_WRAPPERS = ["codex", "cursor", "droid"]
+for wrapper in _EXTERNAL_WRAPPERS:
     mod = ModuleType(wrapper)
     mod.wrapper = MagicMock()
     sys.modules[wrapper] = mod
     sys.modules[f"{wrapper}.wrapper"] = mod.wrapper
+# Note: opencode, kilo, forgecode are real modules in wrappers/ directory
+# and should not be mocked globally
 
 
 def pytest_configure(config):

@@ -1,17 +1,15 @@
 """Tests for policyctl verify CLI command."""
+
 from __future__ import annotations
 
-import json
+import argparse
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from support import REPO_ROOT, CLI_SRC
-
 from policy_federation.cli import verify_command
 from policy_federation.resolver import hash_policy_sources
-import argparse
 
 
 class VerifyCommandTest(unittest.TestCase):
@@ -22,7 +20,9 @@ class VerifyCommandTest(unittest.TestCase):
             # Create a minimal policy directory
             policies_dir = repo_root / "policies" / "system"
             policies_dir.mkdir(parents=True)
-            (policies_dir / "base.yaml").write_text("id: test\npolicy: {}\n", encoding="utf-8")
+            (policies_dir / "base.yaml").write_text(
+                "id: test\npolicy: {}\n", encoding="utf-8",
+            )
 
             baseline_file = repo_root / ".policyctl.verify"
             self.assertFalse(baseline_file.exists())
@@ -108,7 +108,9 @@ class VerifyCommandTest(unittest.TestCase):
             repo_root = Path(tmpdir)
             policies_dir = repo_root / "policies" / "system"
             policies_dir.mkdir(parents=True)
-            (policies_dir / "base.yaml").write_text("id: test\npolicy: {}\n", encoding="utf-8")
+            (policies_dir / "base.yaml").write_text(
+                "id: test\npolicy: {}\n", encoding="utf-8",
+            )
 
             # Use explicit repo-root
             args = argparse.Namespace(repo_root=str(repo_root))
@@ -133,8 +135,7 @@ class VerifyCommandTest(unittest.TestCase):
                 scope_dir.mkdir(parents=True)
                 for i in range(2):
                     (scope_dir / f"policy{i}.yaml").write_text(
-                        f"id: {scope}_policy{i}\npolicy: {{}}\n",
-                        encoding="utf-8"
+                        f"id: {scope}_policy{i}\npolicy: {{}}\n", encoding="utf-8",
                     )
 
             args = argparse.Namespace(repo_root=str(repo_root))

@@ -11,28 +11,25 @@ import os
 import re
 import subprocess
 import tempfile
-from shutil import which
 from pathlib import Path
+from shutil import which
 
 from .constants import (
-    DEFAULT_REVIEW_BIN,
-    DEFAULT_REVIEW_MODEL,
     DEFAULT_FALLBACK_REVIEW_BIN,
     DEFAULT_FALLBACK_REVIEW_MODEL,
+    DEFAULT_REVIEW_BIN,
+    DEFAULT_REVIEW_MODEL,
 )
 from .delegate import (
-    delegate_ask,
-    DelegateContext,
     HARNESS_FALLBACK,
-    HARNESS_CONFIG,
+    DelegateContext,
     _auto_detect_harness,
+    _cache_decision,
+    _get_cached_decision,
     _invoke_harness,
     _local_fast_evaluate,
-    _get_cached_decision,
-    _cache_decision,
 )
-from .risk import assess_risk_tiered, RiskTier, get_tiered_decision_path
-
+from .risk import assess_risk_tiered, get_tiered_decision_path
 
 REVIEW_DECISIONS = {"allow", "deny", "ask"}
 
@@ -162,7 +159,7 @@ def _run_reviewer_binary(
                     "--output-last-message",
                     str(output_path),
                     request_text,
-                ]
+                ],
             )
         elif is_droid:
             # Droid doesn't support the same output flags, we'll capture stdout
@@ -442,7 +439,7 @@ def run_headless_review(
     )
 
     if result["decision"] != "ask" or "unavailable" not in result.get(
-        "review_error", ""
+        "review_error", "",
     ):
         # If it returned a firm allow/deny, or it actually ran but returned ask, return it
         if not result.get("review_error"):
@@ -458,10 +455,10 @@ def run_headless_review(
 
     # Try fallback reviewer
     fallback_bin = os.environ.get(
-        "POLICY_FALLBACK_REVIEW_BIN", DEFAULT_FALLBACK_REVIEW_BIN
+        "POLICY_FALLBACK_REVIEW_BIN", DEFAULT_FALLBACK_REVIEW_BIN,
     )
     fallback_model = os.environ.get(
-        "POLICY_FALLBACK_REVIEW_MODEL", DEFAULT_FALLBACK_REVIEW_MODEL
+        "POLICY_FALLBACK_REVIEW_MODEL", DEFAULT_FALLBACK_REVIEW_MODEL,
     )
 
     if fallback_bin and fallback_bin != primary_bin:
@@ -472,7 +469,7 @@ def run_headless_review(
             request_text=request_text,
         )
         if fallback_result["decision"] != "ask" or not fallback_result.get(
-            "review_error"
+            "review_error",
         ):
             fallback_result["primary_error"] = result.get("review_error")
             return fallback_result

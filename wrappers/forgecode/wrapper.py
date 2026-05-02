@@ -8,9 +8,8 @@ from __future__ import annotations
 import json
 import os
 import sys
-import urllib.request
 import urllib.error
-from pathlib import Path
+import urllib.request
 from typing import Any
 
 
@@ -137,7 +136,7 @@ def main() -> None:
         print(result["decision"])
 
     sys.exit(
-        0 if result["decision"] == "allow" else 1 if result["decision"] == "deny" else 2
+        0 if result["decision"] == "allow" else 1 if result["decision"] == "deny" else 2,
     )
 
 

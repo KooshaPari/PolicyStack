@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import unittest
 
-from support import REPO_ROOT
-
 from policy_federation.compiler import compile_target
 from policy_federation.resolver import resolve
+from support import REPO_ROOT
 
 
 class CompilerTest(unittest.TestCase):
@@ -21,7 +20,9 @@ class CompilerTest(unittest.TestCase):
             "git commit --no-verify*",
             compiled["native_config"]["permissions"]["deny_prefixes"],
         )
-        self.assertIn("git commit*", compiled["native_config"]["permissions"]["deny_prefixes"])
+        self.assertIn(
+            "git commit*", compiled["native_config"]["permissions"]["deny_prefixes"],
+        )
         shim_ids = {rule["id"] for rule in compiled["shim_rules"]}
         self.assertIn("thegent-allow-git-write-in-worktrees", shim_ids)
         self.assertIn("thegent-deny-write-outside-worktrees", shim_ids)
@@ -77,7 +78,9 @@ class CompilerTest(unittest.TestCase):
         compiled = compile_target("cursor-agent", resolved)
         wrapper = compiled["native_config"]["runtime_wrapper"]
         self.assertEqual(wrapper["exec"], "./scripts/runtime/cursor_exec_guard.sh")
-        self.assertEqual(wrapper["write_check"], "./scripts/runtime/cursor_write_guard.sh")
+        self.assertEqual(
+            wrapper["write_check"], "./scripts/runtime/cursor_write_guard.sh",
+        )
 
     def test_factory_compile_includes_runtime_wrappers(self) -> None:
         resolved = resolve(
@@ -89,7 +92,9 @@ class CompilerTest(unittest.TestCase):
         compiled = compile_target("factory-droid", resolved)
         wrapper = compiled["native_config"]["runtime_wrapper"]
         self.assertEqual(wrapper["exec"], "./scripts/runtime/factory_exec_guard.sh")
-        self.assertEqual(wrapper["network_check"], "./scripts/runtime/factory_network_guard.sh")
+        self.assertEqual(
+            wrapper["network_check"], "./scripts/runtime/factory_network_guard.sh",
+        )
         self.assertEqual(compiled["native_config"]["approvalMode"], "review")
 
     def test_claude_compile_includes_pretool_hook(self) -> None:
@@ -102,7 +107,9 @@ class CompilerTest(unittest.TestCase):
         compiled = compile_target("claude-code", resolved)
         wrapper = compiled["native_config"]["runtime_wrapper"]
         self.assertEqual(wrapper["exec"], "./scripts/runtime/claude_exec_guard.sh")
-        self.assertEqual(wrapper["pretool_hook"], "./scripts/runtime/claude_pretool_hook.py")
+        self.assertEqual(
+            wrapper["pretool_hook"], "./scripts/runtime/claude_pretool_hook.py",
+        )
         pretool = compiled["native_config"]["hooks"]["PreToolUse"][0]
         self.assertEqual(
             pretool["matcher"],
@@ -175,7 +182,7 @@ class CompilerTest(unittest.TestCase):
                             "match": {"command_patterns": ["npm publish*"]},
                         },
                     ],
-                }
+                },
             },
             "policy_hash": "unit-matrix",
             "scope_chain": [],
@@ -197,7 +204,9 @@ class CompilerTest(unittest.TestCase):
         }
         for target, wrapper_path in target_wrappers.items():
             compiled = compile_target(target, resolved_payload)
-            self.assertEqual(compiled["native_config"]["runtime_wrapper"]["exec"], wrapper_path)
+            self.assertEqual(
+                compiled["native_config"]["runtime_wrapper"]["exec"], wrapper_path,
+            )
 
             shim_ids = {rule["id"] for rule in compiled["shim_rules"]}
             self.assertIn("test-deny-write-any", shim_ids)

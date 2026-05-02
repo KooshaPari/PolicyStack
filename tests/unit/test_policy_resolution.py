@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import tempfile
-from pathlib import Path
 import unittest
-
-from support import REPO_ROOT
+from pathlib import Path
 
 from policy_federation.resolver import _append_unique_items, _merge_maps, resolve
 from policy_federation.validate import validate_policy_file
+from support import REPO_ROOT
 
 
 class PolicyResolutionTest(unittest.TestCase):
@@ -33,7 +32,7 @@ class PolicyResolutionTest(unittest.TestCase):
                 {"id": "b", "action": "deny"},
                 {"id": "a", "action": "deny"},
                 {"id": "c", "action": "ask"},
-            ]
+            ],
         )
         self.assertEqual(
             merged,
@@ -50,16 +49,16 @@ class PolicyResolutionTest(unittest.TestCase):
                 "rules": [
                     {"id": "r1", "action": "allow"},
                     {"id": "r2", "action": "deny"},
-                ]
-            }
+                ],
+            },
         }
         overrides = {
             "authorization": {
                 "rules": [
                     {"id": "r1", "action": "ask"},
                     {"id": "r3", "action": "allow"},
-                ]
-            }
+                ],
+            },
         }
 
         conflicts: list[dict] = []
@@ -79,8 +78,7 @@ class PolicyResolutionTest(unittest.TestCase):
             repo_root = Path(tmpdir)
             (repo_root / "policies" / "task-domain").mkdir(parents=True)
 
-            shared_policy = (
-                """
+            shared_policy = """
                 version: "1.0"
                 id: "shared-policy"
                 scope: task_domain
@@ -98,13 +96,11 @@ class PolicyResolutionTest(unittest.TestCase):
                           command_patterns:
                             - "npm *"
                 """
-            )
             (repo_root / "policies" / "task-domain" / "shared.yaml").write_text(
-                shared_policy, encoding="utf-8"
+                shared_policy, encoding="utf-8",
             )
 
-            child_policy = (
-                """
+            child_policy = """
                 version: "1.0"
                 id: "child-policy"
                 scope: task_domain
@@ -132,9 +128,8 @@ class PolicyResolutionTest(unittest.TestCase):
                           command_patterns:
                             - "yarn *"
                 """
-            )
             (repo_root / "policies" / "task-domain" / "task-domain.yaml").write_text(
-                child_policy, encoding="utf-8"
+                child_policy, encoding="utf-8",
             )
 
             resolved = resolve(
@@ -143,7 +138,10 @@ class PolicyResolutionTest(unittest.TestCase):
                 repo="test-repo",
                 task_domain="task-domain",
             )
-            rules = {rule["id"]: rule for rule in resolved["policy"]["authorization"]["rules"]}
+            rules = {
+                rule["id"]: rule
+                for rule in resolved["policy"]["authorization"]["rules"]
+            }
 
             self.assertEqual(rules["shared"]["effect"], "allow")
             self.assertEqual(rules["shared"]["description"], "child override")

@@ -10,8 +10,8 @@ CLI_SRC = Path(__file__).resolve().parents[2] / "cli" / "src"
 if str(CLI_SRC) not in sys.path:
     sys.path.insert(0, str(CLI_SRC))
 
-from policy_federation.cli import review_command  # noqa: E402
-from policy_federation.constants import ASK_MODE_REVIEW  # noqa: E402
+from policy_federation.cli import review_command
+from policy_federation.constants import ASK_MODE_REVIEW
 
 
 class CliReviewTest(unittest.TestCase):
@@ -37,7 +37,9 @@ class CliReviewTest(unittest.TestCase):
                 "policy_hash": "hash",
                 "scope_chain": [],
                 "source_files": [],
-                "evaluation": {"headless_review": {"decision": "ask", "reason": "unavailable"}},
+                "evaluation": {
+                    "headless_review": {"decision": "ask", "reason": "unavailable"},
+                },
             }
             with self.assertRaises(SystemExit) as exc:
                 review_command(args)

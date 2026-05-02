@@ -5,7 +5,7 @@ Tests that the Rust policy engine bindings correctly evaluate rules
 when consumed from PolicyStack.
 """
 
-# noqa: S101 — assert statements are standard in pytest
+
 import pytest
 
 # Skip if maturin wheel not available (no Python headers, etc.)
@@ -178,7 +178,7 @@ class TestPyO3PolicyEngineIntegration:
         decision_repr = repr(decision)
         assert "acl-db-read" in decision_repr
         assert "Decision" in decision_repr
-        assert ("true" in decision_repr or "false" in decision_repr)
+        assert "true" in decision_repr or "false" in decision_repr
 
     def test_repr_methods(self):
         """Verify that repr methods work for debugging."""

@@ -1,4 +1,5 @@
 """Shared policy federation constants."""
+
 from __future__ import annotations
 
 ASK_MODE_FAIL = "fail"

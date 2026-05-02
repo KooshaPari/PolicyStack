@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -65,7 +65,9 @@ def test_discover_default_policy_paths_prefers_existing_and_uses_yaml_placeholde
     ]
 
 
-def test_required_default_policy_paths_matches_default_resolution(tmp_path: Path) -> None:
+def test_required_default_policy_paths_matches_default_resolution(
+    tmp_path: Path,
+) -> None:
     config_root = tmp_path / "policy-config"
     config_root.mkdir(parents=True, exist_ok=True)
     (config_root / "system.yaml").write_text("x: 1", encoding="utf-8")
@@ -78,7 +80,7 @@ def test_required_default_policy_paths_matches_default_resolution(tmp_path: Path
 
 
 def test_normalize_input_paths_dedupes_relative_and_absolute_equivalents(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     policy_file = tmp_path / "policy-config" / "repo.yaml"
     policy_file.parent.mkdir(parents=True, exist_ok=True)

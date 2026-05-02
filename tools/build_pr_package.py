@@ -8,7 +8,6 @@ import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / "artifacts"
 PATCH_FILE = OUT_DIR / "agent-devops-setups-pr-ready.patch"
@@ -63,7 +62,7 @@ def main() -> None:
                     "path": file_path,
                     "change_type": "modify",
                     "payload": "git diff",
-                }
+                },
             )
 
     for file_path in untracked:
@@ -79,7 +78,7 @@ def main() -> None:
                 "--",
                 "/dev/null",
                 file_path,
-            ]
+            ],
         )
         if diff:
             patch_lines.append(diff.rstrip())
@@ -88,7 +87,7 @@ def main() -> None:
                     "path": file_path,
                     "change_type": "add",
                     "payload": "git diff --no-index",
-                }
+                },
             )
 
     patch_text = "\n\n".join(patch_lines)

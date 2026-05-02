@@ -1,10 +1,9 @@
 """Tests for policy diff functionality."""
+
 from __future__ import annotations
 
-import pytest
-
-from support import REPO_ROOT  # noqa: F401
 from policy_federation.policy_diff import diff_policies
+from support import REPO_ROOT  # noqa: F401
 
 
 class TestDiffPolicies:
@@ -32,18 +31,16 @@ class TestDiffPolicies:
         """Test detection of added rules."""
         before = {
             "authorization": {
-                "rules": [
-                    {"id": "rule1", "effect": "allow", "actions": ["read"]}
-                ]
-            }
+                "rules": [{"id": "rule1", "effect": "allow", "actions": ["read"]}],
+            },
         }
         after = {
             "authorization": {
                 "rules": [
                     {"id": "rule1", "effect": "allow", "actions": ["read"]},
-                    {"id": "rule2", "effect": "deny", "actions": ["write"]}
-                ]
-            }
+                    {"id": "rule2", "effect": "deny", "actions": ["write"]},
+                ],
+            },
         }
         result = diff_policies(before, after)
         assert len(result["added_rules"]) == 1
@@ -58,16 +55,14 @@ class TestDiffPolicies:
             "authorization": {
                 "rules": [
                     {"id": "rule1", "effect": "allow", "actions": ["read"]},
-                    {"id": "rule2", "effect": "deny", "actions": ["write"]}
-                ]
-            }
+                    {"id": "rule2", "effect": "deny", "actions": ["write"]},
+                ],
+            },
         }
         after = {
             "authorization": {
-                "rules": [
-                    {"id": "rule1", "effect": "allow", "actions": ["read"]}
-                ]
-            }
+                "rules": [{"id": "rule1", "effect": "allow", "actions": ["read"]}],
+            },
         }
         result = diff_policies(before, after)
         assert result["added_rules"] == []
@@ -80,16 +75,26 @@ class TestDiffPolicies:
         before = {
             "authorization": {
                 "rules": [
-                    {"id": "rule1", "effect": "allow", "actions": ["read"], "priority": 1}
-                ]
-            }
+                    {
+                        "id": "rule1",
+                        "effect": "allow",
+                        "actions": ["read"],
+                        "priority": 1,
+                    },
+                ],
+            },
         }
         after = {
             "authorization": {
                 "rules": [
-                    {"id": "rule1", "effect": "allow", "actions": ["read", "write"], "priority": 1}
-                ]
-            }
+                    {
+                        "id": "rule1",
+                        "effect": "allow",
+                        "actions": ["read", "write"],
+                        "priority": 1,
+                    },
+                ],
+            },
         }
         result = diff_policies(before, after)
         assert result["added_rules"] == []
@@ -104,16 +109,26 @@ class TestDiffPolicies:
         before = {
             "authorization": {
                 "rules": [
-                    {"id": "rule1", "effect": "allow", "actions": ["read"], "description": "Allow read"}
-                ]
-            }
+                    {
+                        "id": "rule1",
+                        "effect": "allow",
+                        "actions": ["read"],
+                        "description": "Allow read",
+                    },
+                ],
+            },
         }
         after = {
             "authorization": {
                 "rules": [
-                    {"id": "rule1", "effect": "deny", "actions": ["read"], "description": "Allow read"}
-                ]
-            }
+                    {
+                        "id": "rule1",
+                        "effect": "deny",
+                        "actions": ["read"],
+                        "description": "Allow read",
+                    },
+                ],
+            },
         }
         result = diff_policies(before, after)
         assert len(result["effect_changes"]) == 1
@@ -130,18 +145,18 @@ class TestDiffPolicies:
                 "rules": [
                     {"id": "rule1", "effect": "allow", "actions": ["read"]},
                     {"id": "rule2", "effect": "deny", "actions": ["write"]},
-                    {"id": "rule3", "effect": "ask", "actions": ["execute"]}
-                ]
-            }
+                    {"id": "rule3", "effect": "ask", "actions": ["execute"]},
+                ],
+            },
         }
         after = {
             "authorization": {
                 "rules": [
                     {"id": "rule1", "effect": "deny", "actions": ["read"]},
                     {"id": "rule2", "effect": "allow", "actions": ["write"]},
-                    {"id": "rule3", "effect": "ask", "actions": ["execute"]}
-                ]
-            }
+                    {"id": "rule3", "effect": "ask", "actions": ["execute"]},
+                ],
+            },
         }
         result = diff_policies(before, after)
         assert len(result["effect_changes"]) == 2
@@ -156,18 +171,26 @@ class TestDiffPolicies:
                     {"id": "rule1", "effect": "allow", "actions": ["read"]},
                     {"id": "rule2", "effect": "deny", "actions": ["write"]},
                     {"id": "rule3", "effect": "ask", "actions": ["execute"]},
-                ]
-            }
+                ],
+            },
         }
         after = {
             "authorization": {
                 "rules": [
-                    {"id": "rule1", "effect": "deny", "actions": ["read"]},  # changed effect
-                    {"id": "rule2", "effect": "deny", "actions": ["write", "delete"]},  # modified
+                    {
+                        "id": "rule1",
+                        "effect": "deny",
+                        "actions": ["read"],
+                    },  # changed effect
+                    {
+                        "id": "rule2",
+                        "effect": "deny",
+                        "actions": ["write", "delete"],
+                    },  # modified
                     # rule3 removed
                     {"id": "rule4", "effect": "allow", "actions": ["create"]},  # added
-                ]
-            }
+                ],
+            },
         }
         result = diff_policies(before, after)
 
@@ -195,16 +218,26 @@ class TestDiffPolicies:
         before = {
             "authorization": {
                 "rules": [
-                    {"id": "rule1", "effect": "allow", "actions": ["read"], "priority": 1}
-                ]
-            }
+                    {
+                        "id": "rule1",
+                        "effect": "allow",
+                        "actions": ["read"],
+                        "priority": 1,
+                    },
+                ],
+            },
         }
         after = {
             "authorization": {
                 "rules": [
-                    {"id": "rule1", "effect": "deny", "actions": ["read"], "priority": 2}
-                ]
-            }
+                    {
+                        "id": "rule1",
+                        "effect": "deny",
+                        "actions": ["read"],
+                        "priority": 2,
+                    },
+                ],
+            },
         }
         result = diff_policies(before, after)
 
@@ -219,15 +252,11 @@ class TestDiffPolicies:
         before = {
             "authorization": {
                 "rules": [
-                    {"effect": "allow", "actions": ["read"]}  # no id
-                ]
-            }
+                    {"effect": "allow", "actions": ["read"]},  # no id
+                ],
+            },
         }
-        after = {
-            "authorization": {
-                "rules": []
-            }
-        }
+        after = {"authorization": {"rules": []}}
         # Should handle gracefully without crashing
         result = diff_policies(before, after)
         # Malformed rule won't be tracked since it has no id
@@ -259,17 +288,13 @@ class TestDiffPolicies:
         """Test that effect-only changes are detected."""
         before = {
             "authorization": {
-                "rules": [
-                    {"id": "rule1", "effect": "allow", "actions": ["read"]}
-                ]
-            }
+                "rules": [{"id": "rule1", "effect": "allow", "actions": ["read"]}],
+            },
         }
         after = {
             "authorization": {
-                "rules": [
-                    {"id": "rule1", "effect": "deny", "actions": ["read"]}
-                ]
-            }
+                "rules": [{"id": "rule1", "effect": "deny", "actions": ["read"]}],
+            },
         }
         result = diff_policies(before, after)
 

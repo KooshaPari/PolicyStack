@@ -1,8 +1,8 @@
 """Harness target compilation for resolved authorization policy."""
+
 from __future__ import annotations
 
 from .authorization import normalize_authorization_rules
-
 
 SUPPORTED_TARGETS = {"claude-code", "codex", "factory-droid", "cursor-agent"}
 
@@ -21,7 +21,9 @@ def compile_target(target: str, resolved_payload: dict) -> dict:
     shim_rules: list[dict] = []
     ignored_rules: list[dict] = []
 
-    def _shim_rule(rule: dict, *, reason: str, command_patterns: list[str] | None = None) -> dict:
+    def _shim_rule(
+        rule: dict, *, reason: str, command_patterns: list[str] | None = None,
+    ) -> dict:
         payload = dict(rule)
         payload["reason"] = reason
         payload["requires_runtime_check"] = True
@@ -46,7 +48,7 @@ def compile_target(target: str, resolved_payload: dict) -> dict:
                     },
                     reason="runtime_only_action_requires_interceptor",
                     command_patterns=list(rule.command_patterns),
-                )
+                ),
             )
             continue
 
@@ -59,7 +61,7 @@ def compile_target(target: str, resolved_payload: dict) -> dict:
                         "effect": rule.effect,
                     },
                     reason="missing_command_patterns",
-                )
+                ),
             )
             continue
 
@@ -79,7 +81,7 @@ def compile_target(target: str, resolved_payload: dict) -> dict:
                     },
                     reason="conditional_rule_requires_runtime_interceptor",
                     command_patterns=list(rule.command_patterns),
-                )
+                ),
             )
             continue
 
@@ -95,7 +97,9 @@ def compile_target(target: str, resolved_payload: dict) -> dict:
 
     if target == "codex":
         native_config = {
-            "approval_policy": "on-request" if defaults.get("exec", "ask") == "ask" else "never",
+            "approval_policy": "on-request"
+            if defaults.get("exec", "ask") == "ask"
+            else "never",
             "sandbox_mode": runtime.get("sandbox", "required"),
             "permissions": {
                 "allow_prefixes": sorted(dict.fromkeys(native_allow)),
@@ -112,7 +116,9 @@ def compile_target(target: str, resolved_payload: dict) -> dict:
         native_config = {
             "commandAllowlist": sorted(dict.fromkeys(native_allow)),
             "commandDenylist": sorted(dict.fromkeys(native_deny)),
-            "approvalMode": approvals.get("command_ask_mode", defaults.get("exec", "ask")),
+            "approvalMode": approvals.get(
+                "command_ask_mode", defaults.get("exec", "ask"),
+            ),
             "runtime_wrapper": {
                 "exec": "./scripts/runtime/factory_exec_guard.sh",
                 "write_check": "./scripts/runtime/factory_write_guard.sh",
@@ -135,9 +141,16 @@ def compile_target(target: str, resolved_payload: dict) -> dict:
     elif target == "claude-code":
         native_config = {
             "permissions": {
-                "allow": [f"Bash({pattern})" for pattern in sorted(dict.fromkeys(native_allow))],
-                "deny": [f"Bash({pattern})" for pattern in sorted(dict.fromkeys(native_deny))],
-                "ask": [f"Bash({pattern})" for pattern in sorted(dict.fromkeys(native_ask))],
+                "allow": [
+                    f"Bash({pattern})"
+                    for pattern in sorted(dict.fromkeys(native_allow))
+                ],
+                "deny": [
+                    f"Bash({pattern})" for pattern in sorted(dict.fromkeys(native_deny))
+                ],
+                "ask": [
+                    f"Bash({pattern})" for pattern in sorted(dict.fromkeys(native_ask))
+                ],
             },
             "hooks": {
                 "PreToolUse": [
@@ -146,11 +159,11 @@ def compile_target(target: str, resolved_payload: dict) -> dict:
                         "hooks": [
                             {
                                 "type": "command",
-                                "command": "\"$HOME/.claude/bin/claude_pretool_guard.sh\"",
-                            }
+                                "command": '"$HOME/.claude/bin/claude_pretool_guard.sh"',
+                            },
                         ],
-                    }
-                ]
+                    },
+                ],
             },
             "runtime_wrapper": {
                 "exec": "./scripts/runtime/claude_exec_guard.sh",
@@ -162,9 +175,17 @@ def compile_target(target: str, resolved_payload: dict) -> dict:
     else:
         native_config = {
             "permissions": {
-                "allow": [f"Shell({pattern})" for pattern in sorted(dict.fromkeys(native_allow))],
-                "deny": [f"Shell({pattern})" for pattern in sorted(dict.fromkeys(native_deny))],
-                "ask": [f"Shell({pattern})" for pattern in sorted(dict.fromkeys(native_ask))],
+                "allow": [
+                    f"Shell({pattern})"
+                    for pattern in sorted(dict.fromkeys(native_allow))
+                ],
+                "deny": [
+                    f"Shell({pattern})"
+                    for pattern in sorted(dict.fromkeys(native_deny))
+                ],
+                "ask": [
+                    f"Shell({pattern})" for pattern in sorted(dict.fromkeys(native_ask))
+                ],
             },
             "runtime_wrapper": {
                 "exec": "./scripts/runtime/cursor_exec_guard.sh",

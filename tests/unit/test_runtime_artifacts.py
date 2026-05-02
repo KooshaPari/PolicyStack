@@ -5,8 +5,6 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from support import REPO_ROOT
-
 from policy_federation.runtime_artifacts import (
     append_audit_event,
     build_run_sidecar,

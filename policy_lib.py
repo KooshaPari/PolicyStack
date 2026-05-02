@@ -3,14 +3,13 @@
 
 from __future__ import annotations
 
-import hashlib
 import fnmatch
+import hashlib
 import shlex
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
-
 
 Decision = str
 ALLOWED_ACTIONS = {"allow", "request", "deny"}
@@ -255,7 +254,7 @@ class CommandRule:
             # Partial failure: required condition(s) failed but optional(s) passed
             # in an any-mode group. Use on_mismatch if set, otherwise "request"
             # as a cautious default (do not silently fall through to the next rule).
-            return self.on_mismatch if self.on_mismatch else "request"
+            return self.on_mismatch or "request"
         if self.on_mismatch:
             return self.on_mismatch
         return None
@@ -374,11 +373,11 @@ def normalize_payload(payload: dict[str, Any], cwd: Path | None = None) -> list[
         for idx, value in enumerate(rules):
             if not isinstance(value, str):
                 raise ValueError(
-                    f"policy.commands.{name}[{idx}] must be a non-empty string"
+                    f"policy.commands.{name}[{idx}] must be a non-empty string",
                 )
             if not value.strip():
                 raise ValueError(
-                    f"policy.commands.{name}[{idx}] must be a non-empty string"
+                    f"policy.commands.{name}[{idx}] must be a non-empty string",
                 )
             normalized_patterns.append(value)
         return normalized_patterns
@@ -401,7 +400,7 @@ def normalize_payload(payload: dict[str, Any], cwd: Path | None = None) -> list[
                 pattern=str(pattern),
                 matcher="glob",
                 source="commands",
-            )
+            ),
         )
 
     for pattern in require_rules:
@@ -412,7 +411,7 @@ def normalize_payload(payload: dict[str, Any], cwd: Path | None = None) -> list[
                 pattern=str(pattern),
                 matcher="glob",
                 source="commands",
-            )
+            ),
         )
 
     for pattern in allow_rules:
@@ -423,7 +422,7 @@ def normalize_payload(payload: dict[str, Any], cwd: Path | None = None) -> list[
                 pattern=str(pattern),
                 matcher="glob",
                 source="commands",
-            )
+            ),
         )
 
     command_rules = policy.get("command_rules", [])
@@ -447,7 +446,7 @@ def normalize_payload(payload: dict[str, Any], cwd: Path | None = None) -> list[
         on_mismatch = entry.get("on_mismatch")
         if on_mismatch is not None and on_mismatch not in ALLOWED_ACTIONS:
             raise ValueError(
-                f"command_rule[{idx}] invalid on_mismatch action: {on_mismatch}"
+                f"command_rule[{idx}] invalid on_mismatch action: {on_mismatch}",
             )
         rules.append(
             CommandRule(
@@ -458,14 +457,14 @@ def normalize_payload(payload: dict[str, Any], cwd: Path | None = None) -> list[
                 source="command_rules",
                 conditions=conditions,
                 on_mismatch=on_mismatch,
-            )
+            ),
         )
 
     return rules
 
 
 def evaluate_policy(
-    payload: dict[str, Any], command: str, cwd: Path | None = None
+    payload: dict[str, Any], command: str, cwd: Path | None = None,
 ) -> tuple[Decision, str, CommandRule | None]:
     cwd = cwd or Path.cwd()
     rules = normalize_payload(payload, cwd)

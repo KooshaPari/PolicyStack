@@ -1,4 +1,5 @@
 """Tests for risk scoring engine."""
+
 from __future__ import annotations
 
 import json
@@ -6,7 +7,6 @@ import tempfile
 from pathlib import Path
 
 import support  # noqa: F401 -- setup sys.path
-
 from policy_federation.risk import score_risk
 
 
@@ -60,13 +60,15 @@ class TestScoreRisk:
         with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False) as f:
             for _ in range(10):
                 f.write(
-                    json.dumps({
-                        "command": "cargo test --all",
-                        "final_decision": "allow",
-                        "action": "exec",
-                        "run_id": "x",
-                    })
-                    + "\n"
+                    json.dumps(
+                        {
+                            "command": "cargo test --all",
+                            "final_decision": "allow",
+                            "action": "exec",
+                            "run_id": "x",
+                        },
+                    )
+                    + "\n",
                 )
             audit_path = Path(f.name)
 

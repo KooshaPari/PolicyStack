@@ -5,9 +5,8 @@ Validates compliance with Phenotype organization governance rules.
 """
 
 import os
-import sys
 import subprocess
-from pathlib import Path
+import sys
 
 # ANSI colors
 GREEN = "\033[32m"
@@ -38,7 +37,7 @@ def run_ptrace_check(repo_path):
             cwd=repo_path,
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=30,
         )
         drift_ok = result.returncode == 0
         status = f"{GREEN}✓{RESET}" if drift_ok else f"{YELLOW}⚠{RESET}"
@@ -51,23 +50,23 @@ def run_ptrace_check(repo_path):
 def validate_repo():
     """Run all validation checks."""
     print(f"\n{'='*60}")
-    print(f"Governance Validation: $repo")
+    print("Governance Validation: $repo")
     print(f"{'='*60}\n")
-    
+
     repo_path = os.path.dirname(os.path.abspath(__file__))
     checks = []
-    
+
     # Artifact checks
     print("📋 ARTIFACTS")
     checks.append(check_file(f"{repo_path}/CLAUDE.md", "CLAUDE.md"))
     checks.append(check_file(f"{repo_path}/AGENTS.md", "AGENTS.md"))
     checks.append(check_file(f"{repo_path}/README.md", "README.md"))
-    
+
     # Governance checks
     print("\n⚖️  GOVERNANCE")
     checks.append(check_file(f"{repo_path}/.phenotype/ai-traceability.yaml", "AI attribution"))
     checks.append(check_file(f"{repo_path}/.github/workflows/traceability.yml", "CI/CD workflow"))
-    
+
     # Traceability checks
     print("\n🔍 TRACEABILITY")
     specs_dir = f"{repo_path}/specs"
@@ -75,22 +74,21 @@ def validate_repo():
         checks.append(check_dir(specs_dir, "specs/ directory"))
     else:
         print(f"  {YELLOW}⚠{RESET} specs/ directory (optional)")
-    
+
     # Run ptrace
     checks.append(run_ptrace_check(repo_path))
-    
+
     # Summary
     print(f"\n{'='*60}")
     passed = sum(checks)
     total = len(checks)
     percentage = (passed / total * 100) if total > 0 else 0
-    
+
     if percentage >= 80:
         print(f"{GREEN}✅ PASS: {passed}/{total} checks passed ({percentage:.0f}%){RESET}")
         return 0
-    else:
-        print(f"{RED}❌ FAIL: {passed}/{total} checks passed ({percentage:.0f}%){RESET}")
-        return 1
+    print(f"{RED}❌ FAIL: {passed}/{total} checks passed ({percentage:.0f}%){RESET}")
+    return 1
 
 if __name__ == "__main__":
     sys.exit(validate_repo())

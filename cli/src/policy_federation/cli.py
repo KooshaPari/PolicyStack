@@ -11,36 +11,21 @@ from pathlib import Path
 import yaml
 
 from .authorization import evaluate_authorization
+from .compiler import SUPPORTED_TARGETS, compile_target
 from .constants import ASK_MODE_REVIEW
-from .compiler import compile_target, SUPPORTED_TARGETS
 from .integrations import install_runtime_integrations, uninstall_runtime_integrations
-from .interceptor import run_guarded_subprocess, intercept_command
+from .interceptor import intercept_command, run_guarded_subprocess
 from .policy_diff import diff_policies
-from .resolver import resolve, _policy_layers
-from .runtime_context import infer_repo_name_from_cwd
-
-from .validate import validate_policy_file
-from .resolver import hash_policy_sources
 from .policy_editor import add_rule, remove_rule
+from .resolver import _policy_layers, hash_policy_sources, resolve
 from .runtime_artifacts import (
     append_audit_event,
     filter_audit_events,
     read_audit_log,
     verify_audit_chain,
 )
-from .delegate import (
-    get_cache_stats,
-    clear_cache,
-    HARNESS_CONFIG,
-    _auto_detect_harness,
-    _cli_available,
-)
-from .config_loader import (
-    load_config,
-    get_active_harness,
-    get_cache_db_path,
-    get_audit_log_path,
-)
+from .runtime_context import infer_repo_name_from_cwd
+from .validate import validate_policy_file
 
 
 def _default_repo_root() -> Path:
@@ -107,7 +92,7 @@ def manifest_command(args: argparse.Namespace) -> None:
         task_overlay=args.overlay,
     )
     _emit_json(
-        {"layers": [{"scope": scope, "path": str(path)} for scope, path in layers]}
+        {"layers": [{"scope": scope, "path": str(path)} for scope, path in layers]},
     )
 
 
@@ -385,7 +370,7 @@ def _print_diff_with_color(diff_result: dict) -> None:
         print(f"\n{GREEN}{BOLD}Added Rules ({len(added)}){RESET}")
         for rule in added:
             print(
-                f"  {GREEN}+{RESET} {rule.get('id', 'N/A')}: {rule.get('effect', 'N/A')}"
+                f"  {GREEN}+{RESET} {rule.get('id', 'N/A')}: {rule.get('effect', 'N/A')}",
             )
             if rule.get("description"):
                 print(f"    {rule.get('description')}")
@@ -396,7 +381,7 @@ def _print_diff_with_color(diff_result: dict) -> None:
         print(f"\n{RED}{BOLD}Removed Rules ({len(removed)}){RESET}")
         for rule in removed:
             print(
-                f"  {RED}-{RESET} {rule.get('id', 'N/A')}: {rule.get('effect', 'N/A')}"
+                f"  {RED}-{RESET} {rule.get('id', 'N/A')}: {rule.get('effect', 'N/A')}",
             )
             if rule.get("description"):
                 print(f"    {rule.get('description')}")
@@ -422,7 +407,7 @@ def _print_diff_with_color(diff_result: dict) -> None:
             before_effect = change.get("before_effect", "N/A")
             after_effect = change.get("after_effect", "N/A")
             print(
-                f"  {CYAN}!{RESET} {rule_id}: {before_effect} {CYAN}->{RESET} {after_effect}"
+                f"  {CYAN}!{RESET} {rule_id}: {before_effect} {CYAN}->{RESET} {after_effect}",
             )
             if change.get("description"):
                 print(f"    {change.get('description')}")
@@ -433,7 +418,7 @@ def _print_diff_with_color(diff_result: dict) -> None:
     total_modified = len(modified)
     total_effect_changes = len(effect_changes)
     print(
-        f"\n{BOLD}Summary{RESET}: +{total_added} -{total_removed} ~{total_modified} !{total_effect_changes}"
+        f"\n{BOLD}Summary{RESET}: +{total_added} -{total_removed} ~{total_modified} !{total_effect_changes}",
     )
     print("=" * 60 + "\n")
 
@@ -538,7 +523,7 @@ def verify_command(args: argparse.Namespace) -> None:
                 "status": "baseline-recorded",
                 "hash": current_hash,
                 "file_count": len(source_files),
-            }
+            },
         )
         return
 
@@ -547,7 +532,7 @@ def verify_command(args: argparse.Namespace) -> None:
 
     if baseline_hash == current_hash:
         _emit_json(
-            {"status": "ok", "hash": current_hash, "file_count": len(source_files)}
+            {"status": "ok", "hash": current_hash, "file_count": len(source_files)},
         )
     else:
         _emit_json(
@@ -556,7 +541,7 @@ def verify_command(args: argparse.Namespace) -> None:
                 "current_hash": current_hash,
                 "baseline_hash": baseline_hash,
                 "file_count": len(source_files),
-            }
+            },
         )
         raise SystemExit(1)
 
@@ -570,7 +555,7 @@ def learn_command(args: argparse.Namespace) -> None:
         or os.environ.get(
             "POLICY_AUDIT_LOG_PATH",
             str(Path.home() / ".policy-federation" / "audit.jsonl"),
-        )
+        ),
     )
 
     since = None
@@ -598,7 +583,7 @@ def learn_command(args: argparse.Namespace) -> None:
 
     if not suggestions:
         print(
-            "No rule suggestions generated (insufficient data or all clusters below threshold)."
+            "No rule suggestions generated (insufficient data or all clusters below threshold).",
         )
         return
 
@@ -609,8 +594,8 @@ def learn_command(args: argparse.Namespace) -> None:
         repo_root = Path(
             args.repo_root
             or os.environ.get(
-                "POLICY_REPO_ROOT", str(Path(__file__).resolve().parents[3])
-            )
+                "POLICY_REPO_ROOT", str(Path(__file__).resolve().parents[3]),
+            ),
         )
         output_dir = repo_root / "policies" / "suggestions"
         output_path = write_suggestions(suggestions, output_dir)
@@ -626,11 +611,11 @@ def gaps_command(args: argparse.Namespace) -> None:
         or os.environ.get(
             "POLICY_AUDIT_LOG_PATH",
             str(Path.home() / ".policy-federation" / "audit.jsonl"),
-        )
+        ),
     )
     repo_root = Path(
         args.repo_root
-        or os.environ.get("POLICY_REPO_ROOT", str(Path(__file__).resolve().parents[3]))
+        or os.environ.get("POLICY_REPO_ROOT", str(Path(__file__).resolve().parents[3])),
     )
 
     report = detect_gaps(
@@ -684,7 +669,7 @@ def main() -> None:
 
     compile_parser = sub.add_parser("compile")
     compile_parser.add_argument(
-        "--target", required=True, choices=sorted(SUPPORTED_TARGETS)
+        "--target", required=True, choices=sorted(SUPPORTED_TARGETS),
     )
     compile_parser.add_argument("--harness", required=True)
     compile_parser.add_argument("--domain", required=True)
@@ -705,7 +690,7 @@ def main() -> None:
     intercept_parser.add_argument("--actor")
     intercept_parser.add_argument("--target-path", action="append", default=[])
     intercept_parser.add_argument(
-        "--ask-mode", choices=["fail", "allow", "prompt"], default="fail"
+        "--ask-mode", choices=["fail", "allow", "prompt"], default="fail",
     )
     intercept_parser.add_argument("--prompt-text")
     intercept_parser.set_defaults(func=intercept_command_cli)
@@ -720,7 +705,7 @@ def main() -> None:
     exec_parser.add_argument("--actor")
     exec_parser.add_argument("--target-path", action="append", default=[])
     exec_parser.add_argument(
-        "--ask-mode", choices=["fail", "allow", "prompt"], default="fail"
+        "--ask-mode", choices=["fail", "allow", "prompt"], default="fail",
     )
     exec_parser.add_argument("--prompt-text")
     exec_parser.add_argument("--sidecar-path")
@@ -740,7 +725,7 @@ def main() -> None:
     write_parser.add_argument("--command")
     write_parser.add_argument("--target-path", action="append", required=True)
     write_parser.add_argument(
-        "--ask-mode", choices=["fail", "allow", "prompt"], default="fail"
+        "--ask-mode", choices=["fail", "allow", "prompt"], default="fail",
     )
     write_parser.add_argument("--prompt-text")
     write_parser.set_defaults(func=write_check_command)
@@ -755,7 +740,7 @@ def main() -> None:
     network_parser.add_argument("--actor")
     network_parser.add_argument("--command", required=True)
     network_parser.add_argument(
-        "--ask-mode", choices=["fail", "allow", "prompt"], default="fail"
+        "--ask-mode", choices=["fail", "allow", "prompt"], default="fail",
     )
     network_parser.add_argument("--prompt-text")
     network_parser.set_defaults(func=network_check_command)
@@ -782,16 +767,16 @@ def main() -> None:
         help="Filter events until ISO-8601 datetime (e.g., 2024-12-31T23:59:59Z)",
     )
     audit_parser.add_argument(
-        "--action", choices=["exec", "write", "network"], help="Filter by action type"
+        "--action", choices=["exec", "write", "network"], help="Filter by action type",
     )
     audit_parser.add_argument(
-        "--decision", choices=["allow", "deny", "ask"], help="Filter by decision"
+        "--decision", choices=["allow", "deny", "ask"], help="Filter by decision",
     )
     audit_parser.add_argument(
-        "--actor", help="Filter by actor (regex pattern or substring)"
+        "--actor", help="Filter by actor (regex pattern or substring)",
     )
     audit_parser.add_argument(
-        "--verify-chain", action="store_true", help="Verify audit chain integrity"
+        "--verify-chain", action="store_true", help="Verify audit chain integrity",
     )
     audit_parser.add_argument(
         "--summary",
@@ -807,14 +792,14 @@ def main() -> None:
 
     add_rule_parser = sub.add_parser("add-rule")
     add_rule_parser.add_argument(
-        "--file", required=True, help="Path to policy YAML file"
+        "--file", required=True, help="Path to policy YAML file",
     )
     add_rule_parser.add_argument("--id", required=True, help="Unique rule ID")
     add_rule_parser.add_argument(
-        "--effect", required=True, choices=["allow", "deny", "ask"], help="Rule effect"
+        "--effect", required=True, choices=["allow", "deny", "ask"], help="Rule effect",
     )
     add_rule_parser.add_argument(
-        "--priority", required=True, type=int, help="Rule priority (integer)"
+        "--priority", required=True, type=int, help="Rule priority (integer)",
     )
     add_rule_parser.add_argument(
         "--actions",
@@ -822,32 +807,32 @@ def main() -> None:
         help="Comma-separated list of actions (e.g., exec,write,network)",
     )
     add_rule_parser.add_argument(
-        "--command-patterns", help="Comma-separated command pattern list"
+        "--command-patterns", help="Comma-separated command pattern list",
     )
     add_rule_parser.add_argument(
-        "--target-path-patterns", help="Comma-separated target path pattern list"
+        "--target-path-patterns", help="Comma-separated target path pattern list",
     )
     add_rule_parser.add_argument(
-        "--cwd-patterns", help="Comma-separated cwd pattern list"
+        "--cwd-patterns", help="Comma-separated cwd pattern list",
     )
     add_rule_parser.add_argument(
-        "--audit-log-path", help="Optional path to audit log for recording the change"
+        "--audit-log-path", help="Optional path to audit log for recording the change",
     )
     add_rule_parser.set_defaults(func=add_rule_command)
 
     remove_rule_parser = sub.add_parser("remove-rule")
     remove_rule_parser.add_argument(
-        "--file", required=True, help="Path to policy YAML file"
+        "--file", required=True, help="Path to policy YAML file",
     )
     remove_rule_parser.add_argument("--id", required=True, help="Rule ID to remove")
     remove_rule_parser.add_argument(
-        "--audit-log-path", help="Optional path to audit log for recording the change"
+        "--audit-log-path", help="Optional path to audit log for recording the change",
     )
     remove_rule_parser.set_defaults(func=remove_rule_command)
 
     verify_parser = sub.add_parser("verify")
     verify_parser.add_argument(
-        "--repo-root", help="Path to repository root (default: inferred)"
+        "--repo-root", help="Path to repository root (default: inferred)",
     )
     verify_parser.set_defaults(func=verify_command)
 

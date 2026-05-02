@@ -1,4 +1,5 @@
 """Audit-driven policy learning: suggest rules from decision patterns."""
+
 from __future__ import annotations
 
 import datetime
@@ -34,7 +35,10 @@ def _extract_command_prefix(command: str) -> str:
     if parts[0] == "git" and len(parts) > 1:
         return f"git {parts[1]}"
     # For tool commands with subcommands
-    if parts[0] in ("cargo", "npm", "bun", "pnpm", "uv", "pip", "go", "ruff", "task") and len(parts) > 1:
+    if (
+        parts[0] in ("cargo", "npm", "bun", "pnpm", "uv", "pip", "go", "ruff", "task")
+        and len(parts) > 1
+    ):
         return f"{parts[0]} {parts[1]}"
     return parts[0]
 
@@ -47,7 +51,7 @@ def _extract_cwd_pattern(cwd: str) -> str:
     for marker in ("-wtrees/", "/.worktrees/", "/worktrees/", "/PROJECT-wtrees/"):
         idx = cwd.find(marker)
         if idx >= 0:
-            base = cwd[:idx + len(marker)]
+            base = cwd[: idx + len(marker)]
             return base + "*"
     # Canonical repo path - keep as-is
     return cwd
@@ -87,7 +91,9 @@ def analyze_audit(
 
     suggestions: list[RuleSuggestion] = []
     idx = 0
-    for (prefix, cwd_pat), cluster_events in sorted(clusters.items(), key=lambda x: -len(x[1])):
+    for (prefix, cwd_pat), cluster_events in sorted(
+        clusters.items(), key=lambda x: -len(x[1]),
+    ):
         if len(cluster_events) < min_cluster_size:
             continue
 
@@ -162,7 +168,9 @@ def suggestions_to_yaml(suggestions: list[RuleSuggestion], priority: int = 85) -
         "merge": {"strategy": "append_unique"},
         "_generated": {
             "by": "policyctl learn",
-            "at": datetime.datetime.now(datetime.UTC).isoformat(timespec="seconds").replace("+00:00", "Z"),
+            "at": datetime.datetime.now(datetime.UTC)
+            .isoformat(timespec="seconds")
+            .replace("+00:00", "Z"),
         },
         "policy": {
             "authorization": {

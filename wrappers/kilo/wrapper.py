@@ -9,7 +9,6 @@ import json
 import os
 import subprocess
 import sys
-from pathlib import Path
 from typing import Any
 
 
@@ -99,7 +98,7 @@ class KiloWrapper:
                 "action": ctx.get("action", "exec"),
                 "target_paths": ctx.get("target_paths", []),
                 "risk_score": ctx.get("risk_score", 0.5),
-            }
+            },
         )
 
     def _parse_response(self, output: str) -> dict[str, Any]:
@@ -158,7 +157,7 @@ def main() -> None:
         print(result["decision"])
 
     sys.exit(
-        0 if result["decision"] == "allow" else 1 if result["decision"] == "deny" else 2
+        0 if result["decision"] == "allow" else 1 if result["decision"] == "deny" else 2,
     )
 
 

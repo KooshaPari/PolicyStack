@@ -5,8 +5,8 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import json
 import hmac
+import json
 from pathlib import Path
 
 
@@ -107,10 +107,10 @@ def validate_minimal_policy(payload: dict) -> list[str]:
         elif not isinstance(audit["files"], list):
             errs.append("audit.files must be a list")
 
-    if payload.get("policy", None) is None or not isinstance(payload["policy"], dict):
+    if payload.get("policy") is None or not isinstance(payload["policy"], dict):
         errs.append("policy must be an object")
 
-    if not isinstance(payload.get("applied_layers", None), list):
+    if not isinstance(payload.get("applied_layers"), list):
         errs.append("applied_layers must be a list")
 
     policy_digest = payload.get("audit", {}).get("policy_digest")
@@ -207,7 +207,7 @@ def main() -> None:
         "policy payload valid: "
         f"scope={payload['scope']['repo']} "
         f"extensions={len(payload['scope']['extensions'])} "
-        f"digest={payload['audit']['policy_digest'][:12]}..."
+        f"digest={payload['audit']['policy_digest'][:12]}...",
     )
 
 

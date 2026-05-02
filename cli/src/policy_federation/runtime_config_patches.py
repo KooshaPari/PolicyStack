@@ -1,4 +1,5 @@
 """Config patching helpers for local harness runtime integration."""
+
 from __future__ import annotations
 
 import datetime
@@ -6,10 +7,9 @@ import json
 import shutil
 from pathlib import Path
 
-
 INSTALL_MARKER_START = "# policy-federation runtime start"
 INSTALL_MARKER_END = "# policy-federation runtime end"
-CLAUDE_PRETOOL_COMMAND = "\"$HOME/.claude/bin/claude_pretool_guard.sh\""
+CLAUDE_PRETOOL_COMMAND = '"$HOME/.claude/bin/claude_pretool_guard.sh"'
 
 
 def _timestamp() -> str:
@@ -91,7 +91,9 @@ def _remove_values(items: list[str], remove_items: list[str]) -> list[str]:
     return [item for item in items if item not in remove_set]
 
 
-def patch_cursor_config(cursor_config_path: Path, wrapper_root: Path, manifest_path: Path) -> None:
+def patch_cursor_config(
+    cursor_config_path: Path, wrapper_root: Path, manifest_path: Path,
+) -> None:
     payload = _load_json(
         cursor_config_path,
         default={"permissions": {"allow": [], "deny": []}, "version": 1},
@@ -163,9 +165,13 @@ def patch_codex_config_json(
     _write_json(codex_config_path, payload)
 
 
-def patch_codex_toml(codex_toml_path: Path, wrapper_root: Path, manifest_path: Path) -> None:
+def patch_codex_toml(
+    codex_toml_path: Path, wrapper_root: Path, manifest_path: Path,
+) -> None:
     codex_toml_path.parent.mkdir(parents=True, exist_ok=True)
-    current = codex_toml_path.read_text(encoding="utf-8") if codex_toml_path.exists() else ""
+    current = (
+        codex_toml_path.read_text(encoding="utf-8") if codex_toml_path.exists() else ""
+    )
     if INSTALL_MARKER_START in current and INSTALL_MARKER_END in current:
         prefix = current.split(INSTALL_MARKER_START, 1)[0].rstrip()
     else:
@@ -196,7 +202,9 @@ def patch_claude_settings(
     )
     hooks = payload.setdefault("hooks", {})
     pre_tool_use = hooks.setdefault("PreToolUse", [])
-    pre_tool_use = [entry for entry in pre_tool_use if not _is_managed_claude_hook(entry)]
+    pre_tool_use = [
+        entry for entry in pre_tool_use if not _is_managed_claude_hook(entry)
+    ]
 
     managed_entries = [
         {
@@ -304,4 +312,3 @@ def unpatch_claude_settings(claude_settings_path: Path) -> None:
     payload["hooks"] = hooks
     payload.pop("policyRuntime", None)
     _write_json(claude_settings_path, payload)
-

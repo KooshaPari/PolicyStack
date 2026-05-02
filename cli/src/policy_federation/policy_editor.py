@@ -1,10 +1,11 @@
 """Policy file editing utilities for rule management."""
+
 from __future__ import annotations
 
 from pathlib import Path
+
 import yaml
 
-from .validate import validate_policy_file
 from .authorization import validate_authorization_block
 
 

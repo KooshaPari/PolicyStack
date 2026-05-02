@@ -1,16 +1,15 @@
 """Integration tests for policy editor CLI commands."""
+
 from __future__ import annotations
 
 import json
-import tempfile
-from pathlib import Path
-from io import StringIO
 import sys
+import tempfile
+from io import StringIO
+from pathlib import Path
 
 import pytest
 import yaml
-
-from support import CLI_SRC
 
 
 @pytest.fixture
@@ -31,9 +30,9 @@ def temp_policy_file():
                         "effect": "allow",
                         "actions": ["read"],
                         "priority": 0,
-                    }
+                    },
                 ],
-            }
+            },
         },
     }
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
@@ -60,11 +59,16 @@ def test_cli_add_rule_simple(temp_policy_file):
     sys.argv = [
         "policyctl",
         "add-rule",
-        "--file", str(temp_policy_file),
-        "--id", "deny-write",
-        "--effect", "deny",
-        "--priority", "100",
-        "--actions", "write",
+        "--file",
+        str(temp_policy_file),
+        "--id",
+        "deny-write",
+        "--effect",
+        "deny",
+        "--priority",
+        "100",
+        "--actions",
+        "write",
     ]
 
     # Capture output
@@ -97,12 +101,18 @@ def test_cli_add_rule_with_patterns(temp_policy_file):
     sys.argv = [
         "policyctl",
         "add-rule",
-        "--file", str(temp_policy_file),
-        "--id", "ask-pip-install",
-        "--effect", "ask",
-        "--priority", "50",
-        "--actions", "exec",
-        "--command-patterns", "pip install*,npm install*",
+        "--file",
+        str(temp_policy_file),
+        "--id",
+        "ask-pip-install",
+        "--effect",
+        "ask",
+        "--priority",
+        "50",
+        "--actions",
+        "exec",
+        "--command-patterns",
+        "pip install*,npm install*",
     ]
 
     old_stdout = sys.stdout
@@ -133,11 +143,16 @@ def test_cli_remove_rule(temp_policy_file):
     sys.argv = [
         "policyctl",
         "add-rule",
-        "--file", str(temp_policy_file),
-        "--id", "temp-rule",
-        "--effect", "allow",
-        "--priority", "10",
-        "--actions", "read",
+        "--file",
+        str(temp_policy_file),
+        "--id",
+        "temp-rule",
+        "--effect",
+        "allow",
+        "--priority",
+        "10",
+        "--actions",
+        "read",
     ]
     old_stdout = sys.stdout
     sys.stdout = StringIO()
@@ -151,8 +166,10 @@ def test_cli_remove_rule(temp_policy_file):
     sys.argv = [
         "policyctl",
         "remove-rule",
-        "--file", str(temp_policy_file),
-        "--id", "temp-rule",
+        "--file",
+        str(temp_policy_file),
+        "--id",
+        "temp-rule",
     ]
     sys.stdout = StringIO()
     try:
@@ -181,12 +198,18 @@ def test_cli_add_rule_with_audit_log(temp_policy_file, temp_audit_log):
     sys.argv = [
         "policyctl",
         "add-rule",
-        "--file", str(temp_policy_file),
-        "--id", "audited-rule",
-        "--effect", "ask",
-        "--priority", "30",
-        "--actions", "network",
-        "--audit-log-path", str(temp_audit_log),
+        "--file",
+        str(temp_policy_file),
+        "--id",
+        "audited-rule",
+        "--effect",
+        "ask",
+        "--priority",
+        "30",
+        "--actions",
+        "network",
+        "--audit-log-path",
+        str(temp_audit_log),
     ]
 
     old_stdout = sys.stdout
@@ -218,11 +241,16 @@ def test_cli_remove_rule_with_audit_log(temp_policy_file, temp_audit_log):
     sys.argv = [
         "policyctl",
         "add-rule",
-        "--file", str(temp_policy_file),
-        "--id", "to-be-removed",
-        "--effect", "allow",
-        "--priority", "5",
-        "--actions", "read",
+        "--file",
+        str(temp_policy_file),
+        "--id",
+        "to-be-removed",
+        "--effect",
+        "allow",
+        "--priority",
+        "5",
+        "--actions",
+        "read",
     ]
     old_stdout = sys.stdout
     sys.stdout = StringIO()
@@ -236,9 +264,12 @@ def test_cli_remove_rule_with_audit_log(temp_policy_file, temp_audit_log):
     sys.argv = [
         "policyctl",
         "remove-rule",
-        "--file", str(temp_policy_file),
-        "--id", "to-be-removed",
-        "--audit-log-path", str(temp_audit_log),
+        "--file",
+        str(temp_policy_file),
+        "--id",
+        "to-be-removed",
+        "--audit-log-path",
+        str(temp_audit_log),
     ]
     sys.stdout = StringIO()
     try:
@@ -305,12 +336,14 @@ def test_cli_diff_added_rules(temp_policy_file):
         doc = yaml.safe_load(f)
 
     # Create after policy with additional rule
-    doc["policy"]["authorization"]["rules"].append({
-        "id": "added-rule",
-        "effect": "deny",
-        "actions": ["write"],
-        "priority": 100,
-    })
+    doc["policy"]["authorization"]["rules"].append(
+        {
+            "id": "added-rule",
+            "effect": "deny",
+            "actions": ["write"],
+            "priority": 100,
+        },
+    )
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
         yaml.safe_dump(doc, f)
@@ -334,7 +367,8 @@ def test_cli_diff_added_rules(temp_policy_file):
     # Parse the JSON output - find the JSON object in the output
     # The output contains colored text and JSON, find the JSON part
     import re
-    json_match = re.search(r'\{[\s\S]*\}', output)
+
+    json_match = re.search(r"\{[\s\S]*\}", output)
     assert json_match, f"No JSON found in output: {output}"
     result = json.loads(json_match.group())
 
@@ -375,7 +409,8 @@ def test_cli_diff_removed_rules(temp_policy_file):
 
     # Parse the JSON output - find the JSON object in the output
     import re
-    json_match = re.search(r'\{[\s\S]*\}', output)
+
+    json_match = re.search(r"\{[\s\S]*\}", output)
     assert json_match, f"No JSON found in output: {output}"
     result = json.loads(json_match.group())
 
@@ -436,7 +471,8 @@ def test_cli_audit_with_summary(temp_audit_log_with_events):
         sys.argv = [
             "policyctl",
             "audit",
-            "--log-path", str(temp_audit_log_with_events),
+            "--log-path",
+            str(temp_audit_log_with_events),
             "--summary",
         ]
         main()
@@ -465,7 +501,8 @@ def test_cli_audit_summary_format_complete(temp_audit_log_with_events):
         sys.argv = [
             "policyctl",
             "audit",
-            "--log-path", str(temp_audit_log_with_events),
+            "--log-path",
+            str(temp_audit_log_with_events),
             "--summary",
         ]
         main()
@@ -495,7 +532,8 @@ def test_cli_audit_verify_chain_valid(temp_audit_log_with_events):
         sys.argv = [
             "policyctl",
             "audit",
-            "--log-path", str(temp_audit_log_with_events),
+            "--log-path",
+            str(temp_audit_log_with_events),
             "--verify-chain",
         ]
         main()
@@ -529,7 +567,8 @@ def test_cli_audit_verify_chain_invalid():
         sys.argv = [
             "policyctl",
             "audit",
-            "--log-path", str(temp_path),
+            "--log-path",
+            str(temp_path),
             "--verify-chain",
         ]
         main()

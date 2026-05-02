@@ -1,4 +1,5 @@
 """Tests for policy gap detection."""
+
 from __future__ import annotations
 
 import json
@@ -6,7 +7,6 @@ import tempfile
 from pathlib import Path
 
 import support  # noqa: F401 -- setup sys.path
-
 from policy_federation.gap_detector import (
     GapReport,
     detect_gaps,
@@ -35,13 +35,15 @@ class TestDetectGaps:
         with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False) as f:
             for i in range(15):
                 f.write(
-                    json.dumps({
-                        "run_id": f"r{i}",
-                        "action": "exec",
-                        "command": f"ls -la /path/{i}",
-                        "final_decision": "ask",
-                    })
-                    + "\n"
+                    json.dumps(
+                        {
+                            "run_id": f"r{i}",
+                            "action": "exec",
+                            "command": f"ls -la /path/{i}",
+                            "final_decision": "ask",
+                        },
+                    )
+                    + "\n",
                 )
             audit_path = Path(f.name)
 
@@ -63,12 +65,14 @@ class TestFormatGapReport:
 
     def test_report_with_gaps(self) -> None:
         report = GapReport(
-            high_frequency_asks=[{
-                "command_prefix": "ls -la",
-                "count": 47,
-                "severity": "HIGH",
-                "suggestion": "Consider adding allow rule",
-            }],
+            high_frequency_asks=[
+                {
+                    "command_prefix": "ls -la",
+                    "count": 47,
+                    "severity": "HIGH",
+                    "suggestion": "Consider adding allow rule",
+                },
+            ],
         )
         output = format_gap_report(report)
         assert "HIGH" in output

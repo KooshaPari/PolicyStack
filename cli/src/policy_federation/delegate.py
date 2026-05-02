@@ -14,7 +14,6 @@ import subprocess
 import textwrap
 import time
 from dataclasses import dataclass
-from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -389,8 +388,8 @@ def _invoke_harness(harness: str, prompt: str) -> DelegateResult:
 
 def _invoke_api_harness(harness: str, prompt: str, config: dict) -> DelegateResult:
     """Invoke API-based harness (forgecode.dev)."""
-    import urllib.request
     import urllib.error
+    import urllib.request
 
     api_url = config["api_url"]
     timeout = config.get("timeout", 20)
@@ -410,7 +409,7 @@ def _invoke_api_harness(harness: str, prompt: str, config: dict) -> DelegateResu
             {
                 "prompt": prompt,
                 "model": config.get("model", "default"),
-            }
+            },
         ).encode()
 
         req = urllib.request.Request(
@@ -618,13 +617,13 @@ def get_cache_stats() -> dict[str, Any]:
 
         # Entries by decision
         cursor = conn.execute(
-            "SELECT decision, COUNT(*) FROM decision_cache GROUP BY decision"
+            "SELECT decision, COUNT(*) FROM decision_cache GROUP BY decision",
         )
         stats["by_decision"] = {row[0]: row[1] for row in cursor.fetchall()}
 
         # Hit counts
         cursor = conn.execute(
-            "SELECT SUM(hit_count), AVG(hit_count), MAX(hit_count) FROM decision_cache"
+            "SELECT SUM(hit_count), AVG(hit_count), MAX(hit_count) FROM decision_cache",
         )
         row = cursor.fetchone()
         stats["total_hits"] = row[0] or 0

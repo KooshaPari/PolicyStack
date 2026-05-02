@@ -1,4 +1,5 @@
 """Installer helpers for local harness runtime integration."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -33,7 +34,8 @@ def install_runtime_integrations(repo_root: Path, home: Path) -> dict:
         cursor_bin / "cursor_network_guard.sh": runtime_dir / "cursor_network_guard.sh",
         factory_bin / "factory_exec_guard.sh": runtime_dir / "factory_exec_guard.sh",
         factory_bin / "factory_write_guard.sh": runtime_dir / "factory_write_guard.sh",
-        factory_bin / "factory_network_guard.sh": runtime_dir / "factory_network_guard.sh",
+        factory_bin / "factory_network_guard.sh": runtime_dir
+        / "factory_network_guard.sh",
         codex_bin / "codex_exec_guard.sh": runtime_dir / "codex_exec_guard.sh",
         codex_bin / "codex_write_guard.sh": runtime_dir / "codex_write_guard.sh",
         codex_bin / "codex_network_guard.sh": runtime_dir / "codex_network_guard.sh",
@@ -46,9 +48,7 @@ def install_runtime_integrations(repo_root: Path, home: Path) -> dict:
     for destination, source in wrapper_map.items():
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_text(
-            "#!/usr/bin/env bash\n"
-            "set -euo pipefail\n"
-            f'exec "{source}" "$@"\n',
+            f'#!/usr/bin/env bash\nset -euo pipefail\nexec "{source}" "$@"\n',
             encoding="utf-8",
         )
         destination.chmod(0o755)
@@ -61,13 +61,21 @@ def install_runtime_integrations(repo_root: Path, home: Path) -> dict:
 
     backups = {
         "cursor": str(_backup_file(cursor_config)) if cursor_config.exists() else None,
-        "factory": str(_backup_file(factory_settings)) if factory_settings.exists() else None,
-        "codex_json": str(_backup_file(codex_config)) if codex_config.exists() else None,
+        "factory": str(_backup_file(factory_settings))
+        if factory_settings.exists()
+        else None,
+        "codex_json": str(_backup_file(codex_config))
+        if codex_config.exists()
+        else None,
         "codex_toml": str(_backup_file(codex_toml)) if codex_toml.exists() else None,
-        "claude": str(_backup_file(claude_settings)) if claude_settings.exists() else None,
+        "claude": str(_backup_file(claude_settings))
+        if claude_settings.exists()
+        else None,
     }
 
-    patch_cursor_config(cursor_config, cursor_bin, runtime_dir / "cursor_runtime_manifest.json")
+    patch_cursor_config(
+        cursor_config, cursor_bin, runtime_dir / "cursor_runtime_manifest.json",
+    )
     patch_factory_config(
         factory_settings,
         factory_bin,

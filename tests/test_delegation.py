@@ -2,28 +2,27 @@
 
 from __future__ import annotations
 
-import pytest
 import tempfile
-import sqlite3
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
+import pytest
 from policy_federation.delegate import (
+    HARNESS_CONFIG,
+    HARNESS_FALLBACK,
     DelegateContext,
     DelegateResult,
-    delegate_ask,
-    _local_fast_evaluate,
-    _get_cached_decision,
-    _cache_decision,
-    _hash_command,
-    _extract_pattern,
-    render_delegate_prompt,
-    HARNESS_FALLBACK,
-    HARNESS_CONFIG,
-    get_cache_stats,
-    clear_cache,
     _auto_detect_harness,
+    _cache_decision,
     _cli_available,
+    _extract_pattern,
+    _get_cached_decision,
+    _hash_command,
+    _local_fast_evaluate,
+    clear_cache,
+    delegate_ask,
+    get_cache_stats,
+    render_delegate_prompt,
 )
 
 
@@ -132,7 +131,7 @@ class TestDecisionCaching:
 
             # Patch the cache path
             with patch(
-                "policy_federation.delegate._get_cache_db", return_value=cache_db
+                "policy_federation.delegate._get_cache_db", return_value=cache_db,
             ):
                 # Clear and init cache
                 clear_cache()
@@ -158,9 +157,8 @@ class TestDecisionCaching:
             cache_db = Path(tmpdir) / "test_cache.db"
 
             with patch(
-                "policy_federation.delegate._get_cache_db", return_value=cache_db
+                "policy_federation.delegate._get_cache_db", return_value=cache_db,
             ):
-                import time
 
                 # Cache with very old timestamp
                 with patch("policy_federation.delegate.time.time", return_value=0):
@@ -178,7 +176,7 @@ class TestDecisionCaching:
             cache_db = Path(tmpdir) / "test_cache.db"
 
             with patch(
-                "policy_federation.delegate._get_cache_db", return_value=cache_db
+                "policy_federation.delegate._get_cache_db", return_value=cache_db,
             ):
                 # Cache for specific path
                 result = DelegateResult("allow", "test", "test", 0.9)
@@ -195,7 +193,7 @@ class TestDecisionCaching:
             cache_db = Path(tmpdir) / "test_cache.db"
 
             with patch(
-                "policy_federation.delegate._get_cache_db", return_value=cache_db
+                "policy_federation.delegate._get_cache_db", return_value=cache_db,
             ):
                 clear_cache()
 
@@ -373,7 +371,7 @@ class TestDelegateAskIntegration:
 
         # No harness configured, should return ask
         with patch(
-            "policy_federation.delegate._auto_detect_harness", return_value=None
+            "policy_federation.delegate._auto_detect_harness", return_value=None,
         ):
             result = delegate_ask(ctx, use_local_fast=True, use_cache=False)
             assert result.decision == "ask"

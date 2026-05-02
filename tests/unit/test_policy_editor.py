@@ -1,4 +1,5 @@
 """Tests for policy editing functionality."""
+
 from __future__ import annotations
 
 import tempfile
@@ -6,8 +7,6 @@ from pathlib import Path
 
 import pytest
 import yaml
-
-from support import CLI_SRC
 from policy_federation.policy_editor import add_rule, remove_rule
 
 
@@ -32,9 +31,9 @@ def temp_policy_file():
                         "match": {
                             "command_patterns": ["ls *"],
                         },
-                    }
+                    },
                 ],
-            }
+            },
         },
     }
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:

@@ -8,8 +8,8 @@ CLI_SRC = Path(__file__).resolve().parents[2] / "cli" / "src"
 if str(CLI_SRC) not in sys.path:
     sys.path.insert(0, str(CLI_SRC))
 
-from policy_federation.cli_parsers import build_parser  # noqa: E402
-from policy_federation.constants import ASK_MODE_REVIEW  # noqa: E402
+from policy_federation.cli_parsers import build_parser
+from policy_federation.constants import ASK_MODE_REVIEW
 
 
 class CliParsersTest(unittest.TestCase):
@@ -26,7 +26,7 @@ class CliParsersTest(unittest.TestCase):
                 "network",
                 "--command",
                 "curl https://example.com",
-            ]
+            ],
         )
 
         self.assertEqual(args.cmd, "review")
@@ -47,7 +47,7 @@ class CliParsersTest(unittest.TestCase):
                 "network",
                 "--command",
                 "curl https://example.com",
-            ]
+            ],
         )
         exec_args = parser.parse_args(
             [
@@ -59,7 +59,7 @@ class CliParsersTest(unittest.TestCase):
                 "--",
                 "echo",
                 "ok",
-            ]
+            ],
         )
 
         self.assertEqual(intercept_args.ask_mode, ASK_MODE_REVIEW)

@@ -3,9 +3,7 @@ from __future__ import annotations
 import importlib.util
 import sys
 from pathlib import Path
-
 from typing import Any
-
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT_PATH = REPO_ROOT / "scripts" / "lane4_policy_contract_pr_stack_audit.py"
@@ -13,7 +11,7 @@ SCRIPT_PATH = REPO_ROOT / "scripts" / "lane4_policy_contract_pr_stack_audit.py"
 
 def _load_audit_module():
     spec = importlib.util.spec_from_file_location(
-        "lane4_policy_contract_pr_stack_audit", SCRIPT_PATH
+        "lane4_policy_contract_pr_stack_audit", SCRIPT_PATH,
     )
     module = importlib.util.module_from_spec(spec)
     assert spec and spec.loader
@@ -100,7 +98,7 @@ def _run_main(
                 {
                     "number": 1,
                     "commentCheckError": summary_kwargs["comment_scan_errors"] > 0,
-                }
+                },
             ],
             MOD.FindingsSummary(**summary_kwargs),
         ),
@@ -174,14 +172,16 @@ def test_main_returns_remediation_failure_exit_code(monkeypatch) -> None:
                     "applied": False,
                     "action": "commented",
                     "error": "gh",
-                }
+                },
             ],
         )
         == 3
     )
 
 
-def test_find_stacked_records_collects_mixed_comment_error_with_partial_data(monkeypatch) -> None:
+def test_find_stacked_records_collects_mixed_comment_error_with_partial_data(
+    monkeypatch,
+) -> None:
     monkeypatch.setattr(
         MOD,
         "list_pr_comments_all",

@@ -6,7 +6,6 @@ from pathlib import Path
 
 import yaml
 
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW_PATH = REPO_ROOT / ".github/workflows/policy-contract-governance.yml"
 
@@ -61,7 +60,9 @@ def _assert_node_id_exists(node_id: str) -> None:
 
     tree = ast.parse(file_path.read_text(encoding="utf-8"))
     top_level_functions = {
-        node.name for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        node.name
+        for node in tree.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
     }
     classes: dict[str, set[str]] = {}
     for node in tree.body:
@@ -84,7 +85,9 @@ def _assert_node_id_exists(node_id: str) -> None:
 
     if len(parts) == 2:
         class_name, method_name = parts
-        assert class_name in classes, f"Referenced class not found in {file_token}: {class_name}"
+        assert class_name in classes, (
+            f"Referenced class not found in {file_token}: {class_name}"
+        )
         assert method_name in classes[class_name], (
             f"Referenced class method not found in {file_token}: {selector}"
         )
@@ -95,7 +98,9 @@ def _assert_node_id_exists(node_id: str) -> None:
 
 def test_governance_workflow_pytest_node_ids_exist() -> None:
     node_ids = _pytest_node_ids()
-    assert node_ids, "No pytest targets were discovered in governance workflow commands."
+    assert node_ids, (
+        "No pytest targets were discovered in governance workflow commands."
+    )
     for node_id in node_ids:
         _assert_node_id_exists(node_id)
 
@@ -112,7 +117,10 @@ def test_governance_workflow_requires_governance_pytest_steps() -> None:
         "uv run --with pytest --with pyyaml --with jsonschema pytest tests/test_resolve_cli_governance.py -q"
         in commands
     )
-    assert "uv run --with pytest --with pyyaml pytest tests/test_policy_common.py -q" in commands
+    assert (
+        "uv run --with pytest --with pyyaml pytest tests/test_policy_common.py -q"
+        in commands
+    )
     assert (
         "uv run --with pytest --with pyyaml pytest tests/test_smoke_dispatch_host_hook.py -q"
         in commands
@@ -153,19 +161,27 @@ def test_governance_workflow_referenced_repo_files_exist() -> None:
                 if not candidate.startswith("-"):
                     referenced_paths.add(candidate)
 
-    assert referenced_paths, "No workflow script/file references were discovered in run commands."
+    assert referenced_paths, (
+        "No workflow script/file references were discovered in run commands."
+    )
     for rel_path in sorted(referenced_paths):
-        assert (REPO_ROOT / rel_path).exists(), f"Workflow references missing file: {rel_path}"
+        assert (REPO_ROOT / rel_path).exists(), (
+            f"Workflow references missing file: {rel_path}"
+        )
 
 
 def test_governance_job_declares_permissions_and_timeout() -> None:
     governance = _governance_job()
-    assert "permissions" in governance, "Governance job must declare explicit permissions."
+    assert "permissions" in governance, (
+        "Governance job must declare explicit permissions."
+    )
     permissions = governance["permissions"]
     assert isinstance(permissions, dict) and permissions, (
         "Governance job permissions must be a non-empty mapping."
     )
-    assert "timeout-minutes" in governance, "Governance job must declare timeout-minutes."
+    assert "timeout-minutes" in governance, (
+        "Governance job must declare timeout-minutes."
+    )
     assert isinstance(governance["timeout-minutes"], int), (
         "Governance job timeout-minutes must be an integer."
     )

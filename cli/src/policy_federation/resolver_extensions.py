@@ -1,4 +1,5 @@
 """Policy extension registry helpers."""
+
 from __future__ import annotations
 
 from fnmatch import fnmatch
@@ -28,7 +29,9 @@ def _extension_scope_matches(selector: str, scope_chain: list[str]) -> bool:
     return False
 
 
-def _resolve_extensions(repo_root: Path, scope_chain: list[str], contract_ids: list[str]) -> dict:
+def _resolve_extensions(
+    repo_root: Path, scope_chain: list[str], contract_ids: list[str],
+) -> dict:
     manifests = _load_extensions(repo_root)
     enabled = []
     skipped = []
@@ -43,7 +46,7 @@ def _resolve_extensions(repo_root: Path, scope_chain: list[str], contract_ids: l
                 {
                     "name": name,
                     "reason": "Invalid registry entry",
-                }
+                },
             )
             continue
 
@@ -51,15 +54,15 @@ def _resolve_extensions(repo_root: Path, scope_chain: list[str], contract_ids: l
             skipped.append({"name": name, "reason": "disabled_by_default"})
             continue
 
-        include_ok = any(_extension_scope_matches(pattern, scope_chain) for pattern in selectors)
+        include_ok = any(
+            _extension_scope_matches(pattern, scope_chain) for pattern in selectors
+        )
         if not include_ok:
             skipped.append({"name": name, "reason": "scope_selector_no_match"})
             continue
 
         required_ids = {
-            req.get("id")
-            for req in requires
-            if isinstance(req, dict) and req.get("id")
+            req.get("id") for req in requires if isinstance(req, dict) and req.get("id")
         }
         if not all(req in contract_ids for req in required_ids):
             skipped.append(
@@ -67,11 +70,10 @@ def _resolve_extensions(repo_root: Path, scope_chain: list[str], contract_ids: l
                     "name": name,
                     "reason": "requirements_not_met",
                     "missing": sorted(required_ids.difference(contract_ids)),
-                }
+                },
             )
             continue
 
         enabled.append(name)
 
     return {"enabled": enabled, "disabled": skipped}
-

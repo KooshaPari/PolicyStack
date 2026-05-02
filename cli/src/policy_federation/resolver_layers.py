@@ -1,4 +1,5 @@
 """Policy layer enumeration helpers."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -26,10 +27,24 @@ def _policy_layers(
             if extra.resolve() != primary_repo_file:
                 layers.append(("repo/" + extra.stem, extra))
 
-    layers.append(("task_domain/" + task_domain, repo_root / f"policies/task-domain/{task_domain}.yaml"))
+    layers.append(
+        (
+            "task_domain/" + task_domain,
+            repo_root / f"policies/task-domain/{task_domain}.yaml",
+        ),
+    )
     if task_instance:
-        layers.append(("task_instance/" + task_instance, repo_root / f"policies/task-instance/{task_instance}.yaml"))
+        layers.append(
+            (
+                "task_instance/" + task_instance,
+                repo_root / f"policies/task-instance/{task_instance}.yaml",
+            ),
+        )
     if task_overlay:
-        layers.append(("task_overlay/" + task_overlay, repo_root / f"policies/task-overlay/{task_overlay}.yaml"))
+        layers.append(
+            (
+                "task_overlay/" + task_overlay,
+                repo_root / f"policies/task-overlay/{task_overlay}.yaml",
+            ),
+        )
     return layers
-

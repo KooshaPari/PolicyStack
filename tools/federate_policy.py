@@ -5,11 +5,10 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import json
 import hmac
-from pathlib import Path
+import json
 from datetime import datetime, timezone
-
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 POLICY_ROOT = ROOT / "policies"
@@ -165,7 +164,7 @@ def main() -> None:
 
     if missing and args.strict:
         raise FileNotFoundError(
-            "Missing required layer files: " + ", ".join(sorted(missing))
+            "Missing required layer files: " + ", ".join(sorted(missing)),
         )
 
     effective: dict = {}
@@ -199,7 +198,7 @@ def main() -> None:
             "scope": payload["scope"],
             "policy": payload["policy"],
             "applied_layers": applied_layers,
-        }
+        },
     )
     if args.sign_key:
         signature = hmac.new(

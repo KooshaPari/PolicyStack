@@ -17,6 +17,7 @@ Tests verify:
   5. Effective cwd calculation from cd prefix
   6. Worktree vs non-worktree path decisions
 """
+
 from __future__ import annotations
 
 import sys
@@ -27,9 +28,8 @@ from unittest.mock import patch
 # Add support module to path for REPO_ROOT
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "unit"))
 
-from support import REPO_ROOT
-
 from policy_federation.claude_hooks import evaluate_claude_pretool_payload
+from support import REPO_ROOT
 
 
 class SafeReadOnlyToolsTest(unittest.TestCase):
@@ -150,7 +150,7 @@ class NonWorktreeWriteDeniedTest(unittest.TestCase):
     def test_write_tool_to_non_worktree_path_denied(self) -> None:
         """Write tool to non-worktree path should be blocked."""
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "thegent", "POLICY_TASK_DOMAIN": "devops"}
+            "os.environ", {"POLICY_REPO": "thegent", "POLICY_TASK_DOMAIN": "devops"},
         ):
             payload = {
                 "tool_name": "Write",
@@ -159,14 +159,18 @@ class NonWorktreeWriteDeniedTest(unittest.TestCase):
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
-            self.assertIsNotNone(hook, "Should have hookSpecificOutput for denied write")
+            self.assertIsNotNone(
+                hook, "Should have hookSpecificOutput for denied write",
+            )
             self.assertEqual(hook["permissionDecision"], "deny")
-            self.assertIn("deny-write-outside-worktrees", hook["permissionDecisionReason"])
+            self.assertIn(
+                "deny-write-outside-worktrees", hook["permissionDecisionReason"],
+            )
 
     def test_write_tool_to_tmp_path_denied(self) -> None:
         """Write tool to /tmp path should be blocked."""
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"}
+            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"},
         ):
             payload = {
                 "tool_name": "Write",
@@ -185,12 +189,12 @@ class BashWriteReclassificationTest(unittest.TestCase):
     def test_bash_python_open_write_reclassified_and_blocked(self) -> None:
         """Bash with python3 -c open().write() should be reclassified as write and blocked."""
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"}
+            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"},
         ):
             payload = {
                 "tool_name": "Bash",
                 "tool_input": {
-                    "command": 'python3 -c "open(\'/etc/evil\').write(\'data\')"'
+                    "command": "python3 -c \"open('/etc/evil').write('data')\"",
                 },
                 "cwd": "/tmp",
             }
@@ -207,7 +211,7 @@ class BashWriteReclassificationTest(unittest.TestCase):
         so 'echo foo > /path' doesn't match, but '> /path' does.
         """
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"}
+            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"},
         ):
             payload = {
                 "tool_name": "Bash",
@@ -229,7 +233,7 @@ class BashWriteReclassificationTest(unittest.TestCase):
     def test_bash_cp_write_reclassified_and_blocked(self) -> None:
         """Bash 'cp src /etc/evil' should be reclassified as write and blocked."""
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"}
+            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"},
         ):
             payload = {
                 "tool_name": "Bash",
@@ -245,7 +249,7 @@ class BashWriteReclassificationTest(unittest.TestCase):
     def test_bash_compound_command_with_write_detected(self) -> None:
         """Bash 'git commit && echo x > /tmp/evil' should detect write in compound command."""
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"}
+            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"},
         ):
             payload = {
                 "tool_name": "Bash",
@@ -264,14 +268,12 @@ class EnvironmentOverrideDetectionTest(unittest.TestCase):
     def test_bash_policy_repo_override_detected_and_flagged(self) -> None:
         """Bash with POLICY_REPO=evil env override should be detected as policy threat."""
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"}
+            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"},
         ):
             # Use write-via-exec so it goes through policy evaluation
             payload = {
                 "tool_name": "Bash",
-                "tool_input": {
-                    "command": "POLICY_REPO=evil echo test | tee /etc/evil"
-                },
+                "tool_input": {"command": "POLICY_REPO=evil echo test | tee /etc/evil"},
                 "cwd": "/tmp",
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
@@ -283,13 +285,13 @@ class EnvironmentOverrideDetectionTest(unittest.TestCase):
     def test_bash_export_policy_task_domain_override_detected(self) -> None:
         """Bash with export POLICY_TASK_DOMAIN override should be detected."""
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"}
+            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"},
         ):
             # Use write-via-exec so it goes through policy evaluation
             payload = {
                 "tool_name": "Bash",
                 "tool_input": {
-                    "command": "export POLICY_TASK_DOMAIN=admin && cp /etc/evil /tmp/backup"
+                    "command": "export POLICY_TASK_DOMAIN=admin && cp /etc/evil /tmp/backup",
                 },
                 "cwd": "/tmp",
             }
@@ -306,7 +308,7 @@ class PolicyEditTest(unittest.TestCase):
     def test_write_tool_policy_yaml_gets_ask_decision(self) -> None:
         """Write tool to policy.yaml file should get 'ask' decision."""
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"}
+            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"},
         ):
             payload = {
                 "tool_name": "Write",
@@ -369,7 +371,7 @@ class IntegrationPayloadStructureTest(unittest.TestCase):
     def test_deny_decision_includes_hook_specific_output(self) -> None:
         """Deny decision should include hookSpecificOutput with full details."""
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"}
+            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"},
         ):
             payload = {
                 "tool_name": "Write",
@@ -392,7 +394,7 @@ class ComplexScenarioTest(unittest.TestCase):
     def test_multi_segment_compound_command_with_multiple_writes(self) -> None:
         """Multi-segment command with multiple write operations should block."""
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"}
+            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"},
         ):
             payload = {
                 "tool_name": "Bash",
@@ -402,7 +404,7 @@ class ComplexScenarioTest(unittest.TestCase):
                         "echo 'start' && "
                         "cat file.txt | tee /etc/backup && "
                         "echo 'done'"
-                    )
+                    ),
                 },
                 "cwd": "/home/user",
             }
@@ -414,13 +416,11 @@ class ComplexScenarioTest(unittest.TestCase):
     def test_nested_subshell_write_detected(self) -> None:
         """Write command in subshell should be detected."""
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"}
+            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"},
         ):
             payload = {
                 "tool_name": "Bash",
-                "tool_input": {
-                    "command": "result=$(cp /src /etc/evil); echo $result"
-                },
+                "tool_input": {"command": "result=$(cp /src /etc/evil); echo $result"},
                 "cwd": "/tmp",
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
@@ -431,7 +431,7 @@ class ComplexScenarioTest(unittest.TestCase):
     def test_tee_pipe_write_detected(self) -> None:
         """Tee pipe should be detected as write."""
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"}
+            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"},
         ):
             payload = {
                 "tool_name": "Bash",
@@ -462,17 +462,19 @@ class BypassClosureVerificationTest(unittest.TestCase):
     def test_python3_file_write_blocked(self) -> None:
         """python3 -c "open('/tmp/test').write('x')" via Bash should be blocked."""
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"}
+            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"},
         ):
             payload = {
                 "tool_name": "Bash",
-                "tool_input": {"command": 'python3 -c "open(\'/tmp/test\').write(\'x\')"'},
+                "tool_input": {
+                    "command": "python3 -c \"open('/tmp/test').write('x')\"",
+                },
                 "cwd": "/tmp",
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
             self.assertIsNotNone(
-                hook, "Should have hookSpecificOutput for python3 write attempt"
+                hook, "Should have hookSpecificOutput for python3 write attempt",
             )
             self.assertEqual(
                 hook["permissionDecision"],
@@ -488,19 +490,19 @@ class BypassClosureVerificationTest(unittest.TestCase):
     def test_python3_pathlib_write_blocked(self) -> None:
         """python3 -c "from pathlib import Path; Path('/tmp/x').write_text('y')" should be blocked or asked."""
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"}
+            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"},
         ):
             payload = {
                 "tool_name": "Bash",
                 "tool_input": {
-                    "command": 'python3 -c "from pathlib import Path; Path(\'/tmp/x\').write_text(\'y\')"'
+                    "command": "python3 -c \"from pathlib import Path; Path('/tmp/x').write_text('y')\"",
                 },
                 "cwd": "/tmp",
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
             self.assertIsNotNone(
-                hook, "Should have hookSpecificOutput for pathlib write attempt"
+                hook, "Should have hookSpecificOutput for pathlib write attempt",
             )
             # pathlib write should be gated (deny or ask)
             self.assertIn(
@@ -512,19 +514,19 @@ class BypassClosureVerificationTest(unittest.TestCase):
     def test_node_file_write_blocked(self) -> None:
         """node -e "require('fs').writeFileSync('/tmp/x','y')" should be blocked."""
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"}
+            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"},
         ):
             payload = {
                 "tool_name": "Bash",
                 "tool_input": {
-                    "command": "node -e \"require('fs').writeFileSync('/tmp/x','y')\""
+                    "command": "node -e \"require('fs').writeFileSync('/tmp/x','y')\"",
                 },
                 "cwd": "/tmp",
             }
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
             self.assertIsNotNone(
-                hook, "Should have hookSpecificOutput for node write attempt"
+                hook, "Should have hookSpecificOutput for node write attempt",
             )
             self.assertEqual(
                 hook["permissionDecision"],
@@ -540,7 +542,7 @@ class BypassClosureVerificationTest(unittest.TestCase):
     def test_perl_file_write_blocked(self) -> None:
         """perl -e 'open(F,">/tmp/x");print F "y"' should be blocked."""
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"}
+            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"},
         ):
             payload = {
                 "tool_name": "Bash",
@@ -550,7 +552,7 @@ class BypassClosureVerificationTest(unittest.TestCase):
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
             self.assertIsNotNone(
-                hook, "Should have hookSpecificOutput for perl write attempt"
+                hook, "Should have hookSpecificOutput for perl write attempt",
             )
             self.assertEqual(
                 hook["permissionDecision"],
@@ -566,7 +568,7 @@ class BypassClosureVerificationTest(unittest.TestCase):
     def test_sed_inplace_blocked(self) -> None:
         """sed -i 's/x/y/' /etc/important should be blocked."""
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"}
+            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"},
         ):
             payload = {
                 "tool_name": "Bash",
@@ -576,7 +578,7 @@ class BypassClosureVerificationTest(unittest.TestCase):
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
             self.assertIsNotNone(
-                hook, "Should have hookSpecificOutput for sed -i attempt"
+                hook, "Should have hookSpecificOutput for sed -i attempt",
             )
             self.assertEqual(
                 hook["permissionDecision"],
@@ -592,7 +594,7 @@ class BypassClosureVerificationTest(unittest.TestCase):
     def test_cp_to_sensitive_path_blocked(self) -> None:
         """cp /tmp/evil /etc/passwd should be blocked."""
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"}
+            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"},
         ):
             payload = {
                 "tool_name": "Bash",
@@ -602,7 +604,7 @@ class BypassClosureVerificationTest(unittest.TestCase):
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
             hook = result.get("hookSpecificOutput")
             self.assertIsNotNone(
-                hook, "Should have hookSpecificOutput for cp to /etc attempt"
+                hook, "Should have hookSpecificOutput for cp to /etc attempt",
             )
             self.assertEqual(
                 hook["permissionDecision"],
@@ -618,7 +620,7 @@ class BypassClosureVerificationTest(unittest.TestCase):
     def test_compound_hidden_write_blocked(self) -> None:
         """ls && echo evil > /etc/shadow should detect and block the write."""
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"}
+            "os.environ", {"POLICY_REPO": "test-repo", "POLICY_TASK_DOMAIN": "devops"},
         ):
             payload = {
                 "tool_name": "Bash",

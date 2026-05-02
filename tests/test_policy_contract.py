@@ -7,27 +7,32 @@ import json
 import os
 import shutil
 import subprocess
-import tempfile
 import sys
-import yaml
+import tempfile
 from pathlib import Path
+from typing import Any
 from unittest import TestCase, main
 from unittest.mock import patch
-from typing import Any
+
+import yaml
 
 try:
     from jsonschema import validate as _validate_schema
 except ModuleNotFoundError:
     _validate_schema = None
 
-from policy_lib import Condition, ConditionGroup, normalize_payload, evaluate_policy
+from policy_lib import Condition, ConditionGroup, evaluate_policy, normalize_payload
 from resolve import (
     EXIT_CODE_INVALID,
     EXIT_CODE_MISSING,
     MERGE_STRATEGY,
     _validate_host_artifacts,
 )
-from scripts.sync_host_rules import apply_host_artifacts, render_platform_payload, write_host_artifacts
+from scripts.sync_host_rules import (
+    apply_host_artifacts,
+    render_platform_payload,
+    write_host_artifacts,
+)
 
 
 class TestConditionGroupAnySemantics(TestCase):
@@ -40,9 +45,9 @@ class TestConditionGroupAnySemantics(TestCase):
                         "action": "allow",
                         "match": "git status",
                         "conditions": {"required": False},
-                    }
-                ]
-            }
+                    },
+                ],
+            },
         }
 
         with self.assertRaisesRegex(ValueError, "condition dict must include name"):
@@ -60,9 +65,9 @@ class TestConditionGroupAnySemantics(TestCase):
                             "mode": "maybe",
                             "conditions": [],
                         },
-                    }
-                ]
-            }
+                    },
+                ],
+            },
         }
 
         with self.assertRaisesRegex(ValueError, "unsupported condition mode"):
@@ -77,12 +82,14 @@ class TestConditionGroupAnySemantics(TestCase):
                         "action": "allow",
                         "match": "git status",
                         "conditions": {"name": "unknown_condition"},
-                    }
-                ]
-            }
+                    },
+                ],
+            },
         }
 
-        with self.assertRaisesRegex(ValueError, "unsupported condition: unknown_condition"):
+        with self.assertRaisesRegex(
+            ValueError, "unsupported condition: unknown_condition",
+        ):
             evaluate_policy(payload, "git status")
 
     def test_invalid_condition_type_rejected_during_parse(self) -> None:
@@ -94,9 +101,9 @@ class TestConditionGroupAnySemantics(TestCase):
                         "action": "allow",
                         "match": "git status",
                         "conditions": 123,
-                    }
-                ]
-            }
+                    },
+                ],
+            },
         }
 
         with self.assertRaisesRegex(ValueError, "unsupported condition type"):
@@ -114,9 +121,9 @@ class TestConditionGroupAnySemantics(TestCase):
                             "all": [{"name": "git_is_worktree"}],
                         },
                         "on_mismatch": "maybe",
-                    }
-                ]
-            }
+                    },
+                ],
+            },
         }
 
         with self.assertRaisesRegex(ValueError, "invalid on_mismatch action"):
@@ -131,9 +138,9 @@ class TestConditionGroupAnySemantics(TestCase):
                         "action": "allow",
                         "match": "git status",
                         "conditions": {"mode": "all", "conditions": "not-a-list"},
-                    }
-                ]
-            }
+                    },
+                ],
+            },
         }
 
         with self.assertRaisesRegex(ValueError, "'conditions' must be a list"):
@@ -249,7 +256,9 @@ class TestConditionGroupAnySemantics(TestCase):
                 ["optional-a-false", "optional-b-true"],
             )
 
-    def test_condition_group_nested_any_required_false_optional_true_conflict(self) -> None:
+    def test_condition_group_nested_any_required_false_optional_true_conflict(
+        self,
+    ) -> None:
         group = ConditionGroup(
             mode="all",
             items=(
@@ -298,9 +307,9 @@ class TestConditionGroupAnySemantics(TestCase):
                                 {"name": "git_synced_to_upstream", "required": False},
                             ],
                         },
-                    }
-                ]
-            }
+                    },
+                ],
+            },
         }
 
         with patch.dict(
@@ -323,7 +332,10 @@ class TestConditionGroupAnySemantics(TestCase):
             {
                 "git_is_worktree": lambda _cwd: (True, "git_is_worktree"),
                 "git_clean_worktree": lambda _cwd: (False, "git_clean_worktree"),
-                "git_synced_to_upstream": lambda _cwd: (False, "git_synced_to_upstream"),
+                "git_synced_to_upstream": lambda _cwd: (
+                    False,
+                    "git_synced_to_upstream",
+                ),
             },
             clear=False,
         ):
@@ -343,9 +355,9 @@ class TestConditionGroupAnySemantics(TestCase):
                         "match": "git status",
                         "conditions": "git_clean_worktree",
                         "on_mismatch": "request",
-                    }
-                ]
-            }
+                    },
+                ],
+            },
         }
 
         with patch.dict(
@@ -358,7 +370,9 @@ class TestConditionGroupAnySemantics(TestCase):
         self.assertEqual(decision, "allow")
         self.assertIsNotNone(rule)
         self.assertEqual(rule.rule_id, "root-string")
-        self.assertEqual(rule.conditions, normalize_payload(payload, Path.cwd())[0].conditions)
+        self.assertEqual(
+            rule.conditions, normalize_payload(payload, Path.cwd())[0].conditions,
+        )
 
         with patch.dict(
             "policy_lib.CONDITION_EVALUATORS",
@@ -379,15 +393,17 @@ class TestConditionGroupAnySemantics(TestCase):
                         "id": "bad-matcher",
                         "action": "allow",
                         "match": {"fuzzy": "git status"},
-                    }
-                ]
-            }
+                    },
+                ],
+            },
         }
 
         with self.assertRaisesRegex(ValueError, "unsupported matcher"):
             evaluate_policy(payload, "git status")
 
-    def test_conditional_exact_and_prefix_matcher_with_on_mismatch_end_to_end(self) -> None:
+    def test_conditional_exact_and_prefix_matcher_with_on_mismatch_end_to_end(
+        self,
+    ) -> None:
         payload = {
             "policy": {
                 "command_rules": [
@@ -404,8 +420,8 @@ class TestConditionGroupAnySemantics(TestCase):
                         "conditions": {"all": ["git_is_worktree"]},
                         "on_mismatch": "request",
                     },
-                ]
-            }
+                ],
+            },
         }
 
         with patch.dict(
@@ -421,7 +437,9 @@ class TestConditionGroupAnySemantics(TestCase):
             self.assertEqual(decision, "request")
             self.assertEqual(rule.rule_id, "prefix-fallback")
 
-    def test_root_condition_without_on_mismatch_allows_lower_rule_precedence(self) -> None:
+    def test_root_condition_without_on_mismatch_allows_lower_rule_precedence(
+        self,
+    ) -> None:
         payload = {
             "policy": {
                 "command_rules": [
@@ -436,7 +454,7 @@ class TestConditionGroupAnySemantics(TestCase):
                                     "name": "git_clean_worktree",
                                     "required": False,
                                 },
-                            ]
+                            ],
                         },
                     },
                     {
@@ -444,8 +462,8 @@ class TestConditionGroupAnySemantics(TestCase):
                         "action": "deny",
                         "match": "git status",
                     },
-                ]
-            }
+                ],
+            },
         }
 
         with patch.dict(
@@ -482,7 +500,7 @@ class TestPolicyLibNormalizationValidation(TestCase):
             "policy": {
                 "commands": {"allow": [], "deny": [], "require": []},
                 "command_rules": "not-a-list",
-            }
+            },
         }
         with self.assertRaisesRegex(ValueError, "policy.command_rules must be a list"):
             normalize_payload(payload, Path.cwd())
@@ -492,11 +510,9 @@ class TestPolicyLibNormalizationValidation(TestCase):
             "policy": {
                 "commands": {"allow": [], "deny": [], "require": []},
                 "command_rules": [1, {}],
-            }
+            },
         }
-        with self.assertRaisesRegex(
-            ValueError, "command_rule\\[0\\] must be a map"
-        ):
+        with self.assertRaisesRegex(ValueError, "command_rule\\[0\\] must be a map"):
             normalize_payload(payload, Path.cwd())
 
     def test_normalize_payload_rejects_non_string_command_entry(self) -> None:
@@ -506,17 +522,19 @@ class TestPolicyLibNormalizationValidation(TestCase):
                     "allow": ["git status", 123],
                     "deny": [],
                     "require": [],
-                }
-            }
+                },
+            },
         }
-        with self.assertRaisesRegex(ValueError, "policy.commands.allow\\[1] must be a non-empty string"):
+        with self.assertRaisesRegex(
+            ValueError, "policy.commands.allow\\[1] must be a non-empty string",
+        ):
             normalize_payload(payload, Path.cwd())
 
     def test_normalize_payload_rejects_non_list_command_allow(self) -> None:
         payload = {
             "policy": {
                 "commands": {"allow": "git status", "deny": [], "require": []},
-            }
+            },
         }
         with self.assertRaisesRegex(ValueError, "policy.commands.allow must be a list"):
             normalize_payload(payload, Path.cwd())
@@ -528,10 +546,12 @@ class TestPolicyLibNormalizationValidation(TestCase):
                     "allow": ["   "],
                     "deny": [],
                     "require": [],
-                }
-            }
+                },
+            },
         }
-        with self.assertRaisesRegex(ValueError, "policy.commands.allow\\[0] must be a non-empty string"):
+        with self.assertRaisesRegex(
+            ValueError, "policy.commands.allow\\[0] must be a non-empty string",
+        ):
             normalize_payload(payload, Path.cwd())
 
     def test_normalize_payload_rejects_empty_command_rule_pattern(self) -> None:
@@ -543,9 +563,9 @@ class TestPolicyLibNormalizationValidation(TestCase):
                         "id": "bad-pattern",
                         "action": "allow",
                         "match": "   ",
-                    }
+                    },
                 ],
-            }
+            },
         }
         with self.assertRaisesRegex(ValueError, "non-empty string"):
             normalize_payload(payload, Path.cwd())
@@ -559,9 +579,9 @@ class TestPolicyLibNormalizationValidation(TestCase):
                         "id": "bad-pattern-key",
                         "action": "allow",
                         "pattern": "   ",
-                    }
+                    },
                 ],
-            }
+            },
         }
         with self.assertRaisesRegex(ValueError, "non-empty string"):
             normalize_payload(payload, Path.cwd())
@@ -575,34 +595,47 @@ class TestPolicyLibNormalizationValidation(TestCase):
                         "id": "bad-pattern-type",
                         "action": "allow",
                         "match": 123,
-                    }
+                    },
                 ],
-            }
+            },
         }
         with self.assertRaisesRegex(
-            ValueError, "matcher pattern must be string|match or pattern must be a non-empty string"
+            ValueError,
+            "matcher pattern must be string|match or pattern must be a non-empty string",
         ):
             normalize_payload(payload, Path.cwd())
 
 
 class TestWrapperConditionSemanticsParity(TestCase):
-    fixtures_path = Path(__file__).parent / "fixtures" / "condition_semantics_cases.json"
+    fixtures_path = (
+        Path(__file__).parent / "fixtures" / "condition_semantics_cases.json"
+    )
     command = "policy-wrapper-condition-fixture-probe"
 
     @staticmethod
     def _predict_decision(expect: dict[str, object]) -> str:
-        return "request" if expect.get("has_error") or not expect.get("passed") else "allow"
+        return (
+            "request"
+            if expect.get("has_error") or not expect.get("passed")
+            else "allow"
+        )
 
     @staticmethod
     def _load_schema() -> dict[str, Any] | None:
         if _validate_schema is None:
             return None
-        schema_path = Path(__file__).resolve().parent.parent / "agent-scope" / "policy_wrapper.schema.json"
+        schema_path = (
+            Path(__file__).resolve().parent.parent
+            / "agent-scope"
+            / "policy_wrapper.schema.json"
+        )
         with schema_path.open(encoding="utf-8") as handle:
             return json.loads(handle.read())
 
     @staticmethod
-    def _validate_wrapper_bundle(payload: dict[str, object], schema: dict[str, Any]) -> None:
+    def _validate_wrapper_bundle(
+        payload: dict[str, object], schema: dict[str, Any],
+    ) -> None:
         assert _validate_schema is not None
         _validate_schema(payload, schema)
 
@@ -645,9 +678,7 @@ class TestWrapperConditionSemanticsParity(TestCase):
 
     @staticmethod
     def _build_zig_binary(root: Path) -> bool:
-        binary = (
-            root / "wrappers" / "zig" / "zig-out" / "bin" / "policy-wrapper"
-        )
+        binary = root / "wrappers" / "zig" / "zig-out" / "bin" / "policy-wrapper"
         if binary.exists():
             return True
         if shutil.which("zig") is None:
@@ -665,7 +696,9 @@ class TestWrapperConditionSemanticsParity(TestCase):
         return binary.exists()
 
     @staticmethod
-    def _smoke_wrapper(binary: Path, command: str = "policy-wrapper-condition-fixture-probe") -> bool:
+    def _smoke_wrapper(
+        binary: Path, command: str = "policy-wrapper-condition-fixture-probe",
+    ) -> bool:
         with tempfile.NamedTemporaryFile(
             mode="w",
             prefix="policy-wrapper-smoke-",
@@ -688,7 +721,7 @@ class TestWrapperConditionSemanticsParity(TestCase):
                         "platform_action": "allow",
                         "shell_entry": f"Shell({command})",
                         "bash_entry": f"Bash({command})",
-                    }
+                    },
                 ],
             }
             json.dump(bundle, handle)
@@ -725,7 +758,9 @@ class TestWrapperConditionSemanticsParity(TestCase):
 
         resolved: dict[str, Path] = {}
         for name, candidates in wrappers.items():
-            executable = next((candidate for candidate in candidates if candidate.exists()), None)
+            executable = next(
+                (candidate for candidate in candidates if candidate.exists()), None,
+            )
             if executable is not None:
                 if self._smoke_wrapper(executable):
                     resolved[name] = executable
@@ -873,7 +908,7 @@ exit 1
         wrappers = self._resolve_wrapper_binaries()
         if not wrappers:
             self.skipTest(
-                "Wrapper binaries missing; run go build / cargo build / zig build first"
+                "Wrapper binaries missing; run go build / cargo build / zig build first",
             )
 
         cases = fixture["cases"]
@@ -923,7 +958,7 @@ exit 1
             expectation = self._predict_decision(expected)
             for name, result in results.items():
                 self.assertEqual(
-                    result["decision"], expectation, f"{case['id']}-{name}"
+                    result["decision"], expectation, f"{case['id']}-{name}",
                 )
                 self.assertTrue(result["matched"], f"{case['id']}-{name}")
                 self.assertEqual(
@@ -957,7 +992,7 @@ exit 1
         wrappers = self._resolve_wrapper_binaries()
         if not wrappers:
             self.skipTest(
-                "Wrapper binaries missing; run go build / cargo build / zig build first"
+                "Wrapper binaries missing; run go build / cargo build / zig build first",
             )
 
         with tempfile.NamedTemporaryFile(
@@ -992,7 +1027,7 @@ exit 1
                         "pattern": self.command,
                         "normalized_pattern": self.command,
                         "conditions": {
-                            "all": ["unsupported_condition_request_precedence"]
+                            "all": ["unsupported_condition_request_precedence"],
                         },
                         "platform_action": "allow",
                         "shell_entry": f"Shell({self.command})",
@@ -1056,7 +1091,7 @@ exit 1
         wrappers = self._resolve_wrapper_binaries()
         if not wrappers:
             self.skipTest(
-                "Wrapper binaries missing; run go build / cargo build / zig build first"
+                "Wrapper binaries missing; run go build / cargo build / zig build first",
             )
 
         command = "policy-wrapper-allow-request-parity"
@@ -1101,7 +1136,9 @@ exit 1
             )
             handle.flush()
             results = {
-                name: self._run_wrapper_with_command(binary, Path(handle.name), command, None)
+                name: self._run_wrapper_with_command(
+                    binary, Path(handle.name), command, None,
+                )
                 for name, binary in wrappers.items()
             }
 
@@ -1115,7 +1152,7 @@ exit 1
         wrappers = self._resolve_wrapper_binaries()
         if not wrappers:
             self.skipTest(
-                "Wrapper binaries missing; run go build / cargo build / zig build first"
+                "Wrapper binaries missing; run go build / cargo build / zig build first",
             )
 
         command_all = "policy-wrapper-empty-all"
@@ -1214,10 +1251,14 @@ exit 1
             }
             for name, binary in wrappers.items():
                 for command, (decision, has_required) in expected.items():
-                    result = self._run_wrapper_with_command(binary, Path(handle.name), command, None)
+                    result = self._run_wrapper_with_command(
+                        binary, Path(handle.name), command, None,
+                    )
                     self.assertEqual(result["decision"], decision, f"{name}-{command}")
                     self.assertTrue(result["matched"], f"{name}-{command}")
-                    self.assertEqual(result["has_required"], has_required, f"{name}-{command}")
+                    self.assertEqual(
+                        result["has_required"], has_required, f"{name}-{command}",
+                    )
                     self.assertEqual(
                         len(result.get("condition_reasons", [])),
                         0,
@@ -1225,9 +1266,13 @@ exit 1
                     )
                     self.assertEqual(result.get("error", ""), "", f"{name}-{command}")
                     if command == command_all:
-                        self.assertEqual(result.get("rule_id"), "empty-all", f"{name}-{command}")
+                        self.assertEqual(
+                            result.get("rule_id"), "empty-all", f"{name}-{command}",
+                        )
                     elif command == command_any:
-                        self.assertEqual(result.get("rule_id"), "empty-any", f"{name}-{command}")
+                        self.assertEqual(
+                            result.get("rule_id"), "empty-any", f"{name}-{command}",
+                        )
                     elif command == command_mode_all:
                         self.assertEqual(
                             result.get("rule_id"),
@@ -1251,7 +1296,7 @@ exit 1
         wrappers = self._resolve_wrapper_binaries()
         if not wrappers:
             self.skipTest(
-                "Wrapper binaries missing; run go build / cargo build / zig build first"
+                "Wrapper binaries missing; run go build / cargo build / zig build first",
             )
 
         with tempfile.NamedTemporaryFile(
@@ -1287,7 +1332,7 @@ exit 1
         wrappers = self._resolve_wrapper_binaries()
         if not wrappers:
             self.skipTest(
-                "Wrapper binaries missing; run go build / cargo build / zig build first"
+                "Wrapper binaries missing; run go build / cargo build / zig build first",
             )
 
         command = "policy-wrapper-no-eval-error-precedence"
@@ -1404,7 +1449,11 @@ exit 1
                 encoding="utf-8",
             ) as handle:
                 json.dump(
-                    {"schema_version": 1, "required_conditions": [], "commands": [allow_rule]},
+                    {
+                        "schema_version": 1,
+                        "required_conditions": [],
+                        "commands": [allow_rule],
+                    },
                     handle,
                 )
                 handle.flush()
@@ -1428,7 +1477,7 @@ exit 1
         wrappers = self._resolve_wrapper_binaries()
         if not wrappers:
             self.skipTest(
-                "Wrapper binaries missing; run go build / cargo build / zig build first"
+                "Wrapper binaries missing; run go build / cargo build / zig build first",
             )
 
         command = "policy-wrapper-omit-on-mismatch"
@@ -1485,7 +1534,9 @@ exit 1
             )
             handle.flush()
             results = {
-                name: self._run_wrapper_with_command(binary, Path(handle.name), command, None)
+                name: self._run_wrapper_with_command(
+                    binary, Path(handle.name), command, None,
+                )
                 for name, binary in wrappers.items()
             }
 
@@ -1511,7 +1562,9 @@ exit 1
             )
             handle.flush()
             results = {
-                name: self._run_wrapper_with_command(binary, Path(handle.name), command, None)
+                name: self._run_wrapper_with_command(
+                    binary, Path(handle.name), command, None,
+                )
                 for name, binary in wrappers.items()
             }
 
@@ -1558,7 +1611,7 @@ exit 1
                     "allow",
                     "--condition-eval-error-default",
                     "allow",
-                ]
+                ],
             )
             self.assertEqual(result.returncode, 1)
             payload = json.loads(result.stdout)
@@ -1582,10 +1635,12 @@ exit 1
                     "--require-binary",
                     "--missing-policy-default",
                     "request",
-                ]
+                ],
             )
             self.assertNotEqual(result.returncode, 0)
-            self.assertIn("required policy wrapper binary not found or unusable", result.stderr)
+            self.assertIn(
+                "required policy wrapper binary not found or unusable", result.stderr,
+            )
 
     def test_dispatch_script_uses_specific_fallback_for_malformed_bundle(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1607,7 +1662,7 @@ exit 1
                     str(binary),
                     "--malformed-bundle-default",
                     "deny",
-                ]
+                ],
             )
             self.assertEqual(result.returncode, 2)
             payload = json.loads(result.stdout)
@@ -1615,7 +1670,9 @@ exit 1
             self.assertEqual(payload["fallback"], "deny")
             self.assertEqual(payload["fallback_reason"], "wrapper-json-parse-failed")
 
-    def test_dispatch_script_uses_condition_eval_fallback_on_condition_errors(self) -> None:
+    def test_dispatch_script_uses_condition_eval_fallback_on_condition_errors(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
             bundle = tmpdir / "policy-wrapper-rules.json"
@@ -1642,7 +1699,7 @@ exit 1
                     str(binary),
                     "--condition-eval-error-default",
                     "request",
-                ]
+                ],
             )
             self.assertEqual(result.returncode, 1)
             payload = json.loads(result.stdout)
@@ -1656,7 +1713,9 @@ exit 1
     def test_wrapper_glob_character_class_matches_across_languages(self) -> None:
         wrappers = self._resolve_wrapper_binaries()
         if not wrappers:
-            self.skipTest("Wrapper binaries missing; run go build / cargo build / zig build first")
+            self.skipTest(
+                "Wrapper binaries missing; run go build / cargo build / zig build first",
+            )
 
         command = "policy-wrapper-charclass-a"
         bundle = {
@@ -1675,7 +1734,7 @@ exit 1
                     "platform_action": "allow",
                     "shell_entry": f"Shell({command})",
                     "bash_entry": f"Bash({command})",
-                }
+                },
             ],
         }
         pattern = "policy-wrapper-charclass-[ab]"
@@ -1777,7 +1836,9 @@ exit 1
     def test_git_synced_to_upstream_strict_count_parsing(self) -> None:
         wrappers = self._resolve_wrapper_binaries()
         if not wrappers:
-            self.skipTest("Wrapper binaries missing; run go build / cargo build / zig build first")
+            self.skipTest(
+                "Wrapper binaries missing; run go build / cargo build / zig build first",
+            )
 
         command = "policy-wrapper-upstream-check"
         base_rule = {
@@ -1909,11 +1970,11 @@ exit 1
                             "all": [
                                 "git_is_worktree",
                                 {"name": "git_clean_worktree", "required": False},
-                            ]
+                            ],
                         },
-                    }
+                    },
                 ],
-            }
+            },
         }
         rendered = render_platform_payload(payload, include_conditional=True)
         self._validate_wrapper_bundle(rendered["policy"]["policy_wrapper"], schema)
@@ -1931,11 +1992,11 @@ exit 1
                             "all": [
                                 {"name": "git_is_worktree", "required": True},
                                 {"name": "git_clean_worktree", "required": False},
-                            ]
+                            ],
                         },
-                    }
+                    },
                 ],
-            }
+            },
         }
 
         rendered = render_platform_payload(payload, include_conditional=True)
@@ -1965,14 +2026,16 @@ exit 1
                             "all": [
                                 {"name": "git_clean_worktree", "required": False},
                                 {"name": "git_is_worktree", "required": False},
-                            ]
+                            ],
                         },
-                    }
+                    },
                 ],
-            }
+            },
         }
 
-        rendered_optional_only = render_platform_payload(optional_only, include_conditional=True)
+        rendered_optional_only = render_platform_payload(
+            optional_only, include_conditional=True,
+        )
         self.assertEqual(
             rendered_optional_only["policy"]["policy_wrapper"]["required_conditions"],
             [],
@@ -2008,12 +2071,16 @@ exit 1
                         },
                     },
                 ],
-            }
+            },
         }
 
         rendered = render_platform_payload(payload, include_conditional=True)
-        required_conditions = rendered["policy"]["policy_wrapper"]["required_conditions"]
-        self.assertEqual(required_conditions, ["git_is_worktree", "git_synced_to_upstream"])
+        required_conditions = rendered["policy"]["policy_wrapper"][
+            "required_conditions"
+        ]
+        self.assertEqual(
+            required_conditions, ["git_is_worktree", "git_synced_to_upstream"],
+        )
         self.assertEqual(rendered["wrapper_condition_set"], required_conditions)
 
 
@@ -2024,7 +2091,7 @@ class TestHostRendering(TestCase):
                 "allow": ["git status"],
                 "deny": ["git reset --hard"],
                 "require": ["git checkout*"],
-            }
+            },
         }
 
         rendered = render_platform_payload(payload, include_conditional=False)
@@ -2045,14 +2112,16 @@ class TestHostRendering(TestCase):
                 "allow": ["git status"],
                 "deny": ["git reset --hard"],
                 "require": ["git checkout*"],
-            }
+            },
         }
 
         rendered = render_platform_payload(payload, include_conditional=False)
         with tempfile.TemporaryDirectory() as tmpdir:
             droid_path = Path(tmpdir) / "factory.settings.json"
             droid_path.write_text(
-                json.dumps({"commandAllowlist": ["ls"], "commandDenylist": ["rm -rf /"]}),
+                json.dumps(
+                    {"commandAllowlist": ["ls"], "commandDenylist": ["rm -rf /"]},
+                ),
                 encoding="utf-8",
             )
             apply_host_artifacts(
@@ -2087,7 +2156,7 @@ class TestHostRendering(TestCase):
                         "conditions": {"all": ["git_is_worktree"]},
                     },
                 ],
-            }
+            },
         }
 
         uncond = render_platform_payload(payload, include_conditional=False)
@@ -2114,7 +2183,8 @@ class TestHostRendering(TestCase):
         for rule in base_policy["claude"]["ask"]:
             self.assertIn(rule, conditional_policy["claude"]["ask"])
         self.assertEqual(
-            set(conditional_policy["claude"]["allow"]) - set(base_policy["claude"]["allow"]),
+            set(conditional_policy["claude"]["allow"])
+            - set(base_policy["claude"]["allow"]),
             {"Bash(git checkout *)"},
         )
         self.assertEqual(
@@ -2138,7 +2208,9 @@ class TestHostRendering(TestCase):
             conditional_policy["codex"]["rules"],
         )
 
-    def test_conditional_request_export_does_not_pollute_static_deny_or_ask(self) -> None:
+    def test_conditional_request_export_does_not_pollute_static_deny_or_ask(
+        self,
+    ) -> None:
         payload = {
             "policy": {
                 "commands": {"allow": [], "deny": [], "require": []},
@@ -2165,11 +2237,13 @@ class TestHostRendering(TestCase):
                         "match": "git log",
                     },
                 ],
-            }
+            },
         }
 
         base = render_platform_payload(payload, include_conditional=False)["policy"]
-        with_conditional = render_platform_payload(payload, include_conditional=True)["policy"]
+        with_conditional = render_platform_payload(payload, include_conditional=True)[
+            "policy"
+        ]
 
         self.assertEqual(
             with_conditional["cursor"]["allow"],
@@ -2210,7 +2284,11 @@ class TestHostRendering(TestCase):
     def test_conditional_allow_request_deny_export_preserves_host_parity(self) -> None:
         payload = {
             "policy": {
-                "commands": {"allow": ["git status"], "deny": ["git reset --hard"], "require": []},
+                "commands": {
+                    "allow": ["git status"],
+                    "deny": ["git reset --hard"],
+                    "require": [],
+                },
                 "command_rules": [
                     {
                         "id": "cond-allow",
@@ -2231,11 +2309,13 @@ class TestHostRendering(TestCase):
                         "conditions": {"all": ["git_synced_to_upstream"]},
                     },
                 ],
-            }
+            },
         }
 
         base = render_platform_payload(payload, include_conditional=False)["policy"]
-        with_conditional = render_platform_payload(payload, include_conditional=True)["policy"]
+        with_conditional = render_platform_payload(payload, include_conditional=True)[
+            "policy"
+        ]
 
         self.assertEqual(
             sorted(with_conditional["cursor"]["allow"]),
@@ -2293,13 +2373,13 @@ class TestHostRendering(TestCase):
                 "allow": ["git status"],
                 "deny": ["git reset --hard"],
                 "require": ["python cli.py test run --scope integration"],
-            }
+            },
         }
 
         rendered = render_platform_payload(payload, include_conditional=False)
         host_rules = rendered["policy"]
         codex_request = (
-            'prefix_rule('
+            "prefix_rule("
             'pattern=["python", "cli.py", "test", "run", "--scope", "integration"], '
             'decision="prompt")'
         )
@@ -2332,8 +2412,8 @@ class TestHostRendering(TestCase):
                     "allow": [],
                     "deny": [],
                     "require": ["policy_merge"],
-                }
-            }
+                },
+            },
         }
         decision, _, rule = evaluate_policy(payload, "policy_merge")
 
@@ -2350,11 +2430,11 @@ class TestHostRendering(TestCase):
                         "action": "allow",
                         "match": {"prefix": "git checkout"},
                         "conditions": {
-                            "all": [{"name": "git_is_worktree", "required": True}]
+                            "all": [{"name": "git_is_worktree", "required": True}],
                         },
-                    }
-                ]
-            }
+                    },
+                ],
+            },
         }
 
         rendered = render_platform_payload(payload, include_conditional=True)
@@ -2374,7 +2454,9 @@ class TestHostRendering(TestCase):
                         "id": "allow-only-on-condition",
                         "action": "allow",
                         "match": "git status",
-                        "conditions": {"any": [{"name": "git_clean_worktree", "required": False}]},
+                        "conditions": {
+                            "any": [{"name": "git_clean_worktree", "required": False}],
+                        },
                     },
                     {
                         "id": "deny-command",
@@ -2382,7 +2464,7 @@ class TestHostRendering(TestCase):
                         "match": "git status",
                     },
                 ],
-            }
+            },
         }
 
         with patch.dict(
@@ -2391,7 +2473,7 @@ class TestHostRendering(TestCase):
                 "git_clean_worktree": lambda _cwd: (
                     False,
                     "git_clean_worktree",
-                )
+                ),
             },
             clear=False,
         ):
@@ -2415,15 +2497,18 @@ class TestHostRendering(TestCase):
                                     "mode": "any",
                                     "conditions": [
                                         {"name": "git_is_worktree"},
-                                        {"name": "git_clean_worktree", "required": False},
+                                        {
+                                            "name": "git_clean_worktree",
+                                            "required": False,
+                                        },
                                     ],
                                 },
                                 {"name": "git_synced_to_upstream"},
-                            ]
+                            ],
                         },
-                    }
-                ]
-            }
+                    },
+                ],
+            },
         }
         rendered = render_platform_payload(payload, include_conditional=True)
         self.assertEqual(
@@ -2441,15 +2526,26 @@ class TestHostRendering(TestCase):
                         "match": "git status",
                         "conditions": {
                             "all": [
-                                {"all": ["git_is_worktree", {"name": "git_clean_worktree"}]},
-                                {"mode": "any", "conditions": [
-                                    {"name": "git_synced_to_upstream", "required": False}
-                                ]},
-                            ]
+                                {
+                                    "all": [
+                                        "git_is_worktree",
+                                        {"name": "git_clean_worktree"},
+                                    ],
+                                },
+                                {
+                                    "mode": "any",
+                                    "conditions": [
+                                        {
+                                            "name": "git_synced_to_upstream",
+                                            "required": False,
+                                        },
+                                    ],
+                                },
+                            ],
                         },
-                    }
-                ]
-            }
+                    },
+                ],
+            },
         }
         rendered = render_platform_payload(payload, include_conditional=True)
         wrapper_rule = rendered["wrapper_rules"][0]
@@ -2475,7 +2571,6 @@ class TestHostRendering(TestCase):
             },
         )
 
-
     def test_rendered_wrapper_payload_conditional_split_counts(self) -> None:
         payload = {
             "policy": {
@@ -2495,11 +2590,11 @@ class TestHostRendering(TestCase):
                         "match": "git reset --hard",
                     },
                 ],
-            }
+            },
         }
 
         rendered_conditional_only = render_platform_payload(
-            payload, include_conditional=False
+            payload, include_conditional=False,
         )
         self.assertEqual(rendered_conditional_only["conditional_count"], 1)
         self.assertEqual(rendered_conditional_only["unconditional_count"], 1)
@@ -2511,23 +2606,29 @@ class TestHostRendering(TestCase):
         )
 
         rendered_with_conditional = render_platform_payload(
-            payload, include_conditional=True
+            payload, include_conditional=True,
         )
         self.assertEqual(rendered_with_conditional["conditional_count"], 1)
         self.assertEqual(rendered_with_conditional["unconditional_count"], 1)
         self.assertEqual(len(rendered_with_conditional["wrapper_rules"]), 2)
         self.assertEqual(
-            rendered_with_conditional["policy"]["policy_wrapper"]["required_conditions"],
+            rendered_with_conditional["policy"]["policy_wrapper"][
+                "required_conditions"
+            ],
             ["git_is_worktree"],
         )
 
-        wrapper_rules = rendered_with_conditional["policy"]["policy_wrapper"]["commands"]
+        wrapper_rules = rendered_with_conditional["policy"]["policy_wrapper"][
+            "commands"
+        ]
         self.assertEqual(wrapper_rules[0]["id"], "wrapper-cond-rule")
         self.assertEqual(
             wrapper_rules[0]["conditions"],
-            {"mode": "all", "conditions": [{"name": "git_is_worktree", "required": True}]},
+            {
+                "mode": "all",
+                "conditions": [{"name": "git_is_worktree", "required": True}],
+            },
         )
-
 
 
 class TestResolveCLI(TestCase):
@@ -2650,19 +2751,23 @@ class TestResolveCLI(TestCase):
             bundle_path = Path(output["policy_wrapper_bundle"])
             bundle = json.loads(bundle_path.read_text(encoding="utf-8"))
             self.assertGreater(len(bundle.get("commands", [])), 0)
-            self.assertEqual(len(bundle.get("commands", [])), output["wrapper_rule_count"])
+            self.assertEqual(
+                len(bundle.get("commands", [])), output["wrapper_rule_count"],
+            )
             self.assertTrue(resolved_out.exists())
 
             manifest = json.loads(
                 (host_out_dir / "policy-wrapper-dispatch.manifest.json").read_text(
-                    encoding="utf-8"
-                )
+                    encoding="utf-8",
+                ),
             )
             self.assertEqual(
                 self._normalize_path(manifest["bundle_path"]),
                 self._normalize_path(bundle_path),
             )
-            self.assertEqual(manifest["wrapper_rule_count"], output["wrapper_rule_count"])
+            self.assertEqual(
+                manifest["wrapper_rule_count"], output["wrapper_rule_count"],
+            )
             self.assertEqual(manifest["fallback_missing_policy"], "allow")
             self.assertEqual(manifest["fallback_malformed_bundle"], "allow")
             self.assertEqual(manifest["fallback_condition_eval_error"], "request")
@@ -2672,14 +2777,14 @@ class TestResolveCLI(TestCase):
                 str(
                     Path(__file__).resolve().parent.parent
                     / "wrappers"
-                    / "policy-wrapper-dispatch.sh"
+                    / "policy-wrapper-dispatch.sh",
                 ),
             )
 
             missing_idx = dispatch_command.index("--missing-policy-default")
             malformed_idx = dispatch_command.index("--malformed-bundle-default")
             condition_eval_idx = dispatch_command.index(
-                "--condition-eval-error-default"
+                "--condition-eval-error-default",
             )
             self.assertEqual(dispatch_command[missing_idx + 1], "allow")
             self.assertEqual(dispatch_command[malformed_idx + 1], "allow")
@@ -2695,7 +2800,9 @@ class TestResolveCLI(TestCase):
             ):
                 self.assertTrue((host_out_dir / artifact).exists(), artifact)
 
-    def test_include_conditional_host_artifacts_validate_without_wrapper_rule_count(self) -> None:
+    def test_include_conditional_host_artifacts_validate_without_wrapper_rule_count(
+        self,
+    ) -> None:
         payload = {
             "policy": {
                 "command_rules": [
@@ -2704,9 +2811,9 @@ class TestResolveCLI(TestCase):
                         "action": "allow",
                         "match": {"prefix": "git checkout"},
                         "conditions": {"all": ["git_is_worktree"]},
-                    }
-                ]
-            }
+                    },
+                ],
+            },
         }
         rendered = render_platform_payload(payload, include_conditional=True)
         rendered.pop("wrapper_rule_count", None)
@@ -2787,7 +2894,9 @@ class TestResolveCLIRegressions(TestCase):
     def _normalize_path(value: str | Path) -> str:
         return os.path.realpath(os.fspath(value))
 
-    def _write_policy(self, path: Path, scope: str, *, policy_version: str = "v1") -> None:
+    def _write_policy(
+        self, path: Path, scope: str, *, policy_version: str = "v1",
+    ) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         payload = {
             "policy_version": policy_version,
@@ -2828,7 +2937,9 @@ class TestResolveCLIRegressions(TestCase):
             self._write_policy(config_root / "user.yaml", "user")
             self._write_policy(config_root / "repo.yaml", "repo")
             self._write_policy(config_root / "harness" / "codex.yaml", "harness")
-            self._write_policy(config_root / "task-domain" / "repair.yaml", "task_domain")
+            self._write_policy(
+                config_root / "task-domain" / "repair.yaml", "task_domain",
+            )
 
             out_path = root / "resolved.json"
             result = self._run_resolve(root, emit=out_path)
@@ -2844,22 +2955,32 @@ class TestResolveCLIRegressions(TestCase):
                 scopes,
             )
             self.assertIn(
-                ["harness", self._normalize_path(config_root / "harness" / "codex.yaml")],
+                [
+                    "harness",
+                    self._normalize_path(config_root / "harness" / "codex.yaml"),
+                ],
                 scopes,
             )
             self.assertIn(
-                ["task_domain", self._normalize_path(config_root / "task-domain" / "repair.yaml")],
+                [
+                    "task_domain",
+                    self._normalize_path(config_root / "task-domain" / "repair.yaml"),
+                ],
                 scopes,
             )
 
-    def test_missing_required_scope_file_returns_missing_exit_code_and_error_text(self) -> None:
+    def test_missing_required_scope_file_returns_missing_exit_code_and_error_text(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             config_root = root / "policy-config"
             self._write_policy(config_root / "system.yaml", "system")
             self._write_policy(config_root / "user.yaml", "user")
             self._write_policy(config_root / "harness" / "codex.yaml", "harness")
-            self._write_policy(config_root / "task-domain" / "repair.yaml", "task_domain")
+            self._write_policy(
+                config_root / "task-domain" / "repair.yaml", "task_domain",
+            )
             # Intentionally omit repo.yaml.
 
             result = self._run_resolve(root)
@@ -2882,7 +3003,9 @@ class TestResolveCLIRegressions(TestCase):
                 "harness",
                 policy_version="v2",
             )
-            self._write_policy(config_root / "task-domain" / "repair.yaml", "task_domain")
+            self._write_policy(
+                config_root / "task-domain" / "repair.yaml", "task_domain",
+            )
 
             result = self._run_resolve(root)
 
@@ -2890,7 +3013,9 @@ class TestResolveCLIRegressions(TestCase):
             error_text = f"{result.stdout}\n{result.stderr}"
             self.assertIn("policy_version must be 'v1'", error_text)
 
-    def test_policy_version_error_json_payload_has_invalid_code_and_message(self) -> None:
+    def test_policy_version_error_json_payload_has_invalid_code_and_message(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             config_root = root / "policy-config"
@@ -2902,7 +3027,9 @@ class TestResolveCLIRegressions(TestCase):
                 "harness",
                 policy_version="v2",
             )
-            self._write_policy(config_root / "task-domain" / "repair.yaml", "task_domain")
+            self._write_policy(
+                config_root / "task-domain" / "repair.yaml", "task_domain",
+            )
 
             result = self._run_resolve(root, json_mode=True)
 
@@ -2932,7 +3059,9 @@ class TestResolveCLIRegressions(TestCase):
             self._write_policy(config_root / "user.yaml", "user")
             self._write_policy(config_root / "repo.yaml", "repo")
             self._write_policy(config_root / "harness" / "codex.yaml", "harness")
-            self._write_policy(config_root / "task-domain" / "repair.yaml", "task_domain")
+            self._write_policy(
+                config_root / "task-domain" / "repair.yaml", "task_domain",
+            )
 
             emit_path = root / "resolved.json"
             result = self._run_resolve(root, emit=emit_path, json_mode=True)
@@ -2940,7 +3069,9 @@ class TestResolveCLIRegressions(TestCase):
             self.assertEqual(result.returncode, 0, msg=result.stderr)
             payload = json.loads(result.stdout)
             self.assertEqual(payload["code"], "ok")
-            self.assertEqual(payload["details"]["emit_path"], self._normalize_path(emit_path))
+            self.assertEqual(
+                payload["details"]["emit_path"], self._normalize_path(emit_path),
+            )
             self.assertEqual(
                 payload["details"]["scopes_ordering_assertion_path"],
                 "result.policy.scopes",

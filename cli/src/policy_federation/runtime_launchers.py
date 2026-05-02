@@ -1,10 +1,10 @@
 """Launcher wrapper helpers for local harness runtime integration."""
+
 from __future__ import annotations
 
 from pathlib import Path
 
 from .constants import DEFAULT_ASK_MODE
-
 
 LAUNCHER_MARKER = "# agentops-policy-federation launcher wrapper"
 
@@ -32,23 +32,27 @@ def _write_launcher_wrapper(
 ) -> None:
     launcher_path.parent.mkdir(parents=True, exist_ok=True)
     fallback_block = (
-        "if [ ! -x \"$TARGET\" ] && command -v "
-        f'"{fallback_command}" >/dev/null 2>&1; then\n'
-        f'  exec "{fallback_command}" "$@"\n'
-        "fi\n"
-    ) if fallback_command else ""
+        (
+            'if [ ! -x "$TARGET" ] && command -v '
+            f'"{fallback_command}" >/dev/null 2>&1; then\n'
+            f'  exec "{fallback_command}" "$@"\n'
+            "fi\n"
+        )
+        if fallback_command
+        else ""
+    )
     audit_log_default = "$HOME/.policy-federation/audit.jsonl"
     launcher_path.write_text(
         "#!/usr/bin/env bash\n"
         "set -euo pipefail\n"
         f"{LAUNCHER_MARKER}\n"
         "infer_repo_name_from_pwd() {\n"
-        "  local cwd=\"$1\"\n"
+        '  local cwd="$1"\n'
         "  local IFS='/'\n"
         "  local -a parts\n"
-        "  read -r -a parts <<< \"$cwd\"\n"
+        '  read -r -a parts <<< "$cwd"\n'
         "  for ((i=0; i<${#parts[@]}; i++)); do\n"
-        "    case \"${parts[i]}\" in\n"
+        '    case "${parts[i]}" in\n'
         "      worktrees)\n"
         "        if (( i + 1 < ${#parts[@]} )); then\n"
         "          printf '%s\\n' \"${parts[i+1]}\"\n"
@@ -71,10 +75,10 @@ def _write_launcher_wrapper(
         "        ;;\n"
         "    esac\n"
         "  done\n"
-        "  basename \"$cwd\"\n"
+        '  basename "$cwd"\n'
         "}\n"
         f'export POLICY_HARNESS="{harness}"\n'
-        f'export POLICY_REPO="${{POLICY_REPO:-$(infer_repo_name_from_pwd \"$PWD\")}}"\n'
+        f'export POLICY_REPO="${{POLICY_REPO:-$(infer_repo_name_from_pwd "$PWD")}}"\n'
         f'export POLICY_TASK_DOMAIN="${{POLICY_TASK_DOMAIN:-{task_domain}}}"\n'
         f'export POLICY_ASK_MODE="${{POLICY_ASK_MODE:-{DEFAULT_ASK_MODE}}}"\n'
         f'export POLICY_AUDIT_LOG_PATH="${{POLICY_AUDIT_LOG_PATH:-{audit_log_default}}}"\n'
@@ -103,7 +107,14 @@ def install_launcher_wrappers(
             "fallback": "cursor",
         },
         home / ".local" / "bin" / "droid": {
-            "target": home / ".local" / "share" / "uv" / "tools" / "thegent" / "bin" / "droid",
+            "target": home
+            / ".local"
+            / "share"
+            / "uv"
+            / "tools"
+            / "thegent"
+            / "bin"
+            / "droid",
             "harness": "factory-droid",
             "fallback": "droid",
         },
@@ -148,7 +159,11 @@ def uninstall_launcher_wrappers(home: Path) -> dict:
     for launcher_path in launcher_paths:
         backup_path = _launcher_backup_path(launcher_path)
         if launcher_path.exists():
-            current = launcher_path.read_text(encoding="utf-8") if launcher_path.is_file() else ""
+            current = (
+                launcher_path.read_text(encoding="utf-8")
+                if launcher_path.is_file()
+                else ""
+            )
             if LAUNCHER_MARKER in current:
                 launcher_path.unlink()
                 removed.append(str(launcher_path))

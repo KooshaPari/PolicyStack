@@ -1,14 +1,18 @@
 """Basic policy validation."""
+
 from __future__ import annotations
 
-from pathlib import Path
 import json
-from jsonschema import Draft202012Validator
+from pathlib import Path
+
 import yaml
+from jsonschema import Draft202012Validator
 
 from .authorization import validate_authorization_block
 
-SCHEMA_PATH = Path(__file__).resolve().parents[3] / "schemas" / "policy-contract.schema.json"
+SCHEMA_PATH = (
+    Path(__file__).resolve().parents[3] / "schemas" / "policy-contract.schema.json"
+)
 
 
 def _load_schema() -> dict:
