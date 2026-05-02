@@ -57,8 +57,8 @@ breaches = []
 
 p95 = _num(metrics.get('replay_backpressure_p95', metrics.get('p95', 0.0)))
 p99 = _num(metrics.get('replay_backpressure_p99', metrics.get('p99', 0.0)))
-stall_count = int(_num(metrics.get('stall_count', metrics.get('backpressure_stalls', 0.0)))
-breach_count = int(_num(metrics.get('breach_count', metrics.get('backpressure_breaches', 0.0)))
+stall_count = int(_num(metrics.get('stall_count', metrics.get('backpressure_stalls', 0.0))))
+breach_count = int(_num(metrics.get('breach_count', metrics.get('backpressure_breaches', 0.0))))
 if p95 > a.max_p95:
     breaches.append('metrics:p95')
 if p99 > a.max_p99:
