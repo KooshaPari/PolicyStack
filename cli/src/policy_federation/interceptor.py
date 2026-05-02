@@ -329,9 +329,11 @@ def run_guarded_subprocess(
     """Intercept and, when allowed, execute the requested subprocess."""
     resolved_cwd = Path(cwd or Path.cwd())
     if not resolved_cwd.exists():
-        raise ValueError(f"cwd does not exist: {resolved_cwd}")
+        msg = f"cwd does not exist: {resolved_cwd}"
+        raise ValueError(msg)
     if not resolved_cwd.is_dir():
-        raise ValueError(f"cwd is not a directory: {resolved_cwd}")
+        msg = f"cwd is not a directory: {resolved_cwd}"
+        raise ValueError(msg)
 
     command = shlex.join(argv)
     result = intercept_command(

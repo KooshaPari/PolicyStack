@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from .runtime_config_patches import (
     _backup_file,
@@ -18,6 +18,9 @@ from .runtime_config_patches import (
     unpatch_factory_config,
 )
 from .runtime_launchers import install_launcher_wrappers, uninstall_launcher_wrappers
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def install_runtime_integrations(repo_root: Path, home: Path) -> dict:

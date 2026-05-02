@@ -61,7 +61,8 @@ def parse_args() -> argparse.Namespace:
 
 def load_json_file(path: Path) -> dict:
     if not path.exists():
-        raise FileNotFoundError(f"Missing policy file: {path}")
+        msg = f"Missing policy file: {path}"
+        raise FileNotFoundError(msg)
     return json.loads(path.read_text(encoding="utf-8"))
 
 
@@ -212,7 +213,6 @@ def main() -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
-    print(f"Wrote {out_path} ({len(files)} layers)")
 
 
 if __name__ == "__main__":

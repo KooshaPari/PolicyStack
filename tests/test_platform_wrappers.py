@@ -156,7 +156,7 @@ class TestKiloWrapper:
         )
 
         wrapper = KiloWrapper()
-        result = wrapper.review_command("git status")
+        wrapper.review_command("git status")
 
         # Check that fast mode was used
         call_args = mock_run.call_args[0][0]
@@ -215,7 +215,7 @@ class TestForgeCodeWrapper:
             wrapper = ForgeCodeWrapper()
             # Need to properly mock the context manager
             with patch("forgecode_wrapper.urllib.request.Request"):
-                result = wrapper.review_command("git status")
+                wrapper.review_command("git status")
 
     @patch("forgecode_wrapper.urllib.request.urlopen")
     def test_review_command_auth_error(self, mock_urlopen):

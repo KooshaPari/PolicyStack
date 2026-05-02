@@ -21,6 +21,8 @@ try:
 except ModuleNotFoundError:
     _validate_schema = None
 
+import pytest
+
 from policy_lib import Condition, ConditionGroup, evaluate_policy, normalize_payload
 from resolve import (
     EXIT_CODE_INVALID,
@@ -50,7 +52,7 @@ class TestConditionGroupAnySemantics(TestCase):
             },
         }
 
-        with self.assertRaisesRegex(ValueError, "condition dict must include name"):
+        with pytest.raises(ValueError, match="condition dict must include name"):
             evaluate_policy(payload, "git status")
 
     def test_mode_condition_with_unknown_mode_rejects_in_parse(self) -> None:
@@ -70,7 +72,7 @@ class TestConditionGroupAnySemantics(TestCase):
             },
         }
 
-        with self.assertRaisesRegex(ValueError, "unsupported condition mode"):
+        with pytest.raises(ValueError, match="unsupported condition mode"):
             evaluate_policy(payload, "git status")
 
     def test_unknown_condition_name_rejects_in_parse(self) -> None:
@@ -87,9 +89,7 @@ class TestConditionGroupAnySemantics(TestCase):
             },
         }
 
-        with self.assertRaisesRegex(
-            ValueError, "unsupported condition: unknown_condition",
-        ):
+        with pytest.raises(ValueError, match="unsupported condition: unknown_condition"):
             evaluate_policy(payload, "git status")
 
     def test_invalid_condition_type_rejected_during_parse(self) -> None:
@@ -106,7 +106,7 @@ class TestConditionGroupAnySemantics(TestCase):
             },
         }
 
-        with self.assertRaisesRegex(ValueError, "unsupported condition type"):
+        with pytest.raises(ValueError, match="unsupported condition type"):
             evaluate_policy(payload, "git status")
 
     def test_invalid_on_mismatch_rejected_during_parse(self) -> None:
@@ -126,7 +126,7 @@ class TestConditionGroupAnySemantics(TestCase):
             },
         }
 
-        with self.assertRaisesRegex(ValueError, "invalid on_mismatch action"):
+        with pytest.raises(ValueError, match="invalid on_mismatch action"):
             evaluate_policy(payload, "git status")
 
     def test_condition_group_requires_mode_condition_list(self) -> None:
@@ -143,7 +143,7 @@ class TestConditionGroupAnySemantics(TestCase):
             },
         }
 
-        with self.assertRaisesRegex(ValueError, "'conditions' must be a list"):
+        with pytest.raises(ValueError, match="'conditions' must be a list"):
             evaluate_policy(payload, "git status")
 
     def test_condition_group_any_requires_required_match(self) -> None:
@@ -163,8 +163,8 @@ class TestConditionGroupAnySemantics(TestCase):
             clear=False,
         ):
             ok, reasons = group.evaluate(Path.cwd())
-            self.assertFalse(ok)
-            self.assertEqual(reasons, ["required-false", "optional-true"])
+            assert not ok
+            assert reasons == ["required-false", "optional-true"]
 
     def test_condition_group_any_with_optional_conditions_allows_match(self) -> None:
         group = ConditionGroup(
@@ -183,8 +183,8 @@ class TestConditionGroupAnySemantics(TestCase):
             clear=False,
         ):
             ok, reasons = group.evaluate(Path.cwd())
-            self.assertTrue(ok)
-            self.assertEqual(reasons, ["optional-a-false", "optional-b-true"])
+            assert ok
+            assert reasons == ["optional-a-false", "optional-b-true"]
 
     def test_condition_group_nested_required_children_flow_as_expected(self) -> None:
         group = ConditionGroup(
@@ -217,16 +217,8 @@ class TestConditionGroupAnySemantics(TestCase):
             clear=False,
         ):
             ok, reasons = group.evaluate(Path.cwd())
-            self.assertFalse(ok)
-            self.assertEqual(
-                reasons,
-                [
-                    "required-parent-true",
-                    "optional-child-false",
-                    "required-sibling-false",
-                    "optional-sibling-true",
-                ],
-            )
+            assert not ok
+            assert reasons == ["required-parent-true", "optional-child-false", "required-sibling-false", "optional-sibling-true"]
 
     def test_condition_group_nested_optional_any_passes_without_required(self) -> None:
         group = ConditionGroup(
@@ -250,11 +242,8 @@ class TestConditionGroupAnySemantics(TestCase):
             clear=False,
         ):
             ok, reasons = group.evaluate(Path.cwd())
-            self.assertTrue(ok)
-            self.assertEqual(
-                reasons,
-                ["optional-a-false", "optional-b-true"],
-            )
+            assert ok
+            assert reasons == ["optional-a-false", "optional-b-true"]
 
     def test_condition_group_nested_any_required_false_optional_true_conflict(
         self,
@@ -282,15 +271,8 @@ class TestConditionGroupAnySemantics(TestCase):
             clear=False,
         ):
             ok, reasons = group.evaluate(Path.cwd())
-            self.assertFalse(ok)
-            self.assertEqual(
-                reasons,
-                [
-                    "inner-required-false",
-                    "inner-optional-true",
-                    "outer-optional-false",
-                ],
-            )
+            assert not ok
+            assert reasons == ["inner-required-false", "inner-optional-true", "outer-optional-false"]
 
     def test_any_mode_with_required_and_optional_failure(self) -> None:
         payload = {
@@ -323,9 +305,9 @@ class TestConditionGroupAnySemantics(TestCase):
         ):
             decision, _, rule = evaluate_policy(payload, "git status")
 
-        self.assertEqual(decision, "request")
-        self.assertIsNotNone(rule)
-        self.assertEqual(rule.rule_id, "mixed-any")
+        assert decision == "request"
+        assert rule is not None
+        assert rule.rule_id == "mixed-any"
 
         with patch.dict(
             "policy_lib.CONDITION_EVALUATORS",
@@ -341,9 +323,9 @@ class TestConditionGroupAnySemantics(TestCase):
         ):
             decision, _, rule = evaluate_policy(payload, "git status")
 
-        self.assertEqual(decision, "allow")
-        self.assertIsNotNone(rule)
-        self.assertEqual(rule.rule_id, "mixed-any")
+        assert decision == "allow"
+        assert rule is not None
+        assert rule.rule_id == "mixed-any"
 
     def test_root_string_condition_in_policy_lib_defaults_to_required(self) -> None:
         payload = {
@@ -367,23 +349,21 @@ class TestConditionGroupAnySemantics(TestCase):
         ):
             decision, reason, rule = evaluate_policy(payload, "git status")
 
-        self.assertEqual(decision, "allow")
-        self.assertIsNotNone(rule)
-        self.assertEqual(rule.rule_id, "root-string")
-        self.assertEqual(
-            rule.conditions, normalize_payload(payload, Path.cwd())[0].conditions,
-        )
+        assert decision == "allow"
+        assert rule is not None
+        assert rule.rule_id == "root-string"
+        assert rule.conditions == normalize_payload(payload, Path.cwd())[0].conditions
 
         with patch.dict(
             "policy_lib.CONDITION_EVALUATORS",
             {"git_clean_worktree": lambda _cwd: (False, "git_clean_worktree")},
             clear=False,
         ):
-            decision, reason, rule = evaluate_policy(payload, "git status")
+            decision, _reason, rule = evaluate_policy(payload, "git status")
 
-        self.assertEqual(decision, "request")
-        self.assertIsNotNone(rule)
-        self.assertEqual(rule.rule_id, "root-string")
+        assert decision == "request"
+        assert rule is not None
+        assert rule.rule_id == "root-string"
 
     def test_command_matcher_validation_is_enforced_by_parser(self) -> None:
         payload = {
@@ -398,7 +378,7 @@ class TestConditionGroupAnySemantics(TestCase):
             },
         }
 
-        with self.assertRaisesRegex(ValueError, "unsupported matcher"):
+        with pytest.raises(ValueError, match="unsupported matcher"):
             evaluate_policy(payload, "git status")
 
     def test_conditional_exact_and_prefix_matcher_with_on_mismatch_end_to_end(
@@ -430,12 +410,12 @@ class TestConditionGroupAnySemantics(TestCase):
             clear=False,
         ):
             decision, _, rule = evaluate_policy(payload, "git status")
-            self.assertEqual(decision, "deny")
-            self.assertEqual(rule.rule_id, "exact-block")
+            assert decision == "deny"
+            assert rule.rule_id == "exact-block"
 
             decision, _, rule = evaluate_policy(payload, "git checkout main")
-            self.assertEqual(decision, "request")
-            self.assertEqual(rule.rule_id, "prefix-fallback")
+            assert decision == "request"
+            assert rule.rule_id == "prefix-fallback"
 
     def test_root_condition_without_on_mismatch_allows_lower_rule_precedence(
         self,
@@ -474,25 +454,25 @@ class TestConditionGroupAnySemantics(TestCase):
             },
             clear=False,
         ):
-            decision, reason, rule = evaluate_policy(payload, "git status")
+            decision, _reason, rule = evaluate_policy(payload, "git status")
 
-        self.assertEqual(decision, "deny")
-        self.assertIsNotNone(rule)
-        self.assertEqual(rule.rule_id, "deny-fallback")
+        assert decision == "deny"
+        assert rule is not None
+        assert rule.rule_id == "deny-fallback"
 
 
 class TestPolicyLibNormalizationValidation(TestCase):
     def test_normalize_payload_requires_mapping_payload(self) -> None:
-        with self.assertRaisesRegex(ValueError, "policy payload must be a mapping"):
+        with pytest.raises(ValueError, match="policy payload must be a mapping"):
             normalize_payload([], Path.cwd())
 
     def test_normalize_payload_rejects_non_mapping_policy_value(self) -> None:
-        with self.assertRaisesRegex(ValueError, "'policy' must be a mapping"):
+        with pytest.raises(ValueError, match="'policy' must be a mapping"):
             normalize_payload({"policy": []}, Path.cwd())
 
     def test_normalize_payload_rejects_non_mapping_commands(self) -> None:
         payload = {"policy": {"commands": []}}
-        with self.assertRaisesRegex(ValueError, "policy.commands must be a map"):
+        with pytest.raises(ValueError, match="policy.commands must be a map"):
             normalize_payload(payload, Path.cwd())
 
     def test_normalize_payload_rejects_non_list_command_rule_entry(self) -> None:
@@ -502,7 +482,7 @@ class TestPolicyLibNormalizationValidation(TestCase):
                 "command_rules": "not-a-list",
             },
         }
-        with self.assertRaisesRegex(ValueError, "policy.command_rules must be a list"):
+        with pytest.raises(ValueError, match="policy.command_rules must be a list"):
             normalize_payload(payload, Path.cwd())
 
     def test_normalize_payload_rejects_non_map_command_rule_item(self) -> None:
@@ -512,7 +492,7 @@ class TestPolicyLibNormalizationValidation(TestCase):
                 "command_rules": [1, {}],
             },
         }
-        with self.assertRaisesRegex(ValueError, "command_rule\\[0\\] must be a map"):
+        with pytest.raises(ValueError, match="command_rule\\[0\\] must be a map"):
             normalize_payload(payload, Path.cwd())
 
     def test_normalize_payload_rejects_non_string_command_entry(self) -> None:
@@ -525,9 +505,7 @@ class TestPolicyLibNormalizationValidation(TestCase):
                 },
             },
         }
-        with self.assertRaisesRegex(
-            ValueError, "policy.commands.allow\\[1] must be a non-empty string",
-        ):
+        with pytest.raises(ValueError, match="policy.commands.allow\\[1] must be a non-empty string"):
             normalize_payload(payload, Path.cwd())
 
     def test_normalize_payload_rejects_non_list_command_allow(self) -> None:
@@ -536,7 +514,7 @@ class TestPolicyLibNormalizationValidation(TestCase):
                 "commands": {"allow": "git status", "deny": [], "require": []},
             },
         }
-        with self.assertRaisesRegex(ValueError, "policy.commands.allow must be a list"):
+        with pytest.raises(ValueError, match="policy.commands.allow must be a list"):
             normalize_payload(payload, Path.cwd())
 
     def test_normalize_payload_rejects_empty_command_entry(self) -> None:
@@ -549,9 +527,7 @@ class TestPolicyLibNormalizationValidation(TestCase):
                 },
             },
         }
-        with self.assertRaisesRegex(
-            ValueError, "policy.commands.allow\\[0] must be a non-empty string",
-        ):
+        with pytest.raises(ValueError, match="policy.commands.allow\\[0] must be a non-empty string"):
             normalize_payload(payload, Path.cwd())
 
     def test_normalize_payload_rejects_empty_command_rule_pattern(self) -> None:
@@ -567,7 +543,7 @@ class TestPolicyLibNormalizationValidation(TestCase):
                 ],
             },
         }
-        with self.assertRaisesRegex(ValueError, "non-empty string"):
+        with pytest.raises(ValueError, match="non-empty string"):
             normalize_payload(payload, Path.cwd())
 
     def test_normalize_payload_rejects_empty_command_rule_pattern_key(self) -> None:
@@ -583,7 +559,7 @@ class TestPolicyLibNormalizationValidation(TestCase):
                 ],
             },
         }
-        with self.assertRaisesRegex(ValueError, "non-empty string"):
+        with pytest.raises(ValueError, match="non-empty string"):
             normalize_payload(payload, Path.cwd())
 
     def test_normalize_payload_rejects_non_string_command_rule_pattern(self) -> None:
@@ -599,10 +575,7 @@ class TestPolicyLibNormalizationValidation(TestCase):
                 ],
             },
         }
-        with self.assertRaisesRegex(
-            ValueError,
-            "matcher pattern must be string|match or pattern must be a non-empty string",
-        ):
+        with pytest.raises(ValueError, match="matcher pattern must be string|match or pattern must be a non-empty string"):
             normalize_payload(payload, Path.cwd())
 
 
@@ -810,16 +783,8 @@ class TestWrapperConditionSemanticsParity(TestCase):
             env=env,
             check=False,
         )
-        self.assertEqual(
-            completed.returncode,
-            0,
-            f"{binary} returned {completed.returncode}: {completed.stderr.strip()}",
-        )
-        self.assertGreater(
-            len(completed.stdout),
-            0,
-            f"{binary} returned empty JSON stdout for command {command}: {completed.stderr.strip()}",
-        )
+        assert completed.returncode == 0, f"{binary} returned {completed.returncode}: {completed.stderr.strip()}"
+        assert len(completed.stdout) > 0, f"{binary} returned empty JSON stdout for command {command}: {completed.stderr.strip()}"
         return json.loads(completed.stdout)
 
     @staticmethod
@@ -948,45 +913,19 @@ exit 1
                 }
 
             decisions = {name: result["decision"] for name, result in results.items()}
-            self.assertEqual(
-                len(set(decisions.values())),
-                1,
-                f"Case {case['id']} produced divergent decisions: {decisions}",
-            )
+            assert len(set(decisions.values())) == 1, f"Case {case['id']} produced divergent decisions: {decisions}"
 
             expected = case["expect"]
             expectation = self._predict_decision(expected)
             for name, result in results.items():
-                self.assertEqual(
-                    result["decision"], expectation, f"{case['id']}-{name}",
-                )
-                self.assertTrue(result["matched"], f"{case['id']}-{name}")
-                self.assertEqual(
-                    result["condition_passed"],
-                    expected["passed"],
-                    f"{case['id']}-{name}",
-                )
-                self.assertEqual(
-                    result["has_required"],
-                    expected["has_required"],
-                    f"{case['id']}-{name}",
-                )
-                self.assertEqual(
-                    bool(result.get("error")),
-                    bool(expected["has_error"]),
-                    f"{case['id']}-{name}",
-                )
-                self.assertEqual(
-                    len(result.get("condition_reasons", [])),
-                    expected["reason_count"],
-                    f"{case['id']}-{name}",
-                )
+                assert result["decision"] == expectation, f"{case['id']}-{name}"
+                assert result["matched"], f"{case['id']}-{name}"
+                assert result["condition_passed"] == expected["passed"], f"{case['id']}-{name}"
+                assert result["has_required"] == expected["has_required"], f"{case['id']}-{name}"
+                assert bool(result.get("error")) == bool(expected["has_error"]), f"{case['id']}-{name}"
+                assert len(result.get("condition_reasons", [])) == expected["reason_count"], f"{case['id']}-{name}"
                 if "error_contains" in expected:
-                    self.assertIn(
-                        expected["error_contains"],
-                        result.get("error", ""),
-                        f"{case['id']}-{name}",
-                    )
+                    assert expected["error_contains"] in result.get("error", ""), f"{case['id']}-{name}"
 
     def test_wrapper_precedence_remains_deny_request_allow(self) -> None:
         wrappers = self._resolve_wrapper_binaries()
@@ -1056,13 +995,9 @@ exit 1
             }
 
         for name, result in results.items():
-            self.assertEqual(result["decision"], "deny", name)
-            self.assertTrue(result["matched"], name)
-            self.assertEqual(
-                result["rule_id"],
-                "precedence-deny",
-                name,
-            )
+            assert result["decision"] == "deny", name
+            assert result["matched"], name
+            assert result["rule_id"] == "precedence-deny", name
 
         with tempfile.NamedTemporaryFile(
             mode="w",
@@ -1079,13 +1014,9 @@ exit 1
             }
 
         for name, result in results.items():
-            self.assertEqual(result["decision"], "request", name)
-            self.assertTrue(result["matched"], name)
-            self.assertEqual(
-                result["rule_id"],
-                "precedence-request",
-                name,
-            )
+            assert result["decision"] == "request", name
+            assert result["matched"], name
+            assert result["rule_id"] == "precedence-request", name
 
     def test_wrapper_allow_and_request_rule_parity(self) -> None:
         wrappers = self._resolve_wrapper_binaries()
@@ -1143,10 +1074,10 @@ exit 1
             }
 
         for name, result in results.items():
-            self.assertEqual(result["decision"], "request", name)
-            self.assertEqual(result.get("rule_id"), "allow-vs-request-request", name)
-            self.assertTrue(result["matched"], name)
-            self.assertTrue(result["condition_passed"], name)
+            assert result["decision"] == "request", name
+            assert result.get("rule_id") == "allow-vs-request-request", name
+            assert result["matched"], name
+            assert result["condition_passed"], name
 
     def test_wrapper_empty_condition_group_behavior(self) -> None:
         wrappers = self._resolve_wrapper_binaries()
@@ -1254,43 +1185,21 @@ exit 1
                     result = self._run_wrapper_with_command(
                         binary, Path(handle.name), command, None,
                     )
-                    self.assertEqual(result["decision"], decision, f"{name}-{command}")
-                    self.assertTrue(result["matched"], f"{name}-{command}")
-                    self.assertEqual(
-                        result["has_required"], has_required, f"{name}-{command}",
-                    )
-                    self.assertEqual(
-                        len(result.get("condition_reasons", [])),
-                        0,
-                        f"{name}-{command}",
-                    )
-                    self.assertEqual(result.get("error", ""), "", f"{name}-{command}")
+                    assert result["decision"] == decision, f"{name}-{command}"
+                    assert result["matched"], f"{name}-{command}"
+                    assert result["has_required"] == has_required, f"{name}-{command}"
+                    assert len(result.get("condition_reasons", [])) == 0, f"{name}-{command}"
+                    assert result.get("error", "") == "", f"{name}-{command}"
                     if command == command_all:
-                        self.assertEqual(
-                            result.get("rule_id"), "empty-all", f"{name}-{command}",
-                        )
+                        assert result.get("rule_id") == "empty-all", f"{name}-{command}"
                     elif command == command_any:
-                        self.assertEqual(
-                            result.get("rule_id"), "empty-any", f"{name}-{command}",
-                        )
+                        assert result.get("rule_id") == "empty-any", f"{name}-{command}"
                     elif command == command_mode_all:
-                        self.assertEqual(
-                            result.get("rule_id"),
-                            "empty-mode-all",
-                            f"{name}-{command}",
-                        )
+                        assert result.get("rule_id") == "empty-mode-all", f"{name}-{command}"
                     elif command == command_mode_any:
-                        self.assertEqual(
-                            result.get("rule_id"),
-                            "empty-mode-any",
-                            f"{name}-{command}",
-                        )
+                        assert result.get("rule_id") == "empty-mode-any", f"{name}-{command}"
                     else:
-                        self.assertEqual(
-                            result.get("rule_id"),
-                            "empty-root-array",
-                            f"{name}-{command}",
-                        )
+                        assert result.get("rule_id") == "empty-root-array", f"{name}-{command}"
 
     def test_wrapper_rejects_malformed_bundle_with_non_zero_exit(self) -> None:
         wrappers = self._resolve_wrapper_binaries()
@@ -1313,20 +1222,9 @@ exit 1
             }
 
         for name, completed in results.items():
-            self.assertNotEqual(
-                completed.returncode,
-                0,
-                f"{name} returned success for malformed bundle",
-            )
-            self.assertTrue(
-                completed.stderr.strip(),
-                f"{name} did not emit parse error for malformed bundle",
-            )
-        self.assertEqual(
-            len({result.returncode for result in results.values()}),
-            1,
-            "Malformed bundle exit codes diverged across wrappers",
-        )
+            assert completed.returncode != 0, f"{name} returned success for malformed bundle"
+            assert completed.stderr.strip(), f"{name} did not emit parse error for malformed bundle"
+        assert len({result.returncode for result in results.values()}) == 1, "Malformed bundle exit codes diverged across wrappers"
 
     def test_wrapper_precedence_does_not_rely_on_eval_errors(self) -> None:
         wrappers = self._resolve_wrapper_binaries()
@@ -1406,10 +1304,10 @@ exit 1
                 }
 
             for name, result in results.items():
-                self.assertEqual(result["decision"], "deny", name)
-                self.assertTrue(result["matched"], name)
-                self.assertEqual(result.get("rule_id"), "deny-no-eval-error", name)
-                self.assertEqual(result.get("error", ""), "", name)
+                assert result["decision"] == "deny", name
+                assert result["matched"], name
+                assert result.get("rule_id") == "deny-no-eval-error", name
+                assert result.get("error", "") == "", name
 
             with tempfile.NamedTemporaryFile(
                 mode="w",
@@ -1437,10 +1335,10 @@ exit 1
                 }
 
             for name, result in results.items():
-                self.assertEqual(result["decision"], "request", name)
-                self.assertTrue(result["matched"], name)
-                self.assertEqual(result.get("rule_id"), "request-no-eval-error", name)
-                self.assertEqual(result.get("error", ""), "", name)
+                assert result["decision"] == "request", name
+                assert result["matched"], name
+                assert result.get("rule_id") == "request-no-eval-error", name
+                assert result.get("error", "") == "", name
 
             with tempfile.NamedTemporaryFile(
                 mode="w",
@@ -1468,10 +1366,10 @@ exit 1
                 }
 
             for name, result in results.items():
-                self.assertEqual(result["decision"], "allow", name)
-                self.assertTrue(result["matched"], name)
-                self.assertEqual(result.get("rule_id"), "allow-no-eval-error", name)
-                self.assertEqual(result.get("error", ""), "", name)
+                assert result["decision"] == "allow", name
+                assert result["matched"], name
+                assert result.get("rule_id") == "allow-no-eval-error", name
+                assert result.get("error", "") == "", name
 
     def test_wrapper_action_precedence_with_omitted_on_mismatch_fields(self) -> None:
         wrappers = self._resolve_wrapper_binaries()
@@ -1541,10 +1439,10 @@ exit 1
             }
 
         for name, result in results.items():
-            self.assertEqual(result["decision"], "deny", name)
-            self.assertTrue(result["matched"], name)
-            self.assertEqual(result.get("rule_id"), "omit-on-mismatch-deny", name)
-            self.assertEqual(result.get("error", ""), "", name)
+            assert result["decision"] == "deny", name
+            assert result["matched"], name
+            assert result.get("rule_id") == "omit-on-mismatch-deny", name
+            assert result.get("error", "") == "", name
 
         with tempfile.NamedTemporaryFile(
             mode="w",
@@ -1569,10 +1467,10 @@ exit 1
             }
 
         for name, result in results.items():
-            self.assertEqual(result["decision"], "deny", name)
-            self.assertTrue(result["matched"], name)
-            self.assertEqual(result.get("rule_id"), "omit-on-mismatch-deny", name)
-            self.assertEqual(result.get("error", ""), "", name)
+            assert result["decision"] == "deny", name
+            assert result["matched"], name
+            assert result.get("rule_id") == "omit-on-mismatch-deny", name
+            assert result.get("error", "") == "", name
 
     def test_dispatch_script_prefers_debug_rust_after_release(self) -> None:
         script_path = (
@@ -1583,12 +1481,9 @@ exit 1
         script = script_path.read_text(encoding="utf-8")
         release_candidate = "${script_dir}/rust/target/release/policy-wrapper"
         debug_candidate = "${script_dir}/rust/target/debug/policy-wrapper"
-        self.assertIn(release_candidate, script)
-        self.assertIn(debug_candidate, script)
-        self.assertLess(
-            script.index(release_candidate),
-            script.index(debug_candidate),
-        )
+        assert release_candidate in script
+        assert debug_candidate in script
+        assert script.index(release_candidate) < script.index(debug_candidate)
 
     def test_dispatch_script_missing_binary_uses_missing_default_fallback(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1613,11 +1508,11 @@ exit 1
                     "allow",
                 ],
             )
-            self.assertEqual(result.returncode, 1)
+            assert result.returncode == 1
             payload = json.loads(result.stdout)
-            self.assertEqual(payload["decision"], "request")
-            self.assertEqual(payload["fallback"], "request")
-            self.assertEqual(payload["fallback_reason"], "missing-binary")
+            assert payload["decision"] == "request"
+            assert payload["fallback"] == "request"
+            assert payload["fallback_reason"] == "missing-binary"
 
     def test_dispatch_script_require_binary_fails_fast(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1637,10 +1532,8 @@ exit 1
                     "request",
                 ],
             )
-            self.assertNotEqual(result.returncode, 0)
-            self.assertIn(
-                "required policy wrapper binary not found or unusable", result.stderr,
-            )
+            assert result.returncode != 0
+            assert "required policy wrapper binary not found or unusable" in result.stderr
 
     def test_dispatch_script_uses_specific_fallback_for_malformed_bundle(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1664,11 +1557,11 @@ exit 1
                     "deny",
                 ],
             )
-            self.assertEqual(result.returncode, 2)
+            assert result.returncode == 2
             payload = json.loads(result.stdout)
-            self.assertEqual(payload["decision"], "deny")
-            self.assertEqual(payload["fallback"], "deny")
-            self.assertEqual(payload["fallback_reason"], "wrapper-json-parse-failed")
+            assert payload["decision"] == "deny"
+            assert payload["fallback"] == "deny"
+            assert payload["fallback_reason"] == "wrapper-json-parse-failed"
 
     def test_dispatch_script_uses_condition_eval_fallback_on_condition_errors(
         self,
@@ -1701,14 +1594,11 @@ exit 1
                     "request",
                 ],
             )
-            self.assertEqual(result.returncode, 1)
+            assert result.returncode == 1
             payload = json.loads(result.stdout)
-            self.assertEqual(payload["decision"], "request")
-            self.assertEqual(payload["fallback"], "request")
-            self.assertEqual(
-                payload["fallback_reason"],
-                "wrapper-condition-eval-error:git_synced_to_upstream: malformed upstream counts",
-            )
+            assert payload["decision"] == "request"
+            assert payload["fallback"] == "request"
+            assert payload["fallback_reason"] == "wrapper-condition-eval-error:git_synced_to_upstream: malformed upstream counts"
 
     def test_wrapper_glob_character_class_matches_across_languages(self) -> None:
         wrappers = self._resolve_wrapper_binaries()
@@ -1760,8 +1650,8 @@ exit 1
             }
 
         for name, result in results.items():
-            self.assertEqual(result["decision"], "allow", name)
-            self.assertTrue(result["matched"], name)
+            assert result["decision"] == "allow", name
+            assert result["matched"], name
 
         with tempfile.NamedTemporaryFile(
             mode="w",
@@ -1782,8 +1672,8 @@ exit 1
             }
 
         for name, result in results.items():
-            self.assertEqual(result["decision"], "allow")
-            self.assertFalse(result["matched"], name)
+            assert result["decision"] == "allow"
+            assert not result["matched"], name
 
         pattern = "policy-wrapper-charclass-[!a]"
         bundle["commands"][0]["pattern"] = pattern
@@ -1808,8 +1698,8 @@ exit 1
             }
 
         for name, result in results.items():
-            self.assertEqual(result["decision"], "allow", name)
-            self.assertTrue(result["matched"], name)
+            assert result["decision"] == "allow", name
+            assert result["matched"], name
 
         with tempfile.NamedTemporaryFile(
             mode="w",
@@ -1830,8 +1720,8 @@ exit 1
             }
 
         for name, result in results.items():
-            self.assertEqual(result["decision"], "allow")
-            self.assertFalse(result["matched"], name)
+            assert result["decision"] == "allow"
+            assert not result["matched"], name
 
     def test_git_synced_to_upstream_strict_count_parsing(self) -> None:
         wrappers = self._resolve_wrapper_binaries()
@@ -1887,8 +1777,8 @@ exit 1
                 }
 
             for name, result in results.items():
-                self.assertEqual(result["decision"], "allow", name)
-                self.assertTrue(result["condition_passed"], name)
+                assert result["decision"] == "allow", name
+                assert result["condition_passed"], name
 
             self._write_fake_git(fake_git_dir, "0 0 1")
             with tempfile.NamedTemporaryFile(
@@ -1917,9 +1807,9 @@ exit 1
                 }
 
             for name, result in results.items():
-                self.assertEqual(result["decision"], "request", name)
-                self.assertFalse(result["condition_passed"], name)
-                self.assertEqual(result.get("error", ""), "", name)
+                assert result["decision"] == "request", name
+                assert not result["condition_passed"], name
+                assert result.get("error", "") == "", name
 
             self._write_fake_git(fake_git_dir, "x y")
             with tempfile.NamedTemporaryFile(
@@ -1948,9 +1838,9 @@ exit 1
                 }
 
             for name, result in results.items():
-                self.assertEqual(result["decision"], "request", name)
-                self.assertFalse(result["condition_passed"], name)
-                self.assertNotEqual(result.get("error", ""), "")
+                assert result["decision"] == "request", name
+                assert not result["condition_passed"], name
+                assert result.get("error", "") != ""
 
     def test_rendered_wrapper_bundle_matches_schema(self) -> None:
         if _validate_schema is None:
@@ -2003,16 +1893,9 @@ exit 1
         wrapper_payload = rendered["policy"]["policy_wrapper"]
         expected_conditions = sorted(rendered["wrapper_condition_set"])
 
-        self.assertEqual(wrapper_payload["required_conditions"], expected_conditions)
-        self.assertEqual(
-            wrapper_payload["required_conditions"],
-            ["git_is_worktree"],
-            "Only required conditions should be emitted in metadata",
-        )
-        self.assertEqual(
-            rendered["wrapper_condition_set"],
-            ["git_is_worktree"],
-        )
+        assert wrapper_payload["required_conditions"] == expected_conditions
+        assert wrapper_payload["required_conditions"] == ["git_is_worktree"], "Only required conditions should be emitted in metadata"
+        assert rendered["wrapper_condition_set"] == ["git_is_worktree"]
 
         optional_only = {
             "policy": {
@@ -2036,11 +1919,8 @@ exit 1
         rendered_optional_only = render_platform_payload(
             optional_only, include_conditional=True,
         )
-        self.assertEqual(
-            rendered_optional_only["policy"]["policy_wrapper"]["required_conditions"],
-            [],
-        )
-        self.assertEqual(rendered_optional_only["wrapper_condition_set"], [])
+        assert rendered_optional_only["policy"]["policy_wrapper"]["required_conditions"] == []
+        assert rendered_optional_only["wrapper_condition_set"] == []
 
     def test_wrapper_required_conditions_deduplicated_and_sorted(self) -> None:
         payload = {
@@ -2078,10 +1958,8 @@ exit 1
         required_conditions = rendered["policy"]["policy_wrapper"][
             "required_conditions"
         ]
-        self.assertEqual(
-            required_conditions, ["git_is_worktree", "git_synced_to_upstream"],
-        )
-        self.assertEqual(rendered["wrapper_condition_set"], required_conditions)
+        assert required_conditions == ["git_is_worktree", "git_synced_to_upstream"]
+        assert rendered["wrapper_condition_set"] == required_conditions
 
 
 class TestHostRendering(TestCase):
@@ -2097,14 +1975,8 @@ class TestHostRendering(TestCase):
         rendered = render_platform_payload(payload, include_conditional=False)
         host_rules = rendered["policy"]
 
-        self.assertEqual(
-            host_rules["droid"]["commandRequestlist"],
-            ["git checkout*"],
-        )
-        self.assertEqual(
-            host_rules["droid"]["commandDenylist"],
-            ["git reset --hard"],
-        )
+        assert host_rules["droid"]["commandRequestlist"] == ["git checkout*"]
+        assert host_rules["droid"]["commandDenylist"] == ["git reset --hard"]
 
     def test_apply_host_rules_writes_droid_requestlist(self) -> None:
         payload = {
@@ -2130,9 +2002,9 @@ class TestHostRendering(TestCase):
             )
             updated = json.loads(droid_path.read_text(encoding="utf-8"))
 
-            self.assertIn("git status", updated["commandAllowlist"])
-            self.assertIn("git checkout*", updated["commandRequestlist"])
-            self.assertIn("git reset --hard", updated["commandDenylist"])
+            assert "git status" in updated["commandAllowlist"]
+            assert "git checkout*" in updated["commandRequestlist"]
+            assert "git reset --hard" in updated["commandDenylist"]
 
     def test_conditional_export_does_not_mutate_unconditional_host_rules(self) -> None:
         payload = {
@@ -2165,48 +2037,29 @@ class TestHostRendering(TestCase):
         base_policy = uncond["policy"]
         conditional_policy = with_conditional["policy"]
 
-        self.assertIn("Shell(git status)", base_policy["cursor"]["allow"])
+        assert "Shell(git status)" in base_policy["cursor"]["allow"]
         for rule in base_policy["cursor"]["allow"]:
-            self.assertIn(rule, conditional_policy["cursor"]["allow"])
-        self.assertIn("Shell(git checkout *)", conditional_policy["cursor"]["allow"])
-        self.assertEqual(
-            conditional_policy["cursor"]["deny"],
-            base_policy["cursor"]["deny"],
-        )
-        self.assertIn("Shell(git reset --hard)", conditional_policy["cursor"]["deny"])
-        self.assertIn("Shell(git reset --hard)", base_policy["cursor"]["deny"])
+            assert rule in conditional_policy["cursor"]["allow"]
+        assert "Shell(git checkout *)" in conditional_policy["cursor"]["allow"]
+        assert conditional_policy["cursor"]["deny"] == base_policy["cursor"]["deny"]
+        assert "Shell(git reset --hard)" in conditional_policy["cursor"]["deny"]
+        assert "Shell(git reset --hard)" in base_policy["cursor"]["deny"]
 
         for rule in base_policy["claude"]["allow"]:
-            self.assertIn(rule, conditional_policy["claude"]["allow"])
+            assert rule in conditional_policy["claude"]["allow"]
         for rule in base_policy["claude"]["deny"]:
-            self.assertIn(rule, conditional_policy["claude"]["deny"])
+            assert rule in conditional_policy["claude"]["deny"]
         for rule in base_policy["claude"]["ask"]:
-            self.assertIn(rule, conditional_policy["claude"]["ask"])
-        self.assertEqual(
-            set(conditional_policy["claude"]["allow"])
-            - set(base_policy["claude"]["allow"]),
-            {"Bash(git checkout *)"},
-        )
-        self.assertEqual(
-            conditional_policy["droid"]["commandAllowlist"],
-            ["git status", "git checkout *"],
-        )
-        self.assertEqual(
-            conditional_policy["droid"]["commandDenylist"],
-            base_policy["droid"]["commandDenylist"],
-        )
-        self.assertEqual(
-            conditional_policy["droid"]["commandRequestlist"],
-            base_policy["droid"]["commandRequestlist"],
-        )
+            assert rule in conditional_policy["claude"]["ask"]
+        assert set(conditional_policy["claude"]["allow"]) - set(base_policy["claude"]["allow"]) == {"Bash(git checkout *)"}
+        assert conditional_policy["droid"]["commandAllowlist"] == ["git status", "git checkout *"]
+        assert conditional_policy["droid"]["commandDenylist"] == base_policy["droid"]["commandDenylist"]
+        assert conditional_policy["droid"]["commandRequestlist"] == base_policy["droid"]["commandRequestlist"]
 
         for rule in base_policy["codex"]["rules"]:
-            self.assertIn(rule, conditional_policy["codex"]["rules"])
+            assert rule in conditional_policy["codex"]["rules"]
 
-        self.assertIn(
-            'prefix_rule(pattern=["git", "checkout", "*"], decision="allow")',
-            conditional_policy["codex"]["rules"],
-        )
+        assert 'prefix_rule(pattern=["git", "checkout", "*"], decision="allow")' in conditional_policy["codex"]["rules"]
 
     def test_conditional_request_export_does_not_pollute_static_deny_or_ask(
         self,
@@ -2245,41 +2098,23 @@ class TestHostRendering(TestCase):
             "policy"
         ]
 
-        self.assertEqual(
-            with_conditional["cursor"]["allow"],
-            base["cursor"]["allow"],
-        )
-        self.assertIn("Shell(git checkout *)", with_conditional["cursor"]["deny"])
-        self.assertEqual(len(with_conditional["cursor"]["deny"]), 3)
-        self.assertIn("Shell(git reset --hard)", with_conditional["cursor"]["deny"])
-        self.assertIn("Shell(git log)", with_conditional["cursor"]["deny"])
+        assert with_conditional["cursor"]["allow"] == base["cursor"]["allow"]
+        assert "Shell(git checkout *)" in with_conditional["cursor"]["deny"]
+        assert len(with_conditional["cursor"]["deny"]) == 3
+        assert "Shell(git reset --hard)" in with_conditional["cursor"]["deny"]
+        assert "Shell(git log)" in with_conditional["cursor"]["deny"]
 
         for rule in base["claude"]["allow"]:
-            self.assertIn(rule, with_conditional["claude"]["allow"])
-        self.assertEqual(
-            sorted(with_conditional["claude"]["ask"]),
-            sorted(base["claude"]["ask"] + ["Bash(git checkout *)"]),
-        )
-        self.assertEqual(
-            with_conditional["claude"]["deny"],
-            base["claude"]["deny"],
-        )
+            assert rule in with_conditional["claude"]["allow"]
+        assert sorted(with_conditional["claude"]["ask"]) == sorted(base["claude"]["ask"] + ["Bash(git checkout *)"])
+        assert with_conditional["claude"]["deny"] == base["claude"]["deny"]
 
-        self.assertEqual(
-            with_conditional["droid"]["commandDenylist"],
-            base["droid"]["commandDenylist"],
-        )
-        self.assertEqual(
-            sorted(with_conditional["droid"]["commandRequestlist"]),
-            sorted(base["droid"]["commandRequestlist"] + ["git checkout *"]),
-        )
+        assert with_conditional["droid"]["commandDenylist"] == base["droid"]["commandDenylist"]
+        assert sorted(with_conditional["droid"]["commandRequestlist"]) == sorted(base["droid"]["commandRequestlist"] + ["git checkout *"])
 
         for rule in base["codex"]["rules"]:
-            self.assertIn(rule, with_conditional["codex"]["rules"])
-        self.assertIn(
-            'prefix_rule(pattern=["git", "checkout", "*"], decision="prompt")',
-            with_conditional["codex"]["rules"],
-        )
+            assert rule in with_conditional["codex"]["rules"]
+        assert 'prefix_rule(pattern=["git", "checkout", "*"], decision="prompt")' in with_conditional["codex"]["rules"]
 
     def test_conditional_allow_request_deny_export_preserves_host_parity(self) -> None:
         payload = {
@@ -2317,55 +2152,22 @@ class TestHostRendering(TestCase):
             "policy"
         ]
 
-        self.assertEqual(
-            sorted(with_conditional["cursor"]["allow"]),
-            sorted(base["cursor"]["allow"] + ["Shell(git checkout *)"]),
-        )
-        self.assertEqual(
-            sorted(with_conditional["cursor"]["deny"]),
-            sorted(base["cursor"]["deny"] + ["Shell(git push *)", "Shell(git log *)"]),
-        )
+        assert sorted(with_conditional["cursor"]["allow"]) == sorted(base["cursor"]["allow"] + ["Shell(git checkout *)"])
+        assert sorted(with_conditional["cursor"]["deny"]) == sorted(base["cursor"]["deny"] + ["Shell(git push *)", "Shell(git log *)"])
 
-        self.assertEqual(
-            sorted(with_conditional["claude"]["allow"]),
-            sorted(base["claude"]["allow"] + ["Bash(git checkout *)"]),
-        )
-        self.assertEqual(
-            sorted(with_conditional["claude"]["ask"]),
-            sorted(base["claude"]["ask"] + ["Bash(git push *)"]),
-        )
-        self.assertEqual(
-            sorted(with_conditional["claude"]["deny"]),
-            sorted(base["claude"]["deny"] + ["Bash(git log *)"]),
-        )
+        assert sorted(with_conditional["claude"]["allow"]) == sorted(base["claude"]["allow"] + ["Bash(git checkout *)"])
+        assert sorted(with_conditional["claude"]["ask"]) == sorted(base["claude"]["ask"] + ["Bash(git push *)"])
+        assert sorted(with_conditional["claude"]["deny"]) == sorted(base["claude"]["deny"] + ["Bash(git log *)"])
 
-        self.assertEqual(
-            sorted(with_conditional["droid"]["commandAllowlist"]),
-            sorted(base["droid"]["commandAllowlist"] + ["git checkout *"]),
-        )
-        self.assertEqual(
-            sorted(with_conditional["droid"]["commandRequestlist"]),
-            sorted(base["droid"]["commandRequestlist"] + ["git push *"]),
-        )
-        self.assertEqual(
-            sorted(with_conditional["droid"]["commandDenylist"]),
-            sorted(base["droid"]["commandDenylist"] + ["git log *"]),
-        )
+        assert sorted(with_conditional["droid"]["commandAllowlist"]) == sorted(base["droid"]["commandAllowlist"] + ["git checkout *"])
+        assert sorted(with_conditional["droid"]["commandRequestlist"]) == sorted(base["droid"]["commandRequestlist"] + ["git push *"])
+        assert sorted(with_conditional["droid"]["commandDenylist"]) == sorted(base["droid"]["commandDenylist"] + ["git log *"])
 
         for rule in base["codex"]["rules"]:
-            self.assertIn(rule, with_conditional["codex"]["rules"])
-        self.assertIn(
-            'prefix_rule(pattern=["git", "checkout", "*"], decision="allow")',
-            with_conditional["codex"]["rules"],
-        )
-        self.assertIn(
-            'prefix_rule(pattern=["git", "push", "*"], decision="prompt")',
-            with_conditional["codex"]["rules"],
-        )
-        self.assertIn(
-            'prefix_rule(pattern=["git", "log", "*"], decision="forbidden")',
-            with_conditional["codex"]["rules"],
-        )
+            assert rule in with_conditional["codex"]["rules"]
+        assert 'prefix_rule(pattern=["git", "checkout", "*"], decision="allow")' in with_conditional["codex"]["rules"]
+        assert 'prefix_rule(pattern=["git", "push", "*"], decision="prompt")' in with_conditional["codex"]["rules"]
+        assert 'prefix_rule(pattern=["git", "log", "*"], decision="forbidden")' in with_conditional["codex"]["rules"]
 
     def test_commands_require_maps_to_request_host_fragments(self) -> None:
         payload = {
@@ -2384,26 +2186,11 @@ class TestHostRendering(TestCase):
             'decision="prompt")'
         )
 
-        self.assertIn(
-            codex_request,
-            host_rules["codex"]["rules"],
-        )
-        self.assertIn(
-            "Shell(python cli.py test run --scope integration)",
-            host_rules["cursor"]["deny"],
-        )
-        self.assertIn(
-            "Bash(python cli.py test run --scope integration)",
-            host_rules["claude"]["ask"],
-        )
-        self.assertIn(
-            "python cli.py test run --scope integration",
-            host_rules["droid"]["commandRequestlist"],
-        )
-        self.assertNotIn(
-            "python cli.py test run --scope integration",
-            host_rules["droid"]["commandDenylist"],
-        )
+        assert codex_request in host_rules["codex"]["rules"]
+        assert "Shell(python cli.py test run --scope integration)" in host_rules["cursor"]["deny"]
+        assert "Bash(python cli.py test run --scope integration)" in host_rules["claude"]["ask"]
+        assert "python cli.py test run --scope integration" in host_rules["droid"]["commandRequestlist"]
+        assert "python cli.py test run --scope integration" not in host_rules["droid"]["commandDenylist"]
 
     def test_require_action_evaluates_to_request_in_evaluate_policy(self) -> None:
         payload = {
@@ -2417,9 +2204,9 @@ class TestHostRendering(TestCase):
         }
         decision, _, rule = evaluate_policy(payload, "policy_merge")
 
-        self.assertEqual(decision, "request")
-        self.assertIsNotNone(rule)
-        self.assertEqual(rule.action, "request")
+        assert decision == "request"
+        assert rule is not None
+        assert rule.action == "request"
 
     def test_wrapper_payload_uses_raw_prefix_pattern_for_prefix_matcher(self) -> None:
         payload = {
@@ -2441,9 +2228,9 @@ class TestHostRendering(TestCase):
         host_policy = rendered["policy"]
         wrapper_rule = rendered["wrapper_rules"][0]
 
-        self.assertIn("Shell(git checkout *)", host_policy["cursor"]["allow"])
-        self.assertEqual(wrapper_rule["normalized_pattern"], "git checkout")
-        self.assertEqual(wrapper_rule["shell_entry"], "Shell(git checkout *)")
+        assert "Shell(git checkout *)" in host_policy["cursor"]["allow"]
+        assert wrapper_rule["normalized_pattern"] == "git checkout"
+        assert wrapper_rule["shell_entry"] == "Shell(git checkout *)"
 
     def test_evaluate_policy_prefers_deny_over_allow_from_command_rules(self) -> None:
         payload = {
@@ -2479,9 +2266,9 @@ class TestHostRendering(TestCase):
         ):
             decision, _, rule = evaluate_policy(payload, "git status")
 
-        self.assertEqual(decision, "deny")
-        self.assertIsNotNone(rule)
-        self.assertEqual(rule.rule_id, "deny-command")
+        assert decision == "deny"
+        assert rule is not None
+        assert rule.rule_id == "deny-command"
 
     def test_recursive_condition_set_collects_nested_required_conditions(self) -> None:
         payload = {
@@ -2511,10 +2298,7 @@ class TestHostRendering(TestCase):
             },
         }
         rendered = render_platform_payload(payload, include_conditional=True)
-        self.assertEqual(
-            rendered["wrapper_condition_set"],
-            ["git_is_worktree", "git_synced_to_upstream"],
-        )
+        assert rendered["wrapper_condition_set"] == ["git_is_worktree", "git_synced_to_upstream"]
 
     def test_recursive_wrapper_payload_exports_nested_conditions(self) -> None:
         payload = {
@@ -2549,27 +2333,7 @@ class TestHostRendering(TestCase):
         }
         rendered = render_platform_payload(payload, include_conditional=True)
         wrapper_rule = rendered["wrapper_rules"][0]
-        self.assertEqual(
-            wrapper_rule["conditions"],
-            {
-                "mode": "all",
-                "conditions": [
-                    {
-                        "mode": "all",
-                        "conditions": [
-                            "git_is_worktree",
-                            {"name": "git_clean_worktree", "required": True},
-                        ],
-                    },
-                    {
-                        "mode": "any",
-                        "conditions": [
-                            {"name": "git_synced_to_upstream", "required": False},
-                        ],
-                    },
-                ],
-            },
-        )
+        assert wrapper_rule["conditions"] == {"mode": "all", "conditions": [{"mode": "all", "conditions": ["git_is_worktree", {"name": "git_clean_worktree", "required": True}]}, {"mode": "any", "conditions": [{"name": "git_synced_to_upstream", "required": False}]}]}
 
     def test_rendered_wrapper_payload_conditional_split_counts(self) -> None:
         payload = {
@@ -2596,39 +2360,25 @@ class TestHostRendering(TestCase):
         rendered_conditional_only = render_platform_payload(
             payload, include_conditional=False,
         )
-        self.assertEqual(rendered_conditional_only["conditional_count"], 1)
-        self.assertEqual(rendered_conditional_only["unconditional_count"], 1)
-        self.assertEqual(len(rendered_conditional_only["wrapper_rules"]), 1)
-        self.assertEqual(len(rendered_conditional_only["conditional_rules"]), 1)
-        self.assertEqual(
-            rendered_conditional_only["wrapper_rules"][0]["id"],
-            "wrapper-cond-rule",
-        )
+        assert rendered_conditional_only["conditional_count"] == 1
+        assert rendered_conditional_only["unconditional_count"] == 1
+        assert len(rendered_conditional_only["wrapper_rules"]) == 1
+        assert len(rendered_conditional_only["conditional_rules"]) == 1
+        assert rendered_conditional_only["wrapper_rules"][0]["id"] == "wrapper-cond-rule"
 
         rendered_with_conditional = render_platform_payload(
             payload, include_conditional=True,
         )
-        self.assertEqual(rendered_with_conditional["conditional_count"], 1)
-        self.assertEqual(rendered_with_conditional["unconditional_count"], 1)
-        self.assertEqual(len(rendered_with_conditional["wrapper_rules"]), 2)
-        self.assertEqual(
-            rendered_with_conditional["policy"]["policy_wrapper"][
-                "required_conditions"
-            ],
-            ["git_is_worktree"],
-        )
+        assert rendered_with_conditional["conditional_count"] == 1
+        assert rendered_with_conditional["unconditional_count"] == 1
+        assert len(rendered_with_conditional["wrapper_rules"]) == 2
+        assert rendered_with_conditional["policy"]["policy_wrapper"]["required_conditions"] == ["git_is_worktree"]
 
         wrapper_rules = rendered_with_conditional["policy"]["policy_wrapper"][
             "commands"
         ]
-        self.assertEqual(wrapper_rules[0]["id"], "wrapper-cond-rule")
-        self.assertEqual(
-            wrapper_rules[0]["conditions"],
-            {
-                "mode": "all",
-                "conditions": [{"name": "git_is_worktree", "required": True}],
-            },
-        )
+        assert wrapper_rules[0]["id"] == "wrapper-cond-rule"
+        assert wrapper_rules[0]["conditions"] == {"mode": "all", "conditions": [{"name": "git_is_worktree", "required": True}]}
 
 
 class TestResolveCLI(TestCase):
@@ -2666,11 +2416,8 @@ class TestResolveCLI(TestCase):
                 capture_output=True,
                 text=True,
             )
-            self.assertNotEqual(result.returncode, 0)
-            self.assertIn(
-                "--host-out-dir requires --emit-host-rules",
-                result.stderr + result.stdout,
-            )
+            assert result.returncode != 0
+            assert "--host-out-dir requires --emit-host-rules" in result.stderr + result.stdout
 
     def test_include_conditional_host_artifacts(self) -> None:
         with tempfile.TemporaryDirectory() as repo_root:
@@ -2733,62 +2480,42 @@ class TestResolveCLI(TestCase):
                 capture_output=True,
                 text=True,
             )
-            self.assertEqual(result.returncode, 0, result.stderr)
+            assert result.returncode == 0, result.stderr
 
             output = json.loads(result.stdout)
-            self.assertEqual(output["include_conditional"], True)
-            self.assertEqual(
-                self._normalize_path(output["host_artifacts_written_to"]),
-                self._normalize_path(host_out_dir),
-            )
-            self.assertEqual(
-                self._normalize_path(output["policy_wrapper_bundle"]),
-                self._normalize_path(host_out_dir / "policy-wrapper-rules.json"),
-            )
-            self.assertEqual(output["wrapper_rule_count"], len(output["wrapper_rules"]))
-            self.assertGreaterEqual(output["wrapper_rule_count"], 1)
+            assert output["include_conditional"]
+            assert self._normalize_path(output["host_artifacts_written_to"]) == self._normalize_path(host_out_dir)
+            assert self._normalize_path(output["policy_wrapper_bundle"]) == self._normalize_path(host_out_dir / "policy-wrapper-rules.json")
+            assert output["wrapper_rule_count"] == len(output["wrapper_rules"])
+            assert output["wrapper_rule_count"] >= 1
 
             bundle_path = Path(output["policy_wrapper_bundle"])
             bundle = json.loads(bundle_path.read_text(encoding="utf-8"))
-            self.assertGreater(len(bundle.get("commands", [])), 0)
-            self.assertEqual(
-                len(bundle.get("commands", [])), output["wrapper_rule_count"],
-            )
-            self.assertTrue(resolved_out.exists())
+            assert len(bundle.get("commands", [])) > 0
+            assert len(bundle.get("commands", [])) == output["wrapper_rule_count"]
+            assert resolved_out.exists()
 
             manifest = json.loads(
                 (host_out_dir / "policy-wrapper-dispatch.manifest.json").read_text(
                     encoding="utf-8",
                 ),
             )
-            self.assertEqual(
-                self._normalize_path(manifest["bundle_path"]),
-                self._normalize_path(bundle_path),
-            )
-            self.assertEqual(
-                manifest["wrapper_rule_count"], output["wrapper_rule_count"],
-            )
-            self.assertEqual(manifest["fallback_missing_policy"], "allow")
-            self.assertEqual(manifest["fallback_malformed_bundle"], "allow")
-            self.assertEqual(manifest["fallback_condition_eval_error"], "request")
+            assert self._normalize_path(manifest["bundle_path"]) == self._normalize_path(bundle_path)
+            assert manifest["wrapper_rule_count"] == output["wrapper_rule_count"]
+            assert manifest["fallback_missing_policy"] == "allow"
+            assert manifest["fallback_malformed_bundle"] == "allow"
+            assert manifest["fallback_condition_eval_error"] == "request"
             dispatch_command = manifest["dispatch_command"]
-            self.assertEqual(
-                dispatch_command[0],
-                str(
-                    Path(__file__).resolve().parent.parent
-                    / "wrappers"
-                    / "policy-wrapper-dispatch.sh",
-                ),
-            )
+            assert dispatch_command[0] == str(Path(__file__).resolve().parent.parent / "wrappers" / "policy-wrapper-dispatch.sh")
 
             missing_idx = dispatch_command.index("--missing-policy-default")
             malformed_idx = dispatch_command.index("--malformed-bundle-default")
             condition_eval_idx = dispatch_command.index(
                 "--condition-eval-error-default",
             )
-            self.assertEqual(dispatch_command[missing_idx + 1], "allow")
-            self.assertEqual(dispatch_command[malformed_idx + 1], "allow")
-            self.assertEqual(dispatch_command[condition_eval_idx + 1], "request")
+            assert dispatch_command[missing_idx + 1] == "allow"
+            assert dispatch_command[malformed_idx + 1] == "allow"
+            assert dispatch_command[condition_eval_idx + 1] == "request"
 
             for artifact in (
                 "codex.rules",
@@ -2798,7 +2525,7 @@ class TestResolveCLI(TestCase):
                 "policy-wrapper-rules.json",
                 "policy-wrapper-dispatch.manifest.json",
             ):
-                self.assertTrue((host_out_dir / artifact).exists(), artifact)
+                assert (host_out_dir / artifact).exists(), artifact
 
     def test_include_conditional_host_artifacts_validate_without_wrapper_rule_count(
         self,
@@ -2855,10 +2582,7 @@ class TestPolicyContractSchemaGovernance(TestCase):
     def test_merge_strategy_paths_exist_in_contract_schema(self) -> None:
         schema = self._load_schema()
         for key in MERGE_STRATEGY:
-            self.assertTrue(
-                self._schema_has_path(schema, key),
-                f"MERGE_STRATEGY path missing in schema: {key}",
-            )
+            assert self._schema_has_path(schema, key), f"MERGE_STRATEGY path missing in schema: {key}"
 
     def test_contract_schema_valid_invalid_fixture_set(self) -> None:
         if _validate_schema is None:
@@ -2881,7 +2605,7 @@ class TestPolicyContractSchemaGovernance(TestCase):
 
         for path in invalid_paths:
             payload = json.loads(path.read_text(encoding="utf-8"))
-            with self.assertRaises(Exception):
+            with pytest.raises(Exception):
                 _validate_schema(payload, schema)
 
 
@@ -2944,30 +2668,15 @@ class TestResolveCLIRegressions(TestCase):
             out_path = root / "resolved.json"
             result = self._run_resolve(root, emit=out_path)
 
-            self.assertEqual(result.returncode, 0, msg=result.stderr)
+            assert result.returncode == 0, result.stderr
             payload = json.loads(out_path.read_text(encoding="utf-8"))
             scopes = [
                 [scope_name, self._normalize_path(scope_path)]
                 for scope_name, scope_path in payload["scopes"]
             ]
-            self.assertIn(
-                ["repo", self._normalize_path(config_root / "repo.yaml")],
-                scopes,
-            )
-            self.assertIn(
-                [
-                    "harness",
-                    self._normalize_path(config_root / "harness" / "codex.yaml"),
-                ],
-                scopes,
-            )
-            self.assertIn(
-                [
-                    "task_domain",
-                    self._normalize_path(config_root / "task-domain" / "repair.yaml"),
-                ],
-                scopes,
-            )
+            assert ["repo", self._normalize_path(config_root / "repo.yaml")] in scopes
+            assert ["harness", self._normalize_path(config_root / "harness" / "codex.yaml")] in scopes
+            assert ["task_domain", self._normalize_path(config_root / "task-domain" / "repair.yaml")] in scopes
 
     def test_missing_required_scope_file_returns_missing_exit_code_and_error_text(
         self,
@@ -2985,11 +2694,11 @@ class TestResolveCLIRegressions(TestCase):
 
             result = self._run_resolve(root)
 
-            self.assertEqual(result.returncode, EXIT_CODE_MISSING)
+            assert result.returncode == EXIT_CODE_MISSING
             error_text = f"{result.stdout}\n{result.stderr}"
-            self.assertIn("missing required policy file", error_text)
-            self.assertIn("scope 'repo'", error_text)
-            self.assertIn(str(config_root / "repo.yaml"), error_text)
+            assert "missing required policy file" in error_text
+            assert "scope 'repo'" in error_text
+            assert str(config_root / "repo.yaml") in error_text
 
     def test_policy_version_must_be_v1(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -3009,9 +2718,9 @@ class TestResolveCLIRegressions(TestCase):
 
             result = self._run_resolve(root)
 
-            self.assertEqual(result.returncode, EXIT_CODE_INVALID)
+            assert result.returncode == EXIT_CODE_INVALID
             error_text = f"{result.stdout}\n{result.stderr}"
-            self.assertIn("policy_version must be 'v1'", error_text)
+            assert "policy_version must be 'v1'" in error_text
 
     def test_policy_version_error_json_payload_has_invalid_code_and_message(
         self,
@@ -3033,23 +2742,23 @@ class TestResolveCLIRegressions(TestCase):
 
             result = self._run_resolve(root, json_mode=True)
 
-            self.assertEqual(result.returncode, EXIT_CODE_INVALID)
-            self.assertEqual(result.stderr.strip(), "")
+            assert result.returncode == EXIT_CODE_INVALID
+            assert result.stderr.strip() == ""
             payload = json.loads(result.stdout)
-            self.assertEqual(payload["code"], "invalid")
-            self.assertIn("policy_version must be 'v1'", payload["message"])
-            self.assertNotIn("details", payload)
+            assert payload["code"] == "invalid"
+            assert "policy_version must be 'v1'" in payload["message"]
+            assert "details" not in payload
 
     def test_missing_layout_returns_missing_exit_code_and_explicit_error(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             result = self._run_resolve(root)
 
-            self.assertEqual(result.returncode, EXIT_CODE_MISSING)
+            assert result.returncode == EXIT_CODE_MISSING
             error_text = f"{result.stdout}\n{result.stderr}"
-            self.assertIn("no supported config root layout exists", error_text)
-            self.assertIn(str(root / "policy-config"), error_text)
-            self.assertIn(str(root / "policy-contract" / "policy-config"), error_text)
+            assert "no supported config root layout exists" in error_text
+            assert str(root / "policy-config") in error_text
+            assert str(root / "policy-contract" / "policy-config") in error_text
 
     def test_emit_path_is_stable_for_json_success_with_emit(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -3066,13 +2775,8 @@ class TestResolveCLIRegressions(TestCase):
             emit_path = root / "resolved.json"
             result = self._run_resolve(root, emit=emit_path, json_mode=True)
 
-            self.assertEqual(result.returncode, 0, msg=result.stderr)
+            assert result.returncode == 0, result.stderr
             payload = json.loads(result.stdout)
-            self.assertEqual(payload["code"], "ok")
-            self.assertEqual(
-                payload["details"]["emit_path"], self._normalize_path(emit_path),
-            )
-            self.assertEqual(
-                payload["details"]["scopes_ordering_assertion_path"],
-                "result.policy.scopes",
-            )
+            assert payload["code"] == "ok"
+            assert payload["details"]["emit_path"] == self._normalize_path(emit_path)
+            assert payload["details"]["scopes_ordering_assertion_path"] == "result.policy.scopes"

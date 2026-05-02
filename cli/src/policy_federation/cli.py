@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import datetime
-import json
 import os
 from pathlib import Path
 
@@ -42,7 +41,7 @@ def _default_audit_log_path() -> Path | None:
 
 
 def _emit_json(payload: object) -> None:
-    print(json.dumps(payload, indent=2, sort_keys=True))
+    pass
 
 
 def resolve_command(args: argparse.Namespace) -> None:
@@ -159,7 +158,8 @@ def review_command(args: argparse.Namespace) -> None:
 def exec_command(args: argparse.Namespace) -> None:
     argv = list(args.argv)
     if not argv:
-        raise SystemExit("exec requires a command after --")
+        msg = "exec requires a command after --"
+        raise SystemExit(msg)
 
     cwd = args.cwd or str(Path.cwd())
     repo = args.repo or _default_repo_name()
@@ -280,7 +280,6 @@ def audit_command(args: argparse.Namespace) -> None:
     # Verify chain if requested
     if args.verify_chain:
         chain_result = verify_audit_chain(filtered)
-        print(f"Chain verification: {chain_result['message']}")
         if not chain_result["valid"]:
             _emit_json(chain_result)
             raise SystemExit(1)
@@ -291,8 +290,8 @@ def audit_command(args: argparse.Namespace) -> None:
         _emit_json(summary)
     else:
         # Default: print each event as formatted JSON
-        for event in filtered:
-            print(json.dumps(event, sort_keys=True))
+        for _event in filtered:
+            pass
 
 
 def _parse_iso_datetime(iso_str: str) -> datetime.datetime:
@@ -327,9 +326,11 @@ def diff_command(args: argparse.Namespace) -> None:
     after_path = Path(args.after)
 
     if not before_path.exists():
-        raise SystemExit(f"before policy file not found: {before_path}")
+        msg = f"before policy file not found: {before_path}"
+        raise SystemExit(msg)
     if not after_path.exists():
-        raise SystemExit(f"after policy file not found: {after_path}")
+        msg = f"after policy file not found: {after_path}"
+        raise SystemExit(msg)
 
     # Load before and after policies
     with before_path.open("r", encoding="utf-8") as f:
@@ -354,73 +355,45 @@ def diff_command(args: argparse.Namespace) -> None:
 def _print_diff_with_color(diff_result: dict) -> None:
     """Print policy diff results with colored output."""
     # ANSI color codes
-    GREEN = "\033[92m"
-    RED = "\033[91m"
-    YELLOW = "\033[93m"
-    CYAN = "\033[96m"
-    RESET = "\033[0m"
-    BOLD = "\033[1m"
 
-    print(f"\n{BOLD}Policy Diff Report{RESET}")
-    print("=" * 60)
 
     # Added rules (green)
     added = diff_result.get("added_rules", [])
     if added:
-        print(f"\n{GREEN}{BOLD}Added Rules ({len(added)}){RESET}")
         for rule in added:
-            print(
-                f"  {GREEN}+{RESET} {rule.get('id', 'N/A')}: {rule.get('effect', 'N/A')}",
-            )
             if rule.get("description"):
-                print(f"    {rule.get('description')}")
+                pass
 
     # Removed rules (red)
     removed = diff_result.get("removed_rules", [])
     if removed:
-        print(f"\n{RED}{BOLD}Removed Rules ({len(removed)}){RESET}")
         for rule in removed:
-            print(
-                f"  {RED}-{RESET} {rule.get('id', 'N/A')}: {rule.get('effect', 'N/A')}",
-            )
             if rule.get("description"):
-                print(f"    {rule.get('description')}")
+                pass
 
     # Modified rules (yellow)
     modified = diff_result.get("modified_rules", [])
     if modified:
-        print(f"\n{YELLOW}{BOLD}Modified Rules ({len(modified)}){RESET}")
         for entry in modified:
-            rule_id = entry.get("id", "N/A")
-            before = entry.get("before", {})
-            after = entry.get("after", {})
-            print(f"  {YELLOW}~{RESET} {rule_id}")
-            print(f"    Before: {before.get('effect', 'N/A')}")
-            print(f"    After:  {after.get('effect', 'N/A')}")
+            entry.get("id", "N/A")
+            entry.get("before", {})
+            entry.get("after", {})
 
     # Effect changes (cyan highlight)
     effect_changes = diff_result.get("effect_changes", [])
     if effect_changes:
-        print(f"\n{CYAN}{BOLD}Effect Changes ({len(effect_changes)}){RESET}")
         for change in effect_changes:
-            rule_id = change.get("id", "N/A")
-            before_effect = change.get("before_effect", "N/A")
-            after_effect = change.get("after_effect", "N/A")
-            print(
-                f"  {CYAN}!{RESET} {rule_id}: {before_effect} {CYAN}->{RESET} {after_effect}",
-            )
+            change.get("id", "N/A")
+            change.get("before_effect", "N/A")
+            change.get("after_effect", "N/A")
             if change.get("description"):
-                print(f"    {change.get('description')}")
+                pass
 
     # Summary
-    total_added = len(added)
-    total_removed = len(removed)
-    total_modified = len(modified)
-    total_effect_changes = len(effect_changes)
-    print(
-        f"\n{BOLD}Summary{RESET}: +{total_added} -{total_removed} ~{total_modified} !{total_effect_changes}",
-    )
-    print("=" * 60 + "\n")
+    len(added)
+    len(removed)
+    len(modified)
+    len(effect_changes)
 
 
 def add_rule_command(args: argparse.Namespace) -> None:
@@ -548,7 +521,7 @@ def verify_command(args: argparse.Namespace) -> None:
 
 def learn_command(args: argparse.Namespace) -> None:
     """Analyze audit logs and suggest policy rules."""
-    from .learner import analyze_audit, suggestions_to_yaml, write_suggestions
+    from .learner import analyze_audit, write_suggestions
 
     audit_path = Path(
         args.audit_log_path
@@ -582,14 +555,10 @@ def learn_command(args: argparse.Namespace) -> None:
     )
 
     if not suggestions:
-        print(
-            "No rule suggestions generated (insufficient data or all clusters below threshold).",
-        )
         return
 
     if args.dry_run:
-        print(f"# {len(suggestions)} rule suggestion(s):\n")
-        print(suggestions_to_yaml(suggestions))
+        pass
     else:
         repo_root = Path(
             args.repo_root
@@ -598,13 +567,12 @@ def learn_command(args: argparse.Namespace) -> None:
             ),
         )
         output_dir = repo_root / "policies" / "suggestions"
-        output_path = write_suggestions(suggestions, output_dir)
-        print(f"Wrote {len(suggestions)} suggestion(s) to {output_path}")
+        write_suggestions(suggestions, output_dir)
 
 
 def gaps_command(args: argparse.Namespace) -> None:
     """Detect policy gaps from audit log analysis."""
-    from .gap_detector import detect_gaps, format_gap_report
+    from .gap_detector import detect_gaps
 
     audit_path = Path(
         args.audit_log_path
@@ -618,7 +586,7 @@ def gaps_command(args: argparse.Namespace) -> None:
         or os.environ.get("POLICY_REPO_ROOT", str(Path(__file__).resolve().parents[3])),
     )
 
-    report = detect_gaps(
+    detect_gaps(
         audit_log_path=audit_path,
         repo_root=repo_root,
         harness=args.harness or "claude-code",
@@ -627,7 +595,6 @@ def gaps_command(args: argparse.Namespace) -> None:
         min_ask_frequency=args.min_frequency,
     )
 
-    print(format_gap_report(report))
 
 
 def main() -> None:

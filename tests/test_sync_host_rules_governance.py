@@ -132,16 +132,7 @@ def test_ensure_prefix_rules_file_clear_semantics_preserve_user_text(
 ) -> None:
     target = tmp_path / "default.rules"
     target.write_text(
-        "\n".join(
-            [
-                "# user preface",
-                MANAGED_MARKER_START,
-                'prefix_rule(pattern=["git", "status"], decision="allow")',
-                MANAGED_MARKER_END,
-                "# user suffix",
-                "",
-            ],
-        ),
+        f'# user preface\n{MANAGED_MARKER_START}\nprefix_rule(pattern=["git", "status"], decision="allow")\n{MANAGED_MARKER_END}\n# user suffix\n',
         encoding="utf-8",
     )
 
@@ -162,16 +153,7 @@ def test_apply_host_artifacts_clears_managed_codex_block_on_zero_rules(
 ) -> None:
     codex_rules_path = tmp_path / "default.rules"
     codex_rules_path.write_text(
-        "\n".join(
-            [
-                "# user preface",
-                MANAGED_MARKER_START,
-                'prefix_rule(pattern=["git", "status"], decision="allow")',
-                MANAGED_MARKER_END,
-                "# user suffix",
-                "",
-            ],
-        ),
+        f'# user preface\n{MANAGED_MARKER_START}\nprefix_rule(pattern=["git", "status"], decision="allow")\n{MANAGED_MARKER_END}\n# user suffix\n',
         encoding="utf-8",
     )
 
@@ -272,7 +254,8 @@ def test_main_json_failure_response_for_render_error(
         include_conditional: bool = False,
         cwd: Path | None = None,
     ) -> dict[str, object]:
-        raise RuntimeError("render boom")
+        msg = "render boom"
+        raise RuntimeError(msg)
 
     monkeypatch.setattr(sync_host_rules, "render_platform_payload", failing_render)
     monkeypatch.setattr(
@@ -379,16 +362,7 @@ def test_main_json_success_payload_managed_diagnostics_are_deterministic(
     )
     codex_path = tmp_path / "default.rules"
     codex_path.write_text(
-        "\n".join(
-            [
-                "# user before",
-                MANAGED_MARKER_START,
-                'prefix_rule(pattern=["stale"], decision="allow")',
-                MANAGED_MARKER_END,
-                "# user after",
-                "",
-            ],
-        ),
+        f'# user before\n{MANAGED_MARKER_START}\nprefix_rule(pattern=["stale"], decision="allow")\n{MANAGED_MARKER_END}\n# user after\n',
         encoding="utf-8",
     )
     cursor_path = tmp_path / "cursor.json"
@@ -488,7 +462,8 @@ def test_main_json_failure_response_for_apply_error_mapping(
     )
 
     def failing_apply(*args: object, **kwargs: object) -> dict[str, object]:
-        raise OSError("apply boom")
+        msg = "apply boom"
+        raise OSError(msg)
 
     monkeypatch.setattr(sync_host_rules, "apply_host_artifacts", failing_apply)
     monkeypatch.setattr(
@@ -527,7 +502,8 @@ def test_main_json_failure_response_for_write_error_mapping(
     )
 
     def failing_write(*args: object, **kwargs: object) -> None:
-        raise OSError("disk full")
+        msg = "disk full"
+        raise OSError(msg)
 
     monkeypatch.setattr(sync_host_rules, "write_host_artifacts", failing_write)
     monkeypatch.setattr(
@@ -569,7 +545,8 @@ def test_main_json_failure_response_for_internal_error_mapping(
     def failing_success_entries(
         *args: object, **kwargs: object,
     ) -> list[dict[str, object]]:
-        raise RuntimeError("manifest boom")
+        msg = "manifest boom"
+        raise RuntimeError(msg)
 
     monkeypatch.setattr(
         sync_host_rules, "_build_success_entries", failing_success_entries,
@@ -802,16 +779,7 @@ def test_apply_host_artifacts_apply_rerun_is_idempotent_after_refactor(
     droid_path = tmp_path / "droid.json"
 
     codex_path.write_text(
-        "\n".join(
-            [
-                "# user codex preface",
-                MANAGED_MARKER_START,
-                'prefix_rule(pattern=["stale"], decision="allow")',
-                MANAGED_MARKER_END,
-                "# user codex suffix",
-                "",
-            ],
-        ),
+        f'# user codex preface\n{MANAGED_MARKER_START}\nprefix_rule(pattern=["stale"], decision="allow")\n{MANAGED_MARKER_END}\n# user codex suffix\n',
         encoding="utf-8",
     )
     cursor_path.write_text(
@@ -882,16 +850,7 @@ def test_codex_clear_apply_cycle_preserves_unmanaged_text_before_and_after(
 ) -> None:
     codex_path = tmp_path / "default.rules"
     codex_path.write_text(
-        "\n".join(
-            [
-                "# unmanaged before",
-                MANAGED_MARKER_START,
-                'prefix_rule(pattern=["stale"], decision="allow")',
-                MANAGED_MARKER_END,
-                "# unmanaged after",
-                "",
-            ],
-        ),
+        f'# unmanaged before\n{MANAGED_MARKER_START}\nprefix_rule(pattern=["stale"], decision="allow")\n{MANAGED_MARKER_END}\n# unmanaged after\n',
         encoding="utf-8",
     )
 

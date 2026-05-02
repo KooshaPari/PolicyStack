@@ -12,9 +12,12 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from enum import Enum
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from .runtime_artifacts import read_audit_log
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ============================================================================
 # 4-Tier Risk Assessment System

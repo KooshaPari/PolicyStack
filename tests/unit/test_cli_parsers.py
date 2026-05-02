@@ -29,9 +29,9 @@ class CliParsersTest(unittest.TestCase):
             ],
         )
 
-        self.assertEqual(args.cmd, "review")
-        self.assertEqual(args.harness, "codex")
-        self.assertEqual(args.domain, "devops")
+        assert args.cmd == "review"
+        assert args.harness == "codex"
+        assert args.domain == "devops"
 
     def test_review_first_defaults_apply_to_runtime_commands(self) -> None:
         parser = build_parser()
@@ -62,8 +62,8 @@ class CliParsersTest(unittest.TestCase):
             ],
         )
 
-        self.assertEqual(intercept_args.ask_mode, ASK_MODE_REVIEW)
-        self.assertEqual(exec_args.ask_mode, ASK_MODE_REVIEW)
+        assert intercept_args.ask_mode == ASK_MODE_REVIEW
+        assert exec_args.ask_mode == ASK_MODE_REVIEW
 
 
 if __name__ == "__main__":

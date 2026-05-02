@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from fnmatch import fnmatch
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import yaml
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def _load_extensions(repo_root: Path) -> list[dict]:
@@ -18,15 +21,13 @@ def _load_extensions(repo_root: Path) -> list[dict]:
 
     extensions = registry.get("extensions", [])
     if not isinstance(extensions, list):
-        raise ValueError("extensions.registry.extensions must be a list")
+        msg = "extensions.registry.extensions must be a list"
+        raise ValueError(msg)
     return extensions
 
 
 def _extension_scope_matches(selector: str, scope_chain: list[str]) -> bool:
-    for scope in scope_chain:
-        if fnmatch(scope, selector):
-            return True
-    return False
+    return any(fnmatch(scope, selector) for scope in scope_chain)
 
 
 def _resolve_extensions(

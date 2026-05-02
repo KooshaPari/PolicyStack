@@ -7,8 +7,7 @@ from __future__ import annotations
 
 import statistics
 import time
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 from policy_federation.delegate import (
@@ -19,6 +18,9 @@ from policy_federation.delegate import (
     delegate_ask,
 )
 from policy_federation.risk import assess_risk_tiered
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class PerformanceMetrics:
@@ -79,7 +81,7 @@ def benchmark_function(
 
     for _ in range(iterations):
         start = time.perf_counter()
-        result = func(*args, **kwargs)
+        func(*args, **kwargs)
         elapsed = (time.perf_counter() - start) * 1000  # Convert to ms
         metrics.record(elapsed)
 
@@ -100,7 +102,6 @@ class TestRiskAssessmentPerformance:
             is_worktree=False,
         )
 
-        print(f"\nTier 1 Risk Assessment: {metrics}")
         assert metrics.median < 1.0, f"Tier 1 median {metrics.median:.2f}ms exceeds 1ms"
         assert metrics.p95 < 5.0, f"Tier 1 p95 {metrics.p95:.2f}ms exceeds 5ms"
 
@@ -115,7 +116,6 @@ class TestRiskAssessmentPerformance:
             is_worktree=False,
         )
 
-        print(f"\nTier 4 Risk Assessment: {metrics}")
         assert metrics.median < 1.0, f"Tier 4 median {metrics.median:.2f}ms exceeds 1ms"
 
 
@@ -139,7 +139,6 @@ class TestLocalFastEvaluatorPerformance:
 
         metrics = benchmark_function(_local_fast_evaluate, iterations=1000, ctx=ctx)
 
-        print(f"\nLocal-Fast Tier 1: {metrics}")
         assert metrics.median < 1.0, (
             f"Local-fast median {metrics.median:.2f}ms exceeds 1ms"
         )
@@ -162,7 +161,6 @@ class TestLocalFastEvaluatorPerformance:
 
         metrics = benchmark_function(_local_fast_evaluate, iterations=1000, ctx=ctx)
 
-        print(f"\nLocal-Fast Tier 4: {metrics}")
         assert metrics.median < 1.0, (
             f"Local-fast Tier 4 median {metrics.median:.2f}ms exceeds 1ms"
         )
@@ -184,7 +182,6 @@ class TestLocalFastEvaluatorPerformance:
 
         metrics = benchmark_function(_local_fast_evaluate, iterations=1000, ctx=ctx)
 
-        print(f"\nLocal-Fast Unknown: {metrics}")
         assert metrics.median < 1.0, (
             f"Local-fast unknown median {metrics.median:.2f}ms exceeds 1ms"
         )
@@ -210,7 +207,6 @@ class TestCachePerformance:
                 _get_cached_decision, iterations=1000, command="test command",
             )
 
-            print(f"\nCache Read: {metrics}")
             assert metrics.median < 5.0, (
                 f"Cache read median {metrics.median:.2f}ms exceeds 5ms"
             )
@@ -236,7 +232,6 @@ class TestCachePerformance:
 
             metrics = benchmark_function(write_unique, iterations=100)
 
-            print(f"\nCache Write: {metrics}")
             assert metrics.median < 10.0, (
                 f"Cache write median {metrics.median:.2f}ms exceeds 10ms"
             )
@@ -319,8 +314,6 @@ class TestAutoApprovalRate:
         # Calculate percentage
         auto_approval_rate = (auto_approvals / total) * 100
 
-        print(f"\nSimulated Auto-Approval Rate: {auto_approval_rate:.1f}%")
-        print("Target: >= 70%")
 
         assert auto_approval_rate >= 70.0, (
             f"Auto-approval rate {auto_approval_rate:.1f}% below target"
@@ -345,7 +338,7 @@ class TestOverallSystemPerformance:
             scope_chain=["repo"],
         )
 
-        metrics = benchmark_function(
+        benchmark_function(
             delegate_ask,
             iterations=100,
             context=ctx,
@@ -353,7 +346,6 @@ class TestOverallSystemPerformance:
             use_local_fast=True,
         )
 
-        print(f"\nEnd-to-End Tier 1 (with cache): {metrics}")
         # First call may be slower, subsequent should be fast
         # Median should include cached results
 
@@ -414,13 +406,6 @@ class TestOverallSystemPerformance:
         if regressions:
             pytest.fail("Performance regressions detected:\n" + "\n".join(regressions))
 
-        print("\nPerformance regression check: PASSED")
-        print(
-            f"  Risk Assessment: {risk_metrics.median:.2f}ms (baseline: {baselines['risk_assessment']['median_ms']:.2f}ms)",
-        )
-        print(
-            f"  Local-Fast: {local_fast_metrics.median:.2f}ms (baseline: {baselines['local_fast']['median_ms']:.2f}ms)",
-        )
 
 
 if __name__ == "__main__":

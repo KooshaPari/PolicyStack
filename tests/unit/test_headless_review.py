@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import tempfile
 import unittest
 from pathlib import Path
@@ -38,7 +39,7 @@ class HeadlessReviewTest(unittest.TestCase):
                 patch(
                     "policy_federation.headless_review.subprocess.run",
                     side_effect=fake_run,
-                ) as run,
+                ),
             ):
                 result = run_headless_review(
                     repo_root=REPO_ROOT,
@@ -53,23 +54,18 @@ class HeadlessReviewTest(unittest.TestCase):
                 )
 
         # Result may be from binary, cached, or local-fast decision
-        self.assertIn(result["decision"], ["allow", "ask", "deny"])
+        assert result["decision"] in ["allow", "ask", "deny"]
         # Verify subprocess was called (if not cached) - just check it was called
-        self.assertTrue(
-            len(call_args) > 0, "subprocess.run should be called if not cached",
-        )
+        assert len(call_args) > 0, "subprocess.run should be called if not cached"
 
     def test_run_headless_review_returns_ask_for_missing_cwd(self) -> None:
         missing_cwd = (
             Path(tempfile.gettempdir())
             / "agentops-policy-federation-missing-review-cwd"
         )
-        if missing_cwd.exists():
-            if missing_cwd.is_dir():
-                try:
-                    missing_cwd.rmdir()
-                except OSError:
-                    pass
+        if missing_cwd.exists() and missing_cwd.is_dir():
+            with contextlib.suppress(OSError):
+                missing_cwd.rmdir()
 
         result = run_headless_review(
             repo_root=REPO_ROOT,
@@ -83,8 +79,8 @@ class HeadlessReviewTest(unittest.TestCase):
             matched_rules=[],
         )
 
-        self.assertEqual(result["decision"], "ask")
-        self.assertIn("review cwd does not exist", result["review_error"])
+        assert result["decision"] == "ask"
+        assert "review cwd does not exist" in result["review_error"]
 
     def test_run_headless_review_returns_ask_for_missing_binary(self) -> None:
         # Clear cache to avoid cached decisions interfering with test
@@ -112,7 +108,7 @@ class HeadlessReviewTest(unittest.TestCase):
                 )
 
         # Should return ask when binary is missing (may also return allow from local-fast)
-        self.assertIn(result["decision"], ["ask", "allow"])
+        assert result["decision"] in ["ask", "allow"]
 
 
 if __name__ == "__main__":

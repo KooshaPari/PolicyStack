@@ -10,7 +10,8 @@ SUPPORTED_TARGETS = {"claude-code", "codex", "factory-droid", "cursor-agent"}
 def compile_target(target: str, resolved_payload: dict) -> dict:
     """Compile a resolved policy payload into a target-specific config plan."""
     if target not in SUPPORTED_TARGETS:
-        raise ValueError(f"unsupported target: {target}")
+        msg = f"unsupported target: {target}"
+        raise ValueError(msg)
 
     policy = resolved_payload["policy"]
     defaults, rules = normalize_authorization_rules(policy)
@@ -37,7 +38,7 @@ def compile_target(target: str, resolved_payload: dict) -> dict:
                 _shim_rule(
                     {
                         "id": rule.rule_id,
-                        "actions": sorted(list(rule.actions)),
+                        "actions": sorted(rule.actions),
                         "effect": rule.effect,
                         "priority": rule.priority,
                         "conditions": {
@@ -57,7 +58,7 @@ def compile_target(target: str, resolved_payload: dict) -> dict:
                 _shim_rule(
                     {
                         "id": rule.rule_id,
-                        "actions": sorted(list(rule.actions)),
+                        "actions": sorted(rule.actions),
                         "effect": rule.effect,
                     },
                     reason="missing_command_patterns",
@@ -70,7 +71,7 @@ def compile_target(target: str, resolved_payload: dict) -> dict:
                 _shim_rule(
                     {
                         "id": rule.rule_id,
-                        "actions": sorted(list(rule.actions)),
+                        "actions": sorted(rule.actions),
                         "effect": rule.effect,
                         "priority": rule.priority,
                         "conditions": {

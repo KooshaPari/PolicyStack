@@ -322,7 +322,7 @@ def _run_new_delegate_review(
         return None  # Fall back to legacy
 
     # Build fallback chain
-    fallback_chain = [preferred_harness] + HARNESS_FALLBACK.get(preferred_harness, [])
+    fallback_chain = [preferred_harness, *HARNESS_FALLBACK.get(preferred_harness, [])]
 
     # Try each harness in chain
     prompt = _build_review_request(

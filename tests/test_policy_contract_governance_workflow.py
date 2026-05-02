@@ -93,7 +93,8 @@ def _assert_node_id_exists(node_id: str) -> None:
         )
         return
 
-    raise AssertionError(f"Unsupported pytest node selector format: {node_id}")
+    msg = f"Unsupported pytest node selector format: {node_id}"
+    raise AssertionError(msg)
 
 
 def test_governance_workflow_pytest_node_ids_exist() -> None:

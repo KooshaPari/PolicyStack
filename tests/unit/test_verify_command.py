@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
 from policy_federation.cli import verify_command
 from policy_federation.resolver import hash_policy_sources
 
@@ -25,7 +26,7 @@ class VerifyCommandTest(unittest.TestCase):
             )
 
             baseline_file = repo_root / ".policyctl.verify"
-            self.assertFalse(baseline_file.exists())
+            assert not baseline_file.exists()
 
             # Create args object
             args = argparse.Namespace(repo_root=str(repo_root))
@@ -37,12 +38,12 @@ class VerifyCommandTest(unittest.TestCase):
                 # Should call _emit_json with baseline-recorded status
                 mock_emit.assert_called_once()
                 result = mock_emit.call_args[0][0]
-                self.assertEqual(result["status"], "baseline-recorded")
-                self.assertIn("hash", result)
-                self.assertEqual(result["file_count"], 1)
+                assert result["status"] == "baseline-recorded"
+                assert "hash" in result
+                assert result["file_count"] == 1
 
             # Baseline file should now exist
-            self.assertTrue(baseline_file.exists())
+            assert baseline_file.exists()
 
     def test_verify_reports_ok_when_hash_matches(self) -> None:
         """Test that verify reports OK when policy hash matches baseline."""
@@ -68,8 +69,8 @@ class VerifyCommandTest(unittest.TestCase):
 
                 mock_emit.assert_called_once()
                 result = mock_emit.call_args[0][0]
-                self.assertEqual(result["status"], "ok")
-                self.assertEqual(result["hash"], baseline_hash)
+                assert result["status"] == "ok"
+                assert result["hash"] == baseline_hash
 
     def test_verify_reports_tampered_when_hash_differs(self) -> None:
         """Test that verify reports TAMPERED when policy hash doesn't match baseline."""
@@ -88,19 +89,19 @@ class VerifyCommandTest(unittest.TestCase):
 
             # Mock the output and verify SystemExit
             with patch("policy_federation.cli._emit_json") as mock_emit:
-                with self.assertRaises(SystemExit) as ctx:
+                with pytest.raises(SystemExit) as ctx:
                     verify_command(args)
 
                 # Should exit with code 1
-                self.assertEqual(ctx.exception.code, 1)
+                assert ctx.value.code == 1
 
                 # Should report tampered status
                 mock_emit.assert_called_once()
                 result = mock_emit.call_args[0][0]
-                self.assertEqual(result["status"], "tampered")
-                self.assertIn("current_hash", result)
-                self.assertIn("baseline_hash", result)
-                self.assertEqual(result["baseline_hash"], "fakehash1234567890")
+                assert result["status"] == "tampered"
+                assert "current_hash" in result
+                assert "baseline_hash" in result
+                assert result["baseline_hash"] == "fakehash1234567890"
 
     def test_verify_uses_repo_root_argument(self) -> None:
         """Test that verify respects --repo-root argument."""
@@ -119,11 +120,11 @@ class VerifyCommandTest(unittest.TestCase):
                 verify_command(args)
                 mock_emit.assert_called_once()
                 result = mock_emit.call_args[0][0]
-                self.assertEqual(result["status"], "baseline-recorded")
+                assert result["status"] == "baseline-recorded"
 
             # Baseline should be stored in the temp directory
             baseline_file = repo_root / ".policyctl.verify"
-            self.assertTrue(baseline_file.exists())
+            assert baseline_file.exists()
 
     def test_verify_counts_policy_files(self) -> None:
         """Test that verify reports correct file count."""
@@ -144,7 +145,7 @@ class VerifyCommandTest(unittest.TestCase):
                 verify_command(args)
                 result = mock_emit.call_args[0][0]
                 # Should count all 6 policy files
-                self.assertEqual(result["file_count"], 6)
+                assert result["file_count"] == 6
 
 
 if __name__ == "__main__":

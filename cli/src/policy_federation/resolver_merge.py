@@ -86,15 +86,15 @@ def _resolve_extend_reference(
 ) -> Path:
     """Resolve an extends reference to a concrete policy path."""
     if reference.endswith(".yaml"):
-        candidate = (
+        return (
             (current_path.parent / reference).resolve()
             if not Path(reference).is_absolute()
             else Path(reference)
         )
-        return candidate
 
     if "/" not in reference:
-        raise ValueError(f"invalid extends reference: {reference}")
+        msg = f"invalid extends reference: {reference}"
+        raise ValueError(msg)
 
     scope_dir_map = {
         "system": "system",
@@ -108,7 +108,8 @@ def _resolve_extend_reference(
     scope, name = reference.split("/", 1)
     scope_dir = scope_dir_map.get(scope)
     if scope_dir is None:
-        raise ValueError(f"unknown extends scope: {scope}")
+        msg = f"unknown extends scope: {scope}"
+        raise ValueError(msg)
     return repo_root / "policies" / scope_dir / f"{name}.yaml"
 
 
@@ -118,8 +119,9 @@ def _load_policy_document(
     """Load one policy document and resolve any local inheritance chain."""
     normalized_path = policy_path.resolve()
     if normalized_path in stack:
-        cycle = " -> ".join(str(path) for path in stack + (normalized_path,))
-        raise ValueError(f"policy extends cycle detected: {cycle}")
+        cycle = " -> ".join(str(path) for path in (*stack, normalized_path))
+        msg = f"policy extends cycle detected: {cycle}"
+        raise ValueError(msg)
 
     doc = validate_policy_file(normalized_path)
     extends = doc.get("extends") or []
@@ -131,7 +133,7 @@ def _load_policy_document(
     for reference in extends:
         parent_path = _resolve_extend_reference(repo_root, reference, normalized_path)
         parent_doc = _load_policy_document(
-            repo_root, parent_path, stack + (normalized_path,),
+            repo_root, parent_path, (*stack, normalized_path),
         )
         parent_strategy = parent_doc.get("merge", {}).get("strategy", "merge_map")
         inherited_policy = _merge_maps(
