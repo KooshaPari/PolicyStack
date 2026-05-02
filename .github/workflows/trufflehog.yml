@@ -1,0 +1,17 @@
+name: Trufflehog Secrets Scan
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  trufflehog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: trufflehog/actions/setup@main
+      - run: trufflehog github --only-verified --no-update
+        env:
+          #
