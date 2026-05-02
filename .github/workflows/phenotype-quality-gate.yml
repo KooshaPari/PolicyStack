@@ -14,7 +14,7 @@ jobs:
     name: Tooling Compliance Audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Set up Python
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
@@ -41,7 +41,7 @@ jobs:
       
       - name: Upload Audit Report
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4
         with:
           name: tooling-audit
           path: reports/TOOLING_AUDIT.md
@@ -50,7 +50,7 @@ jobs:
     name: Anti-Pattern Detection
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Set up Python
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
@@ -67,7 +67,7 @@ jobs:
       
       - name: Upload Lint Report
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4
         with:
           name: anti-pattern-report
           path: reports/ANTI_PATTERN_REPORT.md
@@ -76,7 +76,7 @@ jobs:
     name: File Size & Complexity Enforcement
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Set up Python
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
@@ -94,7 +94,7 @@ jobs:
       
       - name: Upload LOC Report
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4
         with:
           name: loc-enforcement
           path: reports/LOC_REPORT.md
@@ -104,7 +104,7 @@ jobs:
     needs: [tooling-audit, anti-pattern-lint, loc-enforcement]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Set up Python
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5

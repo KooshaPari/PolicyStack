@@ -20,10 +20,10 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Checkout phenotype/repos for shared tools
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           repository: kooshapari/phenotype
           path: phenotype-repos
@@ -48,14 +48,14 @@ jobs:
         continue-on-error: true
 
       - name: Upload scan report (JSON)
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4
         with:
           name: legacy-tooling-report-json
           path: legacy_tooling_report.json
           retention-days: 30
 
       - name: Upload scan report (Markdown)
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4
         with:
           name: legacy-tooling-report-md
           path: legacy_tooling_report.md

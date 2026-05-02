@@ -56,7 +56,7 @@ jobs:
       issues: write
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.ref || github.head_ref }}
 
@@ -120,7 +120,7 @@ jobs:
 
       - name: Upload stacked-PR audit output
         if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4
         with:
           name: policy-contract-stack-pr-audit-${{ github.run_id }}-${{ github.run_attempt }}
           if-no-files-found: ignore
@@ -198,7 +198,7 @@ jobs:
 
       - name: Upload governance failure artifacts
         if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4
         with:
           name: policy-contract-governance-failure-${{ github.run_id }}-${{ github.run_attempt }}
           if-no-files-found: ignore
@@ -222,7 +222,7 @@ jobs:
             command: uv run --with pytest --with pyyaml pytest tests/test_smoke_dispatch_host_hook.py -q
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           ref: ${{ github.head_ref }}
       - name: Setup Python
