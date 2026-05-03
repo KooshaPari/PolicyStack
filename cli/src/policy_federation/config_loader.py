@@ -30,6 +30,7 @@ class RiskTierConfig:
     enabled: bool = True
     extra_patterns: list[str] = field(default_factory=list)
     patterns: list[str] = field(default_factory=list)
+    max_risk_score: float | None = None
 
 
 @dataclass
@@ -47,6 +48,11 @@ class RiskAssessmentConfig:
     high_risk_paths: list[str] = field(
         default_factory=lambda: ["/etc/", "/usr/bin/", "/usr/sbin/", "/bin/", "/sbin/"],
     )
+
+    @property
+    def risk_assessment(self) -> RiskTierConfig:
+        """Return the risk assessment config for the highest tier."""
+        return self.tier_4
 
 
 @dataclass

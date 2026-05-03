@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 from policy_federation.delegate import (
+    DelegateResult,
     DelegateContext,
     _cache_decision,
     _get_cached_decision,
@@ -74,7 +75,7 @@ class PerformanceMetrics:
 
 
 def benchmark_function(
-    func: Callable[..., Any], iterations: int = 100, *args, **kwargs,
+    func: Callable[..., Any], *args, iterations: int = 100, **kwargs,
 ) -> PerformanceMetrics:
     """Benchmark a function over multiple iterations."""
     metrics = PerformanceMetrics()
@@ -137,7 +138,7 @@ class TestLocalFastEvaluatorPerformance:
             scope_chain=[],
         )
 
-        metrics = benchmark_function(_local_fast_evaluate, iterations=1000, ctx=ctx)
+        metrics = benchmark_function(_local_fast_evaluate, ctx, iterations=1000)
 
         assert metrics.median < 1.0, (
             f"Local-fast median {metrics.median:.2f}ms exceeds 1ms"
@@ -159,7 +160,7 @@ class TestLocalFastEvaluatorPerformance:
             scope_chain=[],
         )
 
-        metrics = benchmark_function(_local_fast_evaluate, iterations=1000, ctx=ctx)
+        metrics = benchmark_function(_local_fast_evaluate, ctx, iterations=1000)
 
         assert metrics.median < 1.0, (
             f"Local-fast Tier 4 median {metrics.median:.2f}ms exceeds 1ms"
@@ -180,7 +181,7 @@ class TestLocalFastEvaluatorPerformance:
             scope_chain=[],
         )
 
-        metrics = benchmark_function(_local_fast_evaluate, iterations=1000, ctx=ctx)
+        metrics = benchmark_function(_local_fast_evaluate, ctx, iterations=1000)
 
         assert metrics.median < 1.0, (
             f"Local-fast unknown median {metrics.median:.2f}ms exceeds 1ms"
@@ -381,8 +382,8 @@ class TestOverallSystemPerformance:
 
         local_fast_metrics = benchmark_function(
             _local_fast_evaluate,
+            ctx,
             iterations=100,
-            ctx=ctx,
         )
 
         # Check against baselines

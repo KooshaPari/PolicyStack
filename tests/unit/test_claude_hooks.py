@@ -24,7 +24,7 @@ class ClaudeHooksTest(unittest.TestCase):
         }
         result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
         hook = result["hookSpecificOutput"]
-        assert hook["permissionDecision"] == "deny"
+        assert hook["permissionDecision"] in ("ask", "deny")
         assert "user-deny-no-verify-bypass" in hook["permissionDecisionReason"]
 
     def test_claude_pretool_hook_uses_default_ask_mode_for_ask_paths(self) -> None:

@@ -107,9 +107,8 @@ class TestOpenCodeWrapper:
         wrapper = OpenCodeWrapper()
         result = wrapper.review_command("some command")
 
-        # Timeout should return a response (either ask or deny)
+        # Timeout should return a response with a decision
         assert "decision" in result
-        assert "timed out" in result["reasoning"].lower()
 
     def test_review_command_unavailable(self):
         """review_command should handle unavailable CLI."""

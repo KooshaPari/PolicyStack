@@ -249,7 +249,8 @@ def _extract_pattern(command: str) -> str:
     """Extract pattern from command for fuzzy matching."""
     # Remove specific file paths, keeping only the command structure
     pattern = re.sub(r"\s+/[^\s]+", " <PATH>", command)
-    return re.sub(r"\s+\d+", " <NUM>", pattern)
+    # Normalize numbers including negative numbers
+    return re.sub(r"\s+-?\d+", " <NUM>", pattern)
 
 
 def render_delegate_prompt(context: DelegateContext) -> str:

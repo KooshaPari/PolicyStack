@@ -27,7 +27,7 @@ _WRITE_VIA_EXEC_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
             re.DOTALL,
         ),
     ),
-    ("shell-redirect-write", re.compile(r"(?:^|&&|;|\|)\s*[^2]?[>]\s*/", re.MULTILINE)),
+    ("shell-redirect-write", re.compile(r"(?:^|\s)[^2]?[>]\s*\S")),
     ("tee-write", re.compile(r"\btee\b")),
     ("dd-write", re.compile(r"\bdd\b.*\bof=")),
     ("heredoc-write", re.compile(r'<<\s*[\'"]?EOF')),
