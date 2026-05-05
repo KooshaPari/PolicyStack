@@ -457,6 +457,7 @@ def _print_failure_json(code: str, message: str, details: dict[str, Any] | None 
     payload: dict[str, Any] = {"code": code, "message": message}
     if details:
         payload["details"] = details
+    print(json.dumps(payload))
 
 
 def _print_success_json(
@@ -476,6 +477,8 @@ def _print_success_json(
         details["emit_path"] = str(emit_path)
     if scopes_ordering_assertion_path is not None:
         details["scopes_ordering_assertion_path"] = scopes_ordering_assertion_path
+    payload: dict[str, Any] = {"code": "ok", "message": message, "result": result, "details": details}
+    print(json.dumps(payload))
 
 
 def _build_parser() -> _ResolverArgumentParser:
@@ -618,19 +621,19 @@ def main(argv: list[str] | None = None) -> int:
         if json_mode:
             _print_failure_json(ERROR_CODE_ARG, str(exc))
         else:
-            pass
+            print(str(exc), file=sys.stderr)
         return EXIT_CODE_ARG
     except FileNotFoundError as exc:
         if json_mode:
             _print_failure_json(ERROR_CODE_MISSING, str(exc))
         else:
-            pass
+            print(str(exc), file=sys.stderr)
         return EXIT_CODE_MISSING
     except (TypeError, ValueError) as exc:
         if json_mode:
             _print_failure_json(ERROR_CODE_INVALID, str(exc))
         else:
-            pass
+            print(str(exc), file=sys.stderr)
         return EXIT_CODE_INVALID
     except Exception as exc:  # pragma: no cover
         if json_mode:
@@ -640,7 +643,7 @@ def main(argv: list[str] | None = None) -> int:
                 {"exception_type": type(exc).__name__, "exception_message": str(exc)},
             )
         else:
-            pass
+            print(f"internal resolver error: {exc}", file=sys.stderr)
         return EXIT_CODE_INTERNAL
 
 

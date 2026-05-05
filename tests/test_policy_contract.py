@@ -2470,6 +2470,7 @@ class TestResolveCLI(TestCase):
                     "unit",
                     "--task-domain",
                     "unit",
+                    "--json",
                     "--emit",
                     str(resolved_out),
                     "--emit-host-rules",
@@ -2483,25 +2484,24 @@ class TestResolveCLI(TestCase):
             assert result.returncode == 0, result.stderr
 
             output = json.loads(result.stdout)
-            assert output["include_conditional"]
-            assert self._normalize_path(output["host_artifacts_written_to"]) == self._normalize_path(host_out_dir)
-            assert self._normalize_path(output["policy_wrapper_bundle"]) == self._normalize_path(host_out_dir / "policy-wrapper-rules.json")
-            assert output["wrapper_rule_count"] == len(output["wrapper_rules"])
-            assert output["wrapper_rule_count"] >= 1
+            assert output["code"] == "ok"
+            assert output["result"]["include_conditional"]
+            assert self._normalize_path(output["result"]["host_artifacts_written_to"]) == self._normalize_path(host_out_dir)
+            assert self._normalize_path(output["result"]["policy_wrapper_bundle"]) == self._normalize_path(host_out_dir / "policy-wrapper-rules.json")
+            assert output["result"]["wrapper_rule_count"] == len(output["result"]["wrapper_rules"])
+            assert output["result"]["wrapper_rule_count"] >= 1
 
-            bundle_path = Path(output["policy_wrapper_bundle"])
+            bundle_path = Path(output["result"]["policy_wrapper_bundle"])
             bundle = json.loads(bundle_path.read_text(encoding="utf-8"))
             assert len(bundle.get("commands", [])) > 0
-            assert len(bundle.get("commands", [])) == output["wrapper_rule_count"]
+            assert len(bundle.get("commands", [])) == output["result"]["wrapper_rule_count"]
             assert resolved_out.exists()
 
             manifest = json.loads(
-                (host_out_dir / "policy-wrapper-dispatch.manifest.json").read_text(
-                    encoding="utf-8",
-                ),
+                (host_out_dir / "policy-wrapper-dispatch.manifest.json").read_text(encoding="utf-8"),
             )
             assert self._normalize_path(manifest["bundle_path"]) == self._normalize_path(bundle_path)
-            assert manifest["wrapper_rule_count"] == output["wrapper_rule_count"]
+            assert manifest["wrapper_rule_count"] == output["result"]["wrapper_rule_count"]
             assert manifest["fallback_missing_policy"] == "allow"
             assert manifest["fallback_malformed_bundle"] == "allow"
             assert manifest["fallback_condition_eval_error"] == "request"
