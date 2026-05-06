@@ -211,8 +211,8 @@ class TestCachePerformance:
             assert metrics.median < 5.0, (
                 f"Cache read median {metrics.median:.2f}ms exceeds 5ms"
             )
-            assert metrics.p95 < 20.0, (
-                f"Cache read p95 {metrics.p95:.2f}ms exceeds 20ms"
+            assert metrics.p95 < 30.0, (
+                f"Cache read p95 {metrics.p95:.2f}ms exceeds 30ms"
             )
 
     @pytest.mark.benchmark

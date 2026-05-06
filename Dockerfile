@@ -1,41 +1,41 @@
-# TypeScript/Node.js Multi-Stage Build
-FROM node:20-slim as builder
+FROM node:20-slim AS docs-builder
+
+WORKDIR /app/docs
+COPY docs/package.json ./
+RUN npm install
+COPY docs/ ./
+RUN npm run docs:build
+
+FROM rust:1-slim AS rust-builder
+
+WORKDIR /app/wrappers/rust
+COPY wrappers/rust/Cargo.toml wrappers/rust/Cargo.lock ./
+COPY wrappers/rust/src ./src
+RUN cargo build --release
+
+FROM python:3.12-slim
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-COPY tsconfig.json ./
+COPY pyproject.toml README.md ./
+COPY cli/ ./cli/
+COPY policy_lib.py validate_governance.py resolve.py ./
+COPY schemas/ ./schemas/
+COPY contracts/ ./contracts/
+COPY policies/ ./policies/
+COPY scripts/ ./scripts/
+COPY --from=docs-builder /app/docs/.vitepress/dist ./static_docs
+COPY --from=rust-builder /app/wrappers/rust/target/release/policy-wrapper-rust /usr/local/bin/policy-wrapper-rust
 
-# Install dependencies
-RUN npm ci
+RUN pip install --no-cache-dir . ./cli && \
+    groupadd -g 1000 appgroup && \
+    useradd -u 1000 -g appgroup -s /bin/sh -m appuser && \
+    chown -R appuser:appgroup /app
 
-# Copy source code
-COPY src ./src
-
-# Build the project
-RUN npm run build
-
-# Runtime stage
-FROM node:20-slim
-
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-
-# Install production dependencies only
-RUN npm ci --only=production
-
-# Copy built files from builder
-COPY --from=builder /app/dist ./dist
-
-# Set non-root user
-RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 USER appuser
+EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD node --version || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000')" || exit 1
 
-CMD ["node", "dist/index.js"]
+CMD ["python", "-m", "http.server", "8000", "--directory", "static_docs"]
