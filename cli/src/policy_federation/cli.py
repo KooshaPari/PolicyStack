@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import datetime
+import json
 import os
 from pathlib import Path
 
@@ -41,7 +42,8 @@ def _default_audit_log_path() -> Path | None:
 
 
 def _emit_json(payload: object) -> None:
-    pass
+    """Print a JSON payload to stdout."""
+    print(json.dumps(payload, indent=2, sort_keys=True))
 
 
 def resolve_command(args: argparse.Namespace) -> None:
@@ -290,8 +292,8 @@ def audit_command(args: argparse.Namespace) -> None:
         _emit_json(summary)
     else:
         # Default: print each event as formatted JSON
-        for _event in filtered:
-            pass
+        for event in filtered:
+            print(json.dumps(event))
 
 
 def _parse_iso_datetime(iso_str: str) -> datetime.datetime:
@@ -353,47 +355,56 @@ def diff_command(args: argparse.Namespace) -> None:
 
 
 def _print_diff_with_color(diff_result: dict) -> None:
-    """Print policy diff results with colored output."""
-    # ANSI color codes
+    """Print policy diff results with a readable ANSI table-like output."""
+    green = "\033[92m"
+    red = "\033[91m"
+    yellow = "\033[93m"
+    cyan = "\033[96m"
+    reset = "\033[0m"
 
-
-    # Added rules (green)
     added = diff_result.get("added_rules", [])
-    if added:
-        for rule in added:
-            if rule.get("description"):
-                pass
-
-    # Removed rules (red)
     removed = diff_result.get("removed_rules", [])
-    if removed:
-        for rule in removed:
-            if rule.get("description"):
-                pass
-
-    # Modified rules (yellow)
     modified = diff_result.get("modified_rules", [])
-    if modified:
-        for entry in modified:
-            entry.get("id", "N/A")
-            entry.get("before", {})
-            entry.get("after", {})
-
-    # Effect changes (cyan highlight)
     effect_changes = diff_result.get("effect_changes", [])
-    if effect_changes:
-        for change in effect_changes:
-            change.get("id", "N/A")
-            change.get("before_effect", "N/A")
-            change.get("after_effect", "N/A")
-            if change.get("description"):
-                pass
 
-    # Summary
-    len(added)
-    len(removed)
-    len(modified)
-    len(effect_changes)
+    if added:
+        print(f"{green}Added rules ({len(added)}):{reset}")
+        for rule in added:
+            rid = rule.get("id", "N/A")
+            desc = rule.get("description") or rule.get("effect", "")
+            print(f"  + {rid}: {desc}")
+
+    if removed:
+        print(f"{red}Removed rules ({len(removed)}):{reset}")
+        for rule in removed:
+            rid = rule.get("id", "N/A")
+            desc = rule.get("description") or rule.get("effect", "")
+            print(f"  - {rid}: {desc}")
+
+    if modified:
+        print(f"{yellow}Modified rules ({len(modified)}):{reset}")
+        for entry in modified:
+            rid = entry.get("id", "N/A")
+            before = entry.get("before", {}).get("effect", "N/A")
+            after = entry.get("after", {}).get("effect", "N/A")
+            print(f"  ~ {rid}: effect {before} -> {after}")
+
+    if effect_changes:
+        print(f"{cyan}Effect changes ({len(effect_changes)}):{reset}")
+        for change in effect_changes:
+            rid = change.get("id", "N/A")
+            before = change.get("before_effect", "N/A")
+            after = change.get("after_effect", "N/A")
+            desc = change.get("description")
+            if desc:
+                print(f"  = {rid}: {before} -> {after} ({desc})")
+            else:
+                print(f"  = {rid}: {before} -> {after}")
+
+    print(
+        f"Summary: added={len(added)}, removed={len(removed)}, "
+        f"modified={len(modified)}, effects={len(effect_changes)}",
+    )
 
 
 def add_rule_command(args: argparse.Namespace) -> None:
@@ -558,7 +569,10 @@ def learn_command(args: argparse.Namespace) -> None:
         return
 
     if args.dry_run:
-        pass
+        import json as _json_learn
+        print(_json_learn.dumps(
+            {"dry_run": True, "suggestion_count": len(suggestions)}, indent=2,
+        ))
     else:
         repo_root = Path(
             args.repo_root

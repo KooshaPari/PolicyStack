@@ -591,8 +591,6 @@ def main(argv: list[str] | None = None) -> int:
                     emit_path=emit_path.resolve() if emit_path is not None else None,
                     scopes_ordering_assertion_path="result.policy.scopes",
                 )
-            else:
-                pass
         else:
             success_payload = {"policy": resolved_payload}
             if json_mode:
@@ -604,8 +602,6 @@ def main(argv: list[str] | None = None) -> int:
                     emit_path=emit_path.resolve() if emit_path is not None else None,
                     scopes_ordering_assertion_path="result.policy.scopes",
                 )
-            else:
-                pass
         return EXIT_CODE_OK
     except SystemExit as exc:
         if int(exc.code) == EXIT_CODE_OK:
