@@ -46,11 +46,21 @@ This file indexes all formal specifications in the PolicyStack repository.
 | User Journeys | `USER_JOURNEYS.md` | Active |
 | Platform Comparison | `COMPARISON.md` | Active |
 
-### Local Spec Extensions
+#### Local Spec Extensions
 
 | Spec | File | Status | Notes |
 |------|------|--------|-------|
 | Local Extensions | `specs/README.md` | Active | Links to `AgilePlus/specs/` |
+
+### Formal Specifications (SPEC-NNN)
+
+| Spec | File | Status | Version | Coverage |
+|------|------|--------|---------|----------|
+| Policy Resolution | `specs/SPEC-001-policy-resolution.md` | Active | 1.0 (2026-05-06) | FR-RES-001–003 |
+| Authorization Evaluation | `specs/SPEC-002-authorization-evaluation.md` | Active | 1.0 (2026-05-06) | FR-COND-001–004 |
+| Runtime Intercept | `specs/SPEC-003-runtime-intercept.md` | Active | 1.0 (2026-05-06) | FR-HOST-001–004 |
+| Audit Logging | `specs/SPEC-004-audit-logging.md` | Active | 1.0 (2026-05-06) | FR-GOV-001–005 |
+| Learn Suggestions | `specs/SPEC-005-learn-suggestions.md` | Active | 1.0 (2026-05-06) | FR-GOV-006–008 |
 
 ---
 
@@ -64,13 +74,15 @@ This file indexes all formal specifications in the PolicyStack repository.
 
 Total: **31 functional requirements** — all marked as Active/Implemented.
 
+Formal SPEC-NNN documents: **5 specs** (SPEC-001–SPEC-005) — All Active.
+
 ---
 
 ## Open Issues
 
-- `AgilePlus/specs/` link in `specs/README.md` requires `AgilePlus` sibling repo to be present
 - `SPEC.md` section 10 (Detailed API Reference) may be incomplete — verify all API endpoints documented
 - `ARCHITECTURE.md` should be cross-referenced against current `cli/src/policy_federation/` layout
+- Validate that SPEC-001–SPEC-005 acceptance criteria match actual implementation in `cli/src/policy_federation/`
 
 ---
 

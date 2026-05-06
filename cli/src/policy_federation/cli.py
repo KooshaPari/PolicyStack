@@ -532,7 +532,7 @@ def verify_command(args: argparse.Namespace) -> None:
 
 def learn_command(args: argparse.Namespace) -> None:
     """Analyze audit logs and suggest policy rules."""
-    from .learner import analyze_audit, write_suggestions
+    from .learner import analyze_audit, suggestions_to_yaml, write_suggestions
 
     audit_path = Path(
         args.audit_log_path
@@ -569,10 +569,18 @@ def learn_command(args: argparse.Namespace) -> None:
         return
 
     if args.dry_run:
-        import json as _json_learn
-        print(_json_learn.dumps(
-            {"dry_run": True, "suggestion_count": len(suggestions)}, indent=2,
-        ))
+        print("# [DRY RUN] Policy suggestions that would be written:")
+        for s in suggestions:
+            print(
+                f"# --- {s.id} "
+                f"(confidence={s.confidence}, evidence={s.evidence_count})"
+            )
+            print(f"#   {s.description}")
+            for sample in s.sample_commands[:3]:
+                print(f"#   example: {sample}")
+        print("# ---")
+        yaml_out = suggestions_to_yaml(suggestions)
+        print(yaml_out)
     else:
         repo_root = Path(
             args.repo_root
