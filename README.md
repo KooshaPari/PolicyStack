@@ -1,5 +1,7 @@
 # Policy scope stack for multi-harness AgentOps
 
+[![AI Slop Inside](https://sladge.net/badge.svg)](https://sladge.net)
+
 This folder contains a concrete policy scope model:
 
 ## Install

@@ -23,3 +23,19 @@ instead of relying on shelf-level scan notes.
 - `actionlint .github/workflows/*.yml`
 
 **Tags:** `PolicyStack` `[GOVERNANCE]` `[worklog]`
+
+## 2026-05-07 | GOVERNANCE | Current-Head Sladge Refresh
+
+**Context:** Older Sladge badge evidence on `docs/policystack-sladge-current`
+was behind active branch `ci/add-mypy`, and that worktree had unrelated local
+changes.
+
+**Decision:** Refreshed the README Sladge evidence in isolated worktree
+`PolicyStack-wtrees/sladge-ci-current`.
+
+**Validation:**
+- `git diff --check`
+- `rg -n "sladge|AI Slop" README.md docs/sessions/20260507-policystack-sladge-refresh docs/worklogs`
+- `python scripts/validate_policy_contract.py --root .`
+
+**Tags:** `PolicyStack` `[GOVERNANCE]` `[sladge]`
