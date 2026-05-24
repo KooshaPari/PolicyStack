@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           fetch-depth: 0
-      - uses: trufflehog/actions/setup@main
+      - uses: trufflehog/actions/setup@17456f8c7d042d8c82c9a8ca9e937231f9f42e26
       - run: trufflehog github --only-verified --no-update
         env:
           #
