@@ -13,3 +13,6 @@ worktrees/
 docs/.vitepress/cache
 docs/.vitepress/dist
 node_modules
+
+# grade reports (build artifacts)
+.grade-reports/
