@@ -41,7 +41,9 @@ def _default_audit_log_path() -> Path | None:
 
 
 def _emit_json(payload: object) -> None:
-    pass
+    import json
+
+    print(json.dumps(payload, ensure_ascii=True, sort_keys=True))
 
 
 def resolve_command(args: argparse.Namespace) -> None:

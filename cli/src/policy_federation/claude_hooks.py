@@ -9,7 +9,7 @@ import shlex
 import sys
 from pathlib import Path
 
-from .interceptor import intercept_command
+from .interceptor import DENY_EXIT_CODE, intercept_command
 from .runtime_context import infer_repo_name_from_cwd
 
 READ_ONLY_TOOLS = {"Glob", "Grep", "LS", "Read"}
@@ -27,7 +27,7 @@ _WRITE_VIA_EXEC_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
             re.DOTALL,
         ),
     ),
-    ("shell-redirect-write", re.compile(r"(?:^|&&|;|\|)\s*[^2]?[>]\s*/", re.MULTILINE)),
+    ("shell-redirect-write", re.compile(r"(?:^|&&|;|\|)\s*[^2]?>\s*/|(?<![12=&])>\s*/\S", re.MULTILINE)),
     ("tee-write", re.compile(r"\btee\b")),
     ("dd-write", re.compile(r"\bdd\b.*\bof=")),
     ("heredoc-write", re.compile(r'<<\s*[\'"]?EOF')),
@@ -198,10 +198,19 @@ def _detect_write_via_exec(command: str) -> list[str]:
 
 def _resolve_target_path(target_path: str, cwd: str) -> str:
     """Resolve a possibly-relative target path against the command cwd."""
-    path = Path(target_path)
-    if path.is_absolute():
-        return str(path)
-    return str((Path(cwd) / path).resolve())
+    normalized_target = target_path.replace("\\", "/")
+    normalized_cwd = cwd.replace("\\", "/")
+
+    if normalized_target.startswith("/"):
+        return normalized_target
+
+    if len(normalized_target) > 1 and normalized_target[1] == ":":
+        return Path(normalized_target).as_posix()
+
+    if normalized_cwd.startswith("/"):
+        return f"{normalized_cwd.rstrip('/')}/{normalized_target.lstrip('/')}"
+
+    return str((Path(cwd) / target_path).resolve().as_posix())
 
 
 def _extract_sed_target_paths(command: str, cwd: str) -> list[str]:
@@ -328,6 +337,55 @@ def _extract_request(payload: dict) -> dict | None:
     }
 
 
+_SENSITIVE_WRITE_PREFIXES = (
+    "/etc/",
+    "/usr/",
+    "/bin/",
+    "/sbin/",
+    "/var/",
+    "/sys/",
+    "/proc/",
+    "/tmp/",
+)
+
+
+def _normalize_policy_path(path: str) -> str:
+    return path.replace("\\", "/")
+
+
+def _is_worktree_path(path: str) -> bool:
+    normalized = _normalize_policy_path(path)
+    return any(
+        marker in normalized
+        for marker in ("-wtrees/", "/.worktrees/", "/worktrees/", "PROJECT-wtrees/")
+    )
+
+
+def _targets_sensitive_write_paths(target_paths: list[str]) -> bool:
+    for raw in target_paths:
+        path = _normalize_policy_path(raw)
+        if any(path.startswith(prefix) for prefix in _SENSITIVE_WRITE_PREFIXES):
+            return True
+    return False
+
+
+def _should_deny_unapproved_write(
+    *,
+    action: str,
+    target_paths: list[str],
+    cwd: str,
+    final_decision: str,
+) -> bool:
+    if action != "write" or final_decision != "ask":
+        return False
+
+    paths = target_paths or [cwd]
+    if paths and all(_is_worktree_path(path) for path in paths):
+        return False
+
+    return _targets_sensitive_write_paths(paths)
+
+
 def evaluate_claude_pretool_payload(
     payload: dict, repo_root: Path | None = None,
 ) -> dict:
@@ -351,6 +409,35 @@ def evaluate_claude_pretool_payload(
         target_paths=request["target_paths"],
         ask_mode=os.environ.get("POLICY_ASK_MODE", "fail"),
     )
+
+    if request.get("bypass_indicators") and result["final_decision"] == "ask":
+        result = {
+            **result,
+            "allowed": False,
+            "exit_code": DENY_EXIT_CODE,
+            "final_decision": "deny",
+        }
+
+    if _should_deny_unapproved_write(
+        action=request["action"],
+        target_paths=request.get("target_paths", []),
+        cwd=cwd,
+        final_decision=result["final_decision"],
+    ):
+        evaluation = dict(result.get("evaluation") or {})
+        evaluation["winning_rule"] = {
+            "id": "deny-write-outside-worktrees",
+            "effect": "deny",
+            "priority": 0,
+            "description": "Write blocked outside approved worktrees to sensitive targets",
+        }
+        result = {
+            **result,
+            "allowed": False,
+            "exit_code": DENY_EXIT_CODE,
+            "final_decision": "deny",
+            "evaluation": evaluation,
+        }
 
     if result["final_decision"] == "allow":
         evaluation = result.get("evaluation") or {}

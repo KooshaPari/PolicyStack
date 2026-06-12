@@ -12,8 +12,8 @@ def _as_path_text(path: Path | str | None) -> str | None:
     if path is None:
         return None
     if isinstance(path, Path):
-        return str(path)
-    return path
+        return path.as_posix()
+    return path.replace("\\", "/")
 
 
 def build_status_envelope(*, code: str, message: str) -> dict[str, Any]:

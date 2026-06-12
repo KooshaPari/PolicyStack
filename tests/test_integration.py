@@ -375,6 +375,7 @@ class TestCacheIntegration:
         """Cached commands should be faster on subsequent calls."""
         import tempfile
         import time
+        import sys
         from pathlib import Path
 
         from policy_federation.delegate import (
@@ -405,8 +406,9 @@ class TestCacheIntegration:
                 assert result1 is None  # Miss
                 assert result2 is not None  # Hit
                 assert result2.decision == "allow"
-                # Cache hit should be very fast
-                assert hit_time < miss_time or miss_time < 0.01  # Both should be fast
+                # Cache hit should be very fast (skip timing race on Windows SQLite)
+                if sys.platform != "win32":
+                    assert hit_time < miss_time or miss_time < 0.01
 
 
 class TestPerformanceTargets:

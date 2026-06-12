@@ -3,8 +3,16 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
+import sys
 import textwrap
 from pathlib import Path
+
+import pytest
+
+pytestmark = pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="requires bash/WSL",
+)
 
 SCRIPT_UNDER_TEST = (
     Path(__file__).resolve().parents[1] / "scripts" / "smoke_dispatch_host_hook.sh"

@@ -12,7 +12,12 @@ from typing import Any
 import yaml
 
 from output_contract import emit_failure, emit_result, emit_status, emit_summary
-from policy_common import discover_policy_paths, normalize_input_paths, required_default_policy_paths
+from policy_common import (
+    discover_policy_paths,
+    format_policy_path,
+    normalize_input_paths,
+    required_default_policy_paths,
+)
 
 try:
     from jsonschema import Draft202012Validator
@@ -94,6 +99,9 @@ def main() -> int:
     missing = 0
     invalid = 0
 
+    def _display_path(path: Path) -> str:
+        return format_policy_path(path, root=root)
+
     try:
         schema_path = Path(args.schema)
         if not schema_path.is_absolute():
@@ -147,14 +155,19 @@ def main() -> int:
             if not path.exists():
                 missing += 1
                 if args.allow_missing:
-                    emit_result(json_mode=args.json, status="skip", path=path, details="missing")
+                    emit_result(
+                        json_mode=args.json,
+                        status="skip",
+                        path=_display_path(path),
+                        details="missing",
+                    )
                 elif path in required_paths:
                     missing_failures += 1
                     emit_failure(
                         json_mode=args.json,
                         code="missing",
                         message="required input missing",
-                        path=path,
+                        path=_display_path(path),
                         details={"identifier": "missing-required-input"},
                     )
                     if not args.json:
@@ -163,7 +176,7 @@ def main() -> int:
                     emit_result(
                         json_mode=args.json,
                         status="skip",
-                        path=path,
+                        path=_display_path(path),
                         details="missing optional",
                     )
                 continue
@@ -177,7 +190,7 @@ def main() -> int:
                     json_mode=args.json,
                     code="validation",
                     message="failed to load/parse input",
-                    path=path,
+                    path=_display_path(path),
                     details=str(exc),
                 )
                 continue
@@ -198,18 +211,18 @@ def main() -> int:
                         json_mode=True,
                         code="validation",
                         message="schema validation failed",
-                        path=path,
+                        path=_display_path(path),
                         details=details,
                     )
                 else:
-                    print(f"[invalid] {path}")
+                    print(f"[invalid] {_display_path(path)}")
                     print("  id=validation-invalid")
                     for err in errors:
                         loc = ".".join(str(part) for part in err.path) or "<root>"
                         print(f"  - {loc}: {err.message}")
                 continue
 
-            emit_result(json_mode=args.json, status="ok", path=path)
+            emit_result(json_mode=args.json, status="ok", path=_display_path(path))
 
         if validation_failures:
             emit_status(

@@ -11,8 +11,10 @@ import os
 import re
 import sqlite3
 import subprocess
+import sys
 import textwrap
 import time
+import gc
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -135,10 +137,32 @@ def _get_cache_db() -> Path:
     return cache_dir / "delegate_cache.db"
 
 
-def _init_cache() -> None:
-    """Initialize cache database."""
-    db_path = _get_cache_db()
-    conn = sqlite3.connect(db_path)
+def _release_cache_handle() -> None:
+    """Best-effort release of SQLite file handles (needed on Windows)."""
+    if sys.platform == "win32":
+        gc.collect()
+
+
+_INITIALIZED_CACHE_DBS: set[str] = set()
+
+
+def _connect_cache_db(db_path: Path) -> sqlite3.Connection:
+    conn = sqlite3.connect(str(db_path))
+    if sys.platform == "win32":
+        conn.execute("PRAGMA journal_mode=DELETE")
+    return conn
+
+
+def _close_cache_db(conn: sqlite3.Connection) -> None:
+    conn.close()
+    _release_cache_handle()
+
+
+def _ensure_cache_schema(conn: sqlite3.Connection, db_path: Path) -> None:
+    """Create cache tables when missing."""
+    db_key = str(db_path.resolve())
+    if db_key in _INITIALIZED_CACHE_DBS:
+        return
     conn.execute("""
         CREATE TABLE IF NOT EXISTS decision_cache (
             command_hash TEXT PRIMARY KEY,
@@ -154,57 +178,67 @@ def _init_cache() -> None:
         CREATE INDEX IF NOT EXISTS idx_pattern ON decision_cache(command_pattern)
     """)
     conn.commit()
-    conn.close()
+    _INITIALIZED_CACHE_DBS.add(db_key)
+
+
+def _init_cache() -> None:
+    """Initialize cache database."""
+    db_path = _get_cache_db()
+    conn = _connect_cache_db(db_path)
+    try:
+        _ensure_cache_schema(conn, db_path)
+    finally:
+        _close_cache_db(conn)
 
 
 def _get_cached_decision(command: str) -> DelegateResult | None:
     """Check for cached decision."""
     try:
-        _init_cache()
         db_path = _get_cache_db()
-        conn = sqlite3.connect(db_path)
-
-        # Try exact match first
-        command_hash = _hash_command(command)
-        cursor = conn.execute(
-            "SELECT decision, source, confidence FROM decision_cache WHERE command_hash = ? AND timestamp > ?",
-            (command_hash, time.time() - 86400),  # 24h TTL
-        )
-        row = cursor.fetchone()
-        if row:
-            # Update hit count
-            conn.execute(
-                "UPDATE decision_cache SET hit_count = hit_count + 1 WHERE command_hash = ?",
-                (command_hash,),
+        cached: DelegateResult | None = None
+        conn = _connect_cache_db(db_path)
+        try:
+            _ensure_cache_schema(conn, db_path)
+            # Try exact match first
+            command_hash = _hash_command(command)
+            cursor = conn.execute(
+                "SELECT decision, source, confidence FROM decision_cache WHERE command_hash = ? AND timestamp > ?",
+                (command_hash, time.time() - 86400),  # 24h TTL
             )
-            conn.commit()
-            conn.close()
-            return DelegateResult(
-                decision=row[0],
-                reasoning="Cached decision",
-                source=f"cache:{row[1]}",
-                confidence=row[2],
-            )
+            row = cursor.fetchone()
+            if row:
+                # Update hit count
+                conn.execute(
+                    "UPDATE decision_cache SET hit_count = hit_count + 1 WHERE command_hash = ?",
+                    (command_hash,),
+                )
+                conn.commit()
+                cached = DelegateResult(
+                    decision=row[0],
+                    reasoning="Cached decision",
+                    source=f"cache:{row[1]}",
+                    confidence=row[2],
+                )
+            else:
+                # Try pattern match for similar commands
+                pattern = _extract_pattern(command)
+                cursor = conn.execute(
+                    "SELECT decision, source, confidence, command_hash FROM decision_cache WHERE command_pattern = ? AND timestamp > ? ORDER BY hit_count DESC LIMIT 1",
+                    (pattern, time.time() - 86400),
+                )
+                row = cursor.fetchone()
 
-        # Try pattern match for similar commands
-        pattern = _extract_pattern(command)
-        cursor = conn.execute(
-            "SELECT decision, source, confidence, command_hash FROM decision_cache WHERE command_pattern = ? AND timestamp > ? ORDER BY hit_count DESC LIMIT 1",
-            (pattern, time.time() - 86400),
-        )
-        row = cursor.fetchone()
-        conn.close()
-
-        if row:
-            return DelegateResult(
-                decision=row[0],
-                reasoning=f"Pattern match: {pattern}",
-                source=f"cache-pattern:{row[1]}",
-                confidence=row[2]
-                * 0.9,  # Slightly reduced confidence for pattern match
-            )
-
-        return None
+                if row:
+                    cached = DelegateResult(
+                        decision=row[0],
+                        reasoning=f"Pattern match: {pattern}",
+                        source=f"cache-pattern:{row[1]}",
+                        confidence=row[2]
+                        * 0.9,  # Slightly reduced confidence for pattern match
+                    )
+        finally:
+            _close_cache_db(conn)
+        return cached
     except Exception:
         return None
 
@@ -212,28 +246,29 @@ def _get_cached_decision(command: str) -> DelegateResult | None:
 def _cache_decision(command: str, result: DelegateResult) -> None:
     """Cache a decision result."""
     try:
-        _init_cache()
         db_path = _get_cache_db()
-        conn = sqlite3.connect(db_path)
+        conn = _connect_cache_db(db_path)
+        try:
+            _ensure_cache_schema(conn, db_path)
+            command_hash = _hash_command(command)
+            pattern = _extract_pattern(command)
 
-        command_hash = _hash_command(command)
-        pattern = _extract_pattern(command)
-
-        conn.execute(
-            """INSERT OR REPLACE INTO decision_cache
-               (command_hash, command_pattern, decision, source, confidence, timestamp)
-               VALUES (?, ?, ?, ?, ?, ?)""",
-            (
-                command_hash,
-                pattern,
-                result.decision,
-                result.source,
-                result.confidence,
-                time.time(),
-            ),
-        )
-        conn.commit()
-        conn.close()
+            conn.execute(
+                """INSERT OR REPLACE INTO decision_cache
+                   (command_hash, command_pattern, decision, source, confidence, timestamp)
+                   VALUES (?, ?, ?, ?, ?, ?)""",
+                (
+                    command_hash,
+                    pattern,
+                    result.decision,
+                    result.source,
+                    result.confidence,
+                    time.time(),
+                ),
+            )
+            conn.commit()
+        finally:
+            _close_cache_db(conn)
     except Exception:
         pass  # Fail silently - caching is best-effort
 
@@ -249,7 +284,7 @@ def _extract_pattern(command: str) -> str:
     """Extract pattern from command for fuzzy matching."""
     # Remove specific file paths, keeping only the command structure
     pattern = re.sub(r"\s+/[^\s]+", " <PATH>", command)
-    return re.sub(r"\s+\d+", " <NUM>", pattern)
+    return re.sub(r"\s+-?\d+", " <NUM>", pattern)
 
 
 def render_delegate_prompt(context: DelegateContext) -> str:
@@ -606,37 +641,38 @@ def get_cache_stats() -> dict[str, Any]:
     """Get statistics about the decision cache."""
     try:
         db_path = _get_cache_db()
-        conn = sqlite3.connect(db_path)
+        conn = _connect_cache_db(db_path)
+        try:
+            _ensure_cache_schema(conn, db_path)
+            stats = {}
 
-        stats = {}
+            # Total entries
+            cursor = conn.execute("SELECT COUNT(*) FROM decision_cache")
+            stats["total_entries"] = cursor.fetchone()[0]
 
-        # Total entries
-        cursor = conn.execute("SELECT COUNT(*) FROM decision_cache")
-        stats["total_entries"] = cursor.fetchone()[0]
+            # Entries by decision
+            cursor = conn.execute(
+                "SELECT decision, COUNT(*) FROM decision_cache GROUP BY decision",
+            )
+            stats["by_decision"] = {row[0]: row[1] for row in cursor.fetchall()}
 
-        # Entries by decision
-        cursor = conn.execute(
-            "SELECT decision, COUNT(*) FROM decision_cache GROUP BY decision",
-        )
-        stats["by_decision"] = {row[0]: row[1] for row in cursor.fetchall()}
+            # Hit counts
+            cursor = conn.execute(
+                "SELECT SUM(hit_count), AVG(hit_count), MAX(hit_count) FROM decision_cache",
+            )
+            row = cursor.fetchone()
+            stats["total_hits"] = row[0] or 0
+            stats["avg_hits"] = row[1] or 0
+            stats["max_hits"] = row[2] or 0
 
-        # Hit counts
-        cursor = conn.execute(
-            "SELECT SUM(hit_count), AVG(hit_count), MAX(hit_count) FROM decision_cache",
-        )
-        row = cursor.fetchone()
-        stats["total_hits"] = row[0] or 0
-        stats["avg_hits"] = row[1] or 0
-        stats["max_hits"] = row[2] or 0
-
-        # Recent entries (last 24h)
-        cursor = conn.execute(
-            "SELECT COUNT(*) FROM decision_cache WHERE timestamp > ?",
-            (time.time() - 86400,),
-        )
-        stats["entries_24h"] = cursor.fetchone()[0]
-
-        conn.close()
+            # Recent entries (last 24h)
+            cursor = conn.execute(
+                "SELECT COUNT(*) FROM decision_cache WHERE timestamp > ?",
+                (time.time() - 86400,),
+            )
+            stats["entries_24h"] = cursor.fetchone()[0]
+        finally:
+            _close_cache_db(conn)
         return stats
     except Exception as e:
         return {"error": str(e)}
@@ -646,10 +682,13 @@ def clear_cache() -> bool:
     """Clear the decision cache. Returns True on success."""
     try:
         db_path = _get_cache_db()
-        conn = sqlite3.connect(db_path)
-        conn.execute("DELETE FROM decision_cache")
-        conn.commit()
-        conn.close()
+        conn = _connect_cache_db(db_path)
+        try:
+            _ensure_cache_schema(conn, db_path)
+            conn.execute("DELETE FROM decision_cache")
+            conn.commit()
+        finally:
+            _close_cache_db(conn)
         return True
     except Exception:
         return False
