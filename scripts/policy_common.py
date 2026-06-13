@@ -90,4 +90,7 @@ def normalize_input_paths(paths: Iterable[Path]) -> list[Path]:
 
 
 def format_policy_path(path: Path, *, root: Path) -> str:
-    return str(path.relative_to(root)) if path.is_relative_to(root) else str(path)
+    try:
+        return path.relative_to(root).as_posix()
+    except ValueError:
+        return path.as_posix()

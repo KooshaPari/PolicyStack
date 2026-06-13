@@ -94,7 +94,7 @@ def test_allow_missing_downgrades_missing_required_explicit_input_to_skip(
     result = _run_validator(tmp_path, "--allow-missing", "--input", str(missing_path))
 
     assert result.returncode == 0
-    assert f"[skip] {missing_path} (missing)" in result.stdout
+    assert "[skip] policy-config/system.yaml (missing)" in result.stdout
     assert "validation passed" in result.stdout
     assert "summary checked=0 missing=1 invalid=0" in result.stdout
 
@@ -349,7 +349,7 @@ def test_default_discovery_order_is_deterministic_and_deduplicated(
         json.loads(line) for line in result.stdout.splitlines() if line.startswith("{")
     ]
     discovered = [
-        Path(payload["path"]).relative_to(tmp_path).as_posix()
+        payload["path"].replace("\\", "/")
         for payload in payloads
         if payload.get("type") == "result" and payload.get("status") == "ok"
     ]

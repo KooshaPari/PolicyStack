@@ -457,6 +457,7 @@ def _print_failure_json(code: str, message: str, details: dict[str, Any] | None 
     payload: dict[str, Any] = {"code": code, "message": message}
     if details:
         payload["details"] = details
+    print(json.dumps(payload, ensure_ascii=True, sort_keys=True))
 
 
 def _print_success_json(
@@ -476,6 +477,13 @@ def _print_success_json(
         details["emit_path"] = str(emit_path)
     if scopes_ordering_assertion_path is not None:
         details["scopes_ordering_assertion_path"] = scopes_ordering_assertion_path
+    payload = {
+        "code": ERROR_CODE_OK,
+        "message": message,
+        "details": details,
+        "result": result,
+    }
+    print(json.dumps(payload, ensure_ascii=True, sort_keys=True))
 
 
 def _build_parser() -> _ResolverArgumentParser:
@@ -589,7 +597,7 @@ def main(argv: list[str] | None = None) -> int:
                     scopes_ordering_assertion_path="result.policy.scopes",
                 )
             else:
-                pass
+                print(json.dumps(success_payload, ensure_ascii=True, sort_keys=True))
         else:
             success_payload = {"policy": resolved_payload}
             if json_mode:
@@ -618,19 +626,19 @@ def main(argv: list[str] | None = None) -> int:
         if json_mode:
             _print_failure_json(ERROR_CODE_ARG, str(exc))
         else:
-            pass
-        return EXIT_CODE_ARG
+            print(str(exc), file=sys.stderr)
+        return exc.status
     except FileNotFoundError as exc:
         if json_mode:
             _print_failure_json(ERROR_CODE_MISSING, str(exc))
         else:
-            pass
+            print(str(exc), file=sys.stderr)
         return EXIT_CODE_MISSING
     except (TypeError, ValueError) as exc:
         if json_mode:
             _print_failure_json(ERROR_CODE_INVALID, str(exc))
         else:
-            pass
+            print(str(exc), file=sys.stderr)
         return EXIT_CODE_INVALID
     except Exception as exc:  # pragma: no cover
         if json_mode:
@@ -640,7 +648,7 @@ def main(argv: list[str] | None = None) -> int:
                 {"exception_type": type(exc).__name__, "exception_message": str(exc)},
             )
         else:
-            pass
+            print(f"internal resolver error: {exc}", file=sys.stderr)
         return EXIT_CODE_INTERNAL
 
 

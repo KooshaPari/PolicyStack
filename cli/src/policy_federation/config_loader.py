@@ -13,6 +13,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from .delegate import _auto_detect_harness
+
 
 @dataclass
 class PlatformConfig:
@@ -30,6 +32,7 @@ class RiskTierConfig:
     enabled: bool = True
     extra_patterns: list[str] = field(default_factory=list)
     patterns: list[str] = field(default_factory=list)
+    max_risk_score: float | None = None
 
 
 @dataclass
@@ -244,6 +247,8 @@ def _merge_dict_into_config(config: PolicyConfig, data: dict[str, Any]) -> None:
                     tier_config.extra_patterns = tier_data["extra_patterns"]
                 if "patterns" in tier_data:
                     tier_config.patterns = tier_data["patterns"]
+                if "max_risk_score" in tier_data:
+                    tier_config.max_risk_score = tier_data["max_risk_score"]
 
     if "cache" in data:
         cache_data = data["cache"]
@@ -296,8 +301,6 @@ def get_active_harness(config: PolicyConfig) -> str:
         return config.platform.preferred_harness
 
     # Auto-detect from environment
-    from .delegate import _auto_detect_harness
-
     detected = _auto_detect_harness()
     if detected:
         return detected

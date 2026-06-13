@@ -98,7 +98,8 @@ class TestOpenCodeWrapper:
         assert result["decision"] == "deny"
 
     @patch("opencode_wrapper.subprocess.run")
-    def test_review_command_timeout(self, mock_run):
+    @patch.object(OpenCodeWrapper, "is_available", return_value=True)
+    def test_review_command_timeout(self, _mock_available, mock_run):
         """review_command should handle timeout."""
         import subprocess
 

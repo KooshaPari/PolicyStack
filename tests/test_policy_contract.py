@@ -579,6 +579,7 @@ class TestPolicyLibNormalizationValidation(TestCase):
             normalize_payload(payload, Path.cwd())
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="requires bash/WSL")
 class TestWrapperConditionSemanticsParity(TestCase):
     fixtures_path = (
         Path(__file__).parent / "fixtures" / "condition_semantics_cases.json"

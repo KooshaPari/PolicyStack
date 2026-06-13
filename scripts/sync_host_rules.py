@@ -636,62 +636,65 @@ def _has_json_managed_segment(
 def _had_managed_segment_before(platform: str, path: Path) -> bool:
     if not path.exists():
         return False
-    if platform == "codex":
-        existing = path.read_text(encoding="utf-8").splitlines()
-        start, end = find_managed_segment(
-            existing,
-            MANAGED_MARKER_START,
-            MANAGED_MARKER_END,
-            path=path,
-            key="codex",
-        )
-        return start is not None and end is not None
+    try:
+        if platform == "codex":
+            existing = path.read_text(encoding="utf-8").splitlines()
+            start, end = find_managed_segment(
+                existing,
+                MANAGED_MARKER_START,
+                MANAGED_MARKER_END,
+                path=path,
+                key="codex",
+            )
+            return start is not None and end is not None
 
-    data = _load_json(path)
-    if platform == "cursor":
-        permissions = data.get("permissions", {})
-        if not isinstance(permissions, dict):
-            raise ValueError(f"{path}: field 'permissions' must be a JSON object")
-        allow = _read_list_field(permissions, "allow", path)
-        deny = _read_list_field(permissions, "deny", path)
-        ask = _read_list_field(permissions, "ask", path)
-        return (
-            _has_json_managed_segment(allow, path=path, key="allow")
-            or _has_json_managed_segment(deny, path=path, key="deny")
-            or _has_json_managed_segment(ask, path=path, key="ask")
-        )
-    if platform == "claude":
-        permissions = data.get("permissions", {})
-        if not isinstance(permissions, dict):
-            raise ValueError(f"{path}: field 'permissions' must be a JSON object")
-        allow = _read_list_field(permissions, "allow", path)
-        deny = _read_list_field(permissions, "deny", path)
-        ask = _read_list_field(permissions, "ask", path)
-        return (
-            _has_json_managed_segment(allow, path=path, key="allow")
-            or _has_json_managed_segment(deny, path=path, key="deny")
-            or _has_json_managed_segment(ask, path=path, key="ask")
-        )
-    if platform == "forge":
-        forge_data = _load_json(path)
-        allow = _read_list_field(forge_data, "commandAllowlist", path)
-        request = _read_list_field(forge_data, "commandRequestlist", path)
-        deny = _read_list_field(forge_data, "commandDenylist", path)
-        return (
-            _has_json_managed_segment(allow, path=path, key="commandAllowlist")
-            or _has_json_managed_segment(request, path=path, key="commandRequestlist")
-            or _has_json_managed_segment(deny, path=path, key="commandDenylist")
-        )
-    if platform == "droid":
-        allow = _read_list_field(data, "commandAllowlist", path)
-        request = _read_list_field(data, "commandRequestlist", path)
-        deny = _read_list_field(data, "commandDenylist", path)
-        return (
-            _has_json_managed_segment(allow, path=path, key="commandAllowlist")
-            or _has_json_managed_segment(request, path=path, key="commandRequestlist")
-            or _has_json_managed_segment(deny, path=path, key="commandDenylist")
-        )
-    raise ValueError(f"unknown platform: {platform}")
+        data = _load_json(path)
+        if platform == "cursor":
+            permissions = data.get("permissions", {})
+            if not isinstance(permissions, dict):
+                raise ValueError(f"{path}: field 'permissions' must be a JSON object")
+            allow = _read_list_field(permissions, "allow", path)
+            deny = _read_list_field(permissions, "deny", path)
+            ask = _read_list_field(permissions, "ask", path)
+            return (
+                _has_json_managed_segment(allow, path=path, key="allow")
+                or _has_json_managed_segment(deny, path=path, key="deny")
+                or _has_json_managed_segment(ask, path=path, key="ask")
+            )
+        if platform == "claude":
+            permissions = data.get("permissions", {})
+            if not isinstance(permissions, dict):
+                raise ValueError(f"{path}: field 'permissions' must be a JSON object")
+            allow = _read_list_field(permissions, "allow", path)
+            deny = _read_list_field(permissions, "deny", path)
+            ask = _read_list_field(permissions, "ask", path)
+            return (
+                _has_json_managed_segment(allow, path=path, key="allow")
+                or _has_json_managed_segment(deny, path=path, key="deny")
+                or _has_json_managed_segment(ask, path=path, key="ask")
+            )
+        if platform == "forge":
+            forge_data = _load_json(path)
+            allow = _read_list_field(forge_data, "commandAllowlist", path)
+            request = _read_list_field(forge_data, "commandRequestlist", path)
+            deny = _read_list_field(forge_data, "commandDenylist", path)
+            return (
+                _has_json_managed_segment(allow, path=path, key="commandAllowlist")
+                or _has_json_managed_segment(request, path=path, key="commandRequestlist")
+                or _has_json_managed_segment(deny, path=path, key="commandDenylist")
+            )
+        if platform == "droid":
+            allow = _read_list_field(data, "commandAllowlist", path)
+            request = _read_list_field(data, "commandRequestlist", path)
+            deny = _read_list_field(data, "commandDenylist", path)
+            return (
+                _has_json_managed_segment(allow, path=path, key="commandAllowlist")
+                or _has_json_managed_segment(request, path=path, key="commandRequestlist")
+                or _has_json_managed_segment(deny, path=path, key="commandDenylist")
+            )
+        raise ValueError(f"unknown platform: {platform}")
+    except (OSError, ValueError, json.JSONDecodeError):
+        return False
 
 
 def _build_text_summary(

@@ -20,7 +20,7 @@ from policy_federation.runtime_artifacts import (
     build_permission_audit_event,
     record_audit_event,
 )
-from support import REPO_ROOT
+from support import REPO_ROOT, echo_argv
 
 
 class InterceptorTest(unittest.TestCase):
@@ -153,7 +153,7 @@ class InterceptorTest(unittest.TestCase):
                 task_domain="devops",
                 task_instance=None,
                 task_overlay=None,
-                argv=["/bin/echo", "ok"],
+                argv=echo_argv("ok"),
                 cwd=tmpdir,
                 actor="tester",
                 target_paths=[],
@@ -284,7 +284,7 @@ class TocTouDetectionTest(unittest.TestCase):
                 task_domain="devops",
                 task_instance=None,
                 task_overlay=None,
-                argv=["/bin/echo", "ok"],
+                argv=echo_argv("ok"),
                 cwd=tmpdir,
                 actor="tester",
                 target_paths=[],
@@ -365,7 +365,7 @@ class PolicyTamperDetectionTest(unittest.TestCase):
                 task_domain="devops",
                 task_instance=None,
                 task_overlay=None,
-                argv=["/bin/echo", "ok"],
+                argv=echo_argv("ok"),
                 cwd=tmpdir,
                 actor=None,
                 target_paths=[],
