@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **`scripts/ci/b168_git_tree_path_safety_gate.py`**: regression guard that scans the git tree for `\r` / `\n` / `\t` and shell-glob characters in blob paths, preventing the CRLF-contamination class of bug from recurring (issue #52)
 
 ### Changed
 
@@ -13,6 +14,7 @@ All notable changes to this project will be documented in this file.
 ### Removed
 
 ### Fixed
+- Verified HEAD tree is free of the CRLF and wildcard contamination described in issue #52 (1697 paths scanned, 0 bad); the tree-path safety gate above prevents regression
 
 ### Security
 
