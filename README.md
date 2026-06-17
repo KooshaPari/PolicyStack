@@ -1,3 +1,4 @@
+<!-- Work-state: alpha — [######----] 60% — core policy resolve/sync/host-rules green, lint+format debt open, vite CVE to land, CI workflows ubuntu-only -->
 # Policy scope stack for multi-harness AgentOps
 
 This folder contains a concrete policy scope model:
