@@ -1,0 +1,80 @@
+name: Traceability
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  traceability:
+    name: Requirement Traceability
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate governance
+        run: python validate_governance.py
+
+      - name: Check requirement traceability
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyyaml
+          python -c "
+import os, sys, yaml
+
+errors = 0
+
+# Check that all FR IDs in FUNCTIONAL_REQUIREMENTS.md have corresponding tests
+fr_path = 'FUNCTIONAL_REQUIREMENTS.md'
+if os.path.exists(fr_path):
+    with open(fr_path) as f:
+        content = f.read()
+
+    import re
+    fr_ids = re.findall(r'FR-[A-Z]+-\d+', content)
+    print(f'Found {len(fr_ids)} FR references in {fr_path}')
+
+    for fr_id in fr_ids:
+        # Search tests for this FR ID
+        test_files = []
+        for root, dirs, files in os.walk('tests'):
+            for file in files:
+                if file.endswith('.py'):
+                    test_files.append(os.path.join(root, file))
+
+        found = False
+        for tf in test_files:
+            with open(tf) as f:
+                if fr_id in f.read():
+                    found = True
+                    break
+
+        if not found:
+            print(f'  MISSING: {fr_id} has no test coverage')
+            errors += 1
+
+if errors:
+    print(f'{errors} traceability gap(s) found')
+    sys.exit(1)
+else:
+    print('All FRs have test coverage')
+"
