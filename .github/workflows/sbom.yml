@@ -1,0 +1,94 @@
+name: SBOM
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "23 5 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cyclonedx:
+    name: Generate CycloneDX SBOM
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Generate Python SBOM (pip)
+        uses: CycloneDX/gh-python-generate-sbom@7e7ee3a2b2af4e84e0af5e98e0c445846dc39db9 # v2.2.0
+        with:
+          sbom_version: 1.6
+          path: ./
+
+      - name: Upload SBOM as workflow artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: sbom-python-cyclonedx
+          path: bom.xml
+          retention-days: 90
+
+      - name: Generate Rust SBOM (cargo-cyclonedx)
+        uses: actions-rs/cargo@ae10961054e4c8cfae5e48e2e07b4514ccfe2e17 # v1
+        with:
+          command: install
+          args: cargo-cyclonedx@2.1.0
+
+      - name: Run cargo-cyclonedx
+        working-directory: wrappers/rust
+        run: cargo cyclonedx
+
+      - name: Upload Rust SBOM as workflow artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: sbom-rust-cyclonedx
+          path: wrappers/rust/*.xml
+          retention-days: 90
+
+      - name: Upload SBOM to Dependency Graph
+        uses: github/dependency-submission-action@24b9f5c0b50abb491bbf82a8350a443df07e8e29 # v4
+        with:
+          files: |
+            bom.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  npm-sbom:
+    name: Generate npm SBOM
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate npm SBOM
+        run: npx @cyclonedx/cyclonedx-npm --output-format XML --output-file bom-npm.xml
+
+      - name: Upload npm SBOM as workflow artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: sbom-npm-cyclonedx
+          path: bom-npm.xml
+          retention-days: 90

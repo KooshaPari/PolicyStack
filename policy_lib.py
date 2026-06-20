@@ -494,6 +494,46 @@ def normalize_payload(payload: dict[str, Any], cwd: Path | None = None) -> list[
 def evaluate_policy(
     payload: dict[str, Any], command: str, cwd: Path | None = None,
 ) -> tuple[Decision, str, CommandRule | None]:
+    """Evaluate a command against a policy payload.
+
+    The evaluation follows deny-then-request-then-allow priority: if any
+    matching rule produces ``"deny"`` that decision is returned immediately;
+    otherwise the first ``"request"`` match is returned; failing that the
+    first ``"allow"`` match is returned. If no rule matches the fallback
+    decision is ``"allow"``.
+
+    Args:
+        payload: Policy payload dict. May be a top-level policy or wrapped
+            in a ``"policy"`` key.
+        command: Shell command string to evaluate.
+        cwd: Working directory for condition evaluation. Defaults to
+            ``Path.cwd()``.
+
+    Returns:
+        Tuple of ``(decision, reason, matched_rule)``.
+
+    Examples:
+        >>> from pathlib import Path
+        >>> import tempfile
+        >>> test_dir = Path(tempfile.mkdtemp())
+        >>> payload = {
+        ...     "policy": {
+        ...         "commands": {
+        ...             "allow": ["git push", "cargo build"],
+        ...             "deny": ["rm -rf /"],
+        ...         },
+        ...     },
+        ... }
+        >>> decision, reason, rule = evaluate_policy(payload, "git push", test_dir)
+        >>> decision
+        'allow'
+        >>> decision, reason, rule = evaluate_policy(payload, "rm -rf /", test_dir)
+        >>> decision
+        'deny'
+        >>> decision, reason, rule = evaluate_policy(payload, "unknown-command", test_dir)
+        >>> decision
+        'allow'
+    """
     cwd = cwd or Path.cwd()
     rules = normalize_payload(payload, cwd)
     reasons = {"deny": [], "allow": [], "request": []}
