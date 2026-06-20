@@ -1,0 +1,47 @@
+name: Policy Contract Governance
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  governance:
+    name: Policy Contract Governance
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate policy contract
+        run: python scripts/validate_policy_contract.py --root .
+
+      - name: Check policy versions
+        run: python scripts/check_policy_versions.py --root .
+
+      - name: Run resolve CLI governance tests
+        run: uv run --with pytest --with pyyaml --with jsonschema pytest tests/test_resolve_cli_governance.py -q
+
+      - name: Run policy common governance tests
+        run: uv run --with pytest --with pyyaml pytest tests/test_policy_common.py -q
+
+      - name: Run smoke-script pytest tests
+        run: uv run --with pytest --with pyyaml pytest tests/test_smoke_dispatch_host_hook.py -q

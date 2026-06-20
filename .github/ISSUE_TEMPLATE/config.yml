@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discussions
+    url: https://github.com/KooshaPari/PolicyStack/discussions
+    about: For questions, ideas, and open-ended discussion.
+  - name: Security policy
+    url: https://github.com/KooshaPari/PolicyStack/blob/main/SECURITY.md
+    about: For reporting security vulnerabilities (please do not open a public issue).
