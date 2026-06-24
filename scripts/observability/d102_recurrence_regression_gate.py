@@ -25,7 +25,9 @@ def main() -> int:
     parser.add_argument("--max-regression-drop", type=float, default=0.0)
     args = parser.parse_args()
 
-    rows = list(csv.DictReader(pathlib.Path(args.recurrence_csv).read_text().splitlines()))
+    rows = list(
+        csv.DictReader(pathlib.Path(args.recurrence_csv).read_text().splitlines())
+    )
     values = [to_float(r.get(args.value_field), args.value_field) for r in rows]
     regressions = 0
     max_drop = 0.0
@@ -40,5 +42,5 @@ def main() -> int:
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     raise SystemExit(main())

@@ -66,7 +66,9 @@ def main() -> int:
     drift_rate = drifted / total
     if args.max_drift_steps and drifted > args.max_drift_steps:
         fail(f"drift_steps={drifted}")
-    if args.max_drift_rate and drift_rate > to_float(args.max_drift_rate, "max_drift_rate"):
+    if args.max_drift_rate and drift_rate > to_float(
+        args.max_drift_rate, "max_drift_rate"
+    ):
         fail(f"drift_rate={drift_rate:.6f}")
     return 0
 

@@ -176,7 +176,8 @@ def test_apply_host_artifacts_clears_managed_codex_block_on_zero_rules(
 
 
 def test_main_uses_explicit_cwd_for_rendering(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     policy_path = tmp_path / "policy.json"
     policy_path.write_text(
@@ -218,7 +219,9 @@ def test_main_uses_explicit_cwd_for_rendering(
         }
 
     monkeypatch.setattr(
-        sync_host_rules, "render_platform_payload", fake_render_platform_payload,
+        sync_host_rules,
+        "render_platform_payload",
+        fake_render_platform_payload,
     )
     monkeypatch.setattr(
         sys,
@@ -543,13 +546,16 @@ def test_main_json_failure_response_for_internal_error_mapping(
     )
 
     def failing_success_entries(
-        *args: object, **kwargs: object,
+        *args: object,
+        **kwargs: object,
     ) -> list[dict[str, object]]:
         msg = "manifest boom"
         raise RuntimeError(msg)
 
     monkeypatch.setattr(
-        sync_host_rules, "_build_success_entries", failing_success_entries,
+        sync_host_rules,
+        "_build_success_entries",
+        failing_success_entries,
     )
     monkeypatch.setattr(
         sys,
@@ -783,7 +789,8 @@ def test_apply_host_artifacts_apply_rerun_is_idempotent_after_refactor(
         encoding="utf-8",
     )
     cursor_path.write_text(
-        json.dumps({"permissions": {"allow": [], "deny": []}}), encoding="utf-8",
+        json.dumps({"permissions": {"allow": [], "deny": []}}),
+        encoding="utf-8",
     )
     claude_path.write_text(
         json.dumps({"permissions": {"allow": [], "deny": [], "ask": []}}),

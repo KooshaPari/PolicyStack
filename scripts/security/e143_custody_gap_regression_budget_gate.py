@@ -33,7 +33,9 @@ def load_rows(path: pathlib.Path) -> list[dict]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows
-    fail("custody payload must be list or object with records/items/entries/transitions/attestations")
+    fail(
+        "custody payload must be list or object with records/items/entries/transitions/attestations"
+    )
 
 
 def main() -> int:
@@ -78,7 +80,9 @@ def main() -> int:
 
     regression_rate = regressions / len(gap_values)
     if regressions > args.max_regressions:
-        fail(f"regressions={regressions} exceeds max_regressions={args.max_regressions}")
+        fail(
+            f"regressions={regressions} exceeds max_regressions={args.max_regressions}"
+        )
     if regression_rate > args.max_regression_rate:
         fail(
             f"regression_rate={regression_rate:.6f} exceeds max_regression_rate={args.max_regression_rate}"

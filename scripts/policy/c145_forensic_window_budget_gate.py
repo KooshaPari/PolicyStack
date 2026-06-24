@@ -67,7 +67,10 @@ def main() -> int:
         if not isinstance(row, dict):
             continue
         age = to_int(
-            row.get("age_hours", row.get("forensic_age_hours", row.get("window_age_hours", 0))),
+            row.get(
+                "age_hours",
+                row.get("forensic_age_hours", row.get("window_age_hours", 0)),
+            ),
             "age_hours",
         )
         if age > args.window_hours:
@@ -92,7 +95,9 @@ def main() -> int:
                 "budget_breach",
                 row.get(
                     "forensic_window_budget_breach",
-                    row.get("forensic_budget_breach", row.get("budget_breach_count", False)),
+                    row.get(
+                        "forensic_budget_breach", row.get("budget_breach_count", False)
+                    ),
                 ),
             )
         ) or (actual - budget > args.allowed_budget_overrun)

@@ -39,7 +39,9 @@ def main() -> int:
     if not isinstance(payload, dict):
         fail("board payload must be a JSON object")
 
-    fatigue_score = _to_float(payload.get("review_fatigue_score"), "review_fatigue_score")
+    fatigue_score = _to_float(
+        payload.get("review_fatigue_score"), "review_fatigue_score"
+    )
     if fatigue_score > args.max_fatigue_score:
         fail(f"review_fatigue_score={fatigue_score}")
 

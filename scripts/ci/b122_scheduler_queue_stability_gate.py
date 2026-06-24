@@ -102,7 +102,9 @@ def main() -> int:
 
     for row in records:
         queue_depth = parse_float(row.get(args.queue_depth_key), args.queue_depth_key)
-        queue_jitter = parse_float(row.get(args.queue_jitter_key, 0), args.queue_jitter_key)
+        queue_jitter = parse_float(
+            row.get(args.queue_jitter_key, 0), args.queue_jitter_key
+        )
         stalled = parse_int(row.get(args.stalled_flag_key, 0), args.stalled_flag_key)
 
         queue_depth_total += queue_depth
@@ -122,7 +124,9 @@ def main() -> int:
         )
 
     if max_queue_depth > args.max_queue_depth:
-        fail(f"max_queue_depth={max_queue_depth} > max_queue_depth={args.max_queue_depth}")
+        fail(
+            f"max_queue_depth={max_queue_depth} > max_queue_depth={args.max_queue_depth}"
+        )
 
     average_queue_jitter = queue_jitter_total / len(records)
     if average_queue_jitter > args.max_average_queue_jitter:
@@ -132,7 +136,9 @@ def main() -> int:
         )
 
     if stalled_count > args.max_stalled_count:
-        fail(f"stalled_count={stalled_count} > max_stalled_count={args.max_stalled_count}")
+        fail(
+            f"stalled_count={stalled_count} > max_stalled_count={args.max_stalled_count}"
+        )
 
     for window, count in sorted(window_counts.items()):
         average = window_totals[window] / count

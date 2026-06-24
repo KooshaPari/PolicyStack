@@ -68,7 +68,10 @@ def main() -> int:
         _fail("D80 recurrence volatility gate failed: no recurrence rows")
 
     sorted_rows = sorted(rows, key=lambda row: (row.get("window_start") or "").strip())
-    values = [_to_float(row.get("open_recurrence"), csv_path, "open_recurrence") for row in sorted_rows]
+    values = [
+        _to_float(row.get("open_recurrence"), csv_path, "open_recurrence")
+        for row in sorted_rows
+    ]
 
     max_step = 0.0
     spike_count = 0

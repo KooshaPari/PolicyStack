@@ -17,7 +17,9 @@ def main() -> int:
     args = parser.parse_args()
 
     data = json.loads(pathlib.Path(args.board).read_text())
-    if not isinstance(data, dict) or not data.get("board_review_staleness_monitoring", True):
+    if not isinstance(data, dict) or not data.get(
+        "board_review_staleness_monitoring", True
+    ):
         fail("board_review_staleness_monitoring is disabled")
 
     max_stale = float(data.get("max_stale_days", 0.0))
@@ -26,5 +28,5 @@ def main() -> int:
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     raise SystemExit(main())

@@ -249,10 +249,10 @@ def _run_new_delegate_review(
         return None
 
     # Detect worktree vs canonical
-    is_worktree = cwd and (
+    is_worktree = bool(cwd) and bool(
         ".worktrees" in cwd or "worktrees" in cwd or "-wtrees/" in cwd
     )
-    is_canonical = cwd and not is_worktree
+    is_canonical = bool(cwd) and not is_worktree
 
     # Tiered risk assessment
     risk_assessment = assess_risk_tiered(
@@ -439,7 +439,8 @@ def run_headless_review(
     )
 
     if result["decision"] != "ask" or "unavailable" not in result.get(
-        "review_error", "",
+        "review_error",
+        "",
     ):
         # If it returned a firm allow/deny, or it actually ran but returned ask, return it
         if not result.get("review_error"):
@@ -455,10 +456,12 @@ def run_headless_review(
 
     # Try fallback reviewer
     fallback_bin = os.environ.get(
-        "POLICY_FALLBACK_REVIEW_BIN", DEFAULT_FALLBACK_REVIEW_BIN,
+        "POLICY_FALLBACK_REVIEW_BIN",
+        DEFAULT_FALLBACK_REVIEW_BIN,
     )
     fallback_model = os.environ.get(
-        "POLICY_FALLBACK_REVIEW_MODEL", DEFAULT_FALLBACK_REVIEW_MODEL,
+        "POLICY_FALLBACK_REVIEW_MODEL",
+        DEFAULT_FALLBACK_REVIEW_MODEL,
     )
 
     if fallback_bin and fallback_bin != primary_bin:

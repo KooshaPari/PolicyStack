@@ -23,6 +23,7 @@ def _to_float(value: object, field: str) -> float:
     except Exception:
         _fail(f"invalid float {field}: {value!r}")
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--recert", required=True)
 parser.add_argument("--max-exception-velocity", type=float, default=0.0)
@@ -34,9 +35,15 @@ report = json.loads(pathlib.Path(args.recert).read_text())
 if not isinstance(report, dict):
     _fail("recert report must be object")
 
-velocity = _to_float(report.get("exception_velocity", report.get("velocity", 0.0)), "exception_velocity")
-burst = _to_int(report.get("velocity_burst", report.get("burst_cycles", 0)), "velocity_burst")
-open_ex = _to_int(report.get("open_exceptions", report.get("open", 0)), "open_exceptions")
+velocity = _to_float(
+    report.get("exception_velocity", report.get("velocity", 0.0)), "exception_velocity"
+)
+burst = _to_int(
+    report.get("velocity_burst", report.get("burst_cycles", 0)), "velocity_burst"
+)
+open_ex = _to_int(
+    report.get("open_exceptions", report.get("open", 0)), "open_exceptions"
+)
 
 if velocity > args.max_exception_velocity:
     _fail(f"exception_velocity={velocity}")

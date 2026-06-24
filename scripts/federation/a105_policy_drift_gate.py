@@ -8,7 +8,7 @@ import sys
 
 def load_report(path):
     raw = path.read_text()
-    if path.suffix.lower() == '.csv':
+    if path.suffix.lower() == ".csv":
         return list(csv.DictReader(raw.splitlines()))
     return json.loads(raw)
 
@@ -30,22 +30,31 @@ def to_int(value, label):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--report', required=True)
-parser.add_argument('--max-drift', type=float, default=0.05)
-parser.add_argument('--max-unexpected-entries', type=int, default=0)
+parser.add_argument("--report", required=True)
+parser.add_argument("--max-drift", type=float, default=0.05)
+parser.add_argument("--max-unexpected-entries", type=int, default=0)
 args = parser.parse_args()
 
 rows = load_report(pathlib.Path(args.report))
 if isinstance(rows, dict):
-    drift = to_float(rows.get('policy_drift', rows.get('drift', 0.0)), 'policy_drift')
-    unexpected = to_int(rows.get('unexpected_entries', rows.get('unexpected_count', 0)), 'unexpected_entries')
+    drift = to_float(rows.get("policy_drift", rows.get("drift", 0.0)), "policy_drift")
+    unexpected = to_int(
+        rows.get("unexpected_entries", rows.get("unexpected_count", 0)),
+        "unexpected_entries",
+    )
 else:
     drift = 0.0
     unexpected = 0
     for row in rows:
-        drift = max(drift, to_float(row.get('policy_drift', row.get('drift', 0.0)), 'policy_drift'))
-        unexpected += to_int(row.get('unexpected_entries', row.get('unexpected_count', 0)), 'unexpected_entries')
+        drift = max(
+            drift,
+            to_float(row.get("policy_drift", row.get("drift", 0.0)), "policy_drift"),
+        )
+        unexpected += to_int(
+            row.get("unexpected_entries", row.get("unexpected_count", 0)),
+            "unexpected_entries",
+        )
 
 if drift > args.max_drift or unexpected > args.max_unexpected_entries:
-    print('A105 policy drift gate failed', file=sys.stderr)
+    print("A105 policy drift gate failed", file=sys.stderr)
     raise SystemExit(2)

@@ -12,7 +12,9 @@ from pathlib import Path
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Validate policy payload artifacts.")
-    parser.add_argument("--payload", required=True, help="Path to effective-policy.json")
+    parser.add_argument(
+        "--payload", required=True, help="Path to effective-policy.json"
+    )
     parser.add_argument(
         "--policy-schema",
         default="schemas/policy-resolution.schema.json",
@@ -61,7 +63,9 @@ def hash_payload(payload: dict) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
-def validate_schema(payload: dict, schema: dict, strict: bool) -> tuple[list[str], list[str]]:
+def validate_schema(
+    payload: dict, schema: dict, strict: bool
+) -> tuple[list[str], list[str]]:
     missing = []
     warnings: list[str] = []
     try:
@@ -203,7 +207,6 @@ def main() -> None:
         for _error in sig_errors:
             pass
         raise SystemExit(1)
-
 
 
 if __name__ == "__main__":

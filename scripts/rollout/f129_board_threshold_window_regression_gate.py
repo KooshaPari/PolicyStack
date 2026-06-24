@@ -7,7 +7,10 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E129 board threshold window regression gate failed: {message}", file=sys.stderr)
+    print(
+        f"E129 board threshold window regression gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -37,7 +40,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("board payload must be a JSON object or non-empty list of objects")
 
@@ -46,10 +53,13 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--board", required=True)
     parser.add_argument(
-        "--threshold-window-regression-count-field", default="threshold_window_regression_count"
+        "--threshold-window-regression-count-field",
+        default="threshold_window_regression_count",
     )
     parser.add_argument("--max-threshold-window-regression-count", type=int, default=0)
-    parser.add_argument("--threshold-window-days-field", default="threshold_window_days")
+    parser.add_argument(
+        "--threshold-window-days-field", default="threshold_window_days"
+    )
     parser.add_argument("--max-threshold-window-days", type=int, default=30)
     args = parser.parse_args()
 
@@ -67,7 +77,9 @@ def main() -> int:
             )
 
         threshold_window_days = to_int(
-            record.get(args.threshold_window_days_field), args.threshold_window_days_field, index
+            record.get(args.threshold_window_days_field),
+            args.threshold_window_days_field,
+            index,
         )
         if threshold_window_days > args.max_threshold_window_days:
             fail(

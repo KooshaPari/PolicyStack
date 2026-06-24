@@ -246,10 +246,12 @@ def test_json_success_payload_for_mixed_yaml_and_json_default_discovery(
     _write_file(tmp_path / "policy-config" / "user.yaml", {"name": "user"})
     _write_file(tmp_path / "policy-config" / "repo.yaml", {"name": "repo"})
     _write_file(
-        tmp_path / "policy-config" / "harness" / "harness.yaml", {"name": "harness"},
+        tmp_path / "policy-config" / "harness" / "harness.yaml",
+        {"name": "harness"},
     )
     _write_json_file(
-        tmp_path / "policy-config" / "task-domain" / "domain.json", {"name": "domain"},
+        tmp_path / "policy-config" / "task-domain" / "domain.json",
+        {"name": "domain"},
     )
     _write_json_file(
         tmp_path / "policy-config" / "task-instance" / "instance.json",
@@ -286,10 +288,12 @@ def test_json_failure_payload_for_mixed_yaml_and_json_default_discovery(
     _write_file(tmp_path / "policy-config" / "user.yaml", {"name": "user"})
     _write_file(tmp_path / "policy-config" / "repo.yaml", {"name": "repo"})
     _write_file(
-        tmp_path / "policy-config" / "harness" / "harness.yaml", {"name": "harness"},
+        tmp_path / "policy-config" / "harness" / "harness.yaml",
+        {"name": "harness"},
     )
     _write_json_file(
-        tmp_path / "policy-config" / "task-domain" / "domain.json", {"name": "domain"},
+        tmp_path / "policy-config" / "task-domain" / "domain.json",
+        {"name": "domain"},
     )
     _write_json_file(
         tmp_path / "policy-config" / "task-instance" / "instance.json",
@@ -326,20 +330,25 @@ def test_default_discovery_order_is_deterministic_and_deduplicated(
     _write_file(tmp_path / "policy-config" / "repo.yaml", {"name": "repo"})
 
     _write_json_file(
-        tmp_path / "policy-config" / "harness" / "beta.json", {"name": "beta"},
+        tmp_path / "policy-config" / "harness" / "beta.json",
+        {"name": "beta"},
     )
     _write_file(tmp_path / "policy-config" / "harness" / "beta.yaml", {"name": "beta"})
     _write_json_file(
-        tmp_path / "policy-config" / "task-domain" / "alpha.json", {"name": "alpha"},
+        tmp_path / "policy-config" / "task-domain" / "alpha.json",
+        {"name": "alpha"},
     )
     _write_file(
-        tmp_path / "policy-config" / "task-domain" / "zeta.yaml", {"name": "zeta"},
+        tmp_path / "policy-config" / "task-domain" / "zeta.yaml",
+        {"name": "zeta"},
     )
     _write_json_file(
-        tmp_path / "policy-config" / "task-instance" / "item.json", {"name": "item"},
+        tmp_path / "policy-config" / "task-instance" / "item.json",
+        {"name": "item"},
     )
     _write_file(
-        tmp_path / "policy-config" / "task-instance" / "item.yaml", {"name": "item"},
+        tmp_path / "policy-config" / "task-instance" / "item.yaml",
+        {"name": "item"},
     )
 
     result = _run_validator(tmp_path, "--json")

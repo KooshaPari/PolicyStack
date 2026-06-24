@@ -86,9 +86,7 @@ def main() -> int:
         if status not in {"active", "approved"}:
             continue
         pressure = _to_float(row.get("pressure_score", ""), csv_path, "pressure_score")
-        days = _to_int(
-            row.get("days_since_update", ""), csv_path, "days_since_update"
-        )
+        days = _to_int(row.get("days_since_update", ""), csv_path, "days_since_update")
         score = max(score, pressure)
         age_pressure = pressure * (1.0 + days / max(args.max_pressure_age_days, 1))
         if age_pressure > args.max_age_pressure_score:

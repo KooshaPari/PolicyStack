@@ -131,7 +131,8 @@ class TestDecisionCaching:
 
             # Patch the cache path
             with patch(
-                "policy_federation.delegate._get_cache_db", return_value=cache_db,
+                "policy_federation.delegate._get_cache_db",
+                return_value=cache_db,
             ):
                 # Clear and init cache
                 clear_cache()
@@ -157,9 +158,9 @@ class TestDecisionCaching:
             cache_db = Path(tmpdir) / "test_cache.db"
 
             with patch(
-                "policy_federation.delegate._get_cache_db", return_value=cache_db,
+                "policy_federation.delegate._get_cache_db",
+                return_value=cache_db,
             ):
-
                 # Cache with very old timestamp
                 with patch("policy_federation.delegate.time.time", return_value=0):
                     result = DelegateResult("allow", "old", "test", 0.9)
@@ -176,7 +177,8 @@ class TestDecisionCaching:
             cache_db = Path(tmpdir) / "test_cache.db"
 
             with patch(
-                "policy_federation.delegate._get_cache_db", return_value=cache_db,
+                "policy_federation.delegate._get_cache_db",
+                return_value=cache_db,
             ):
                 # Cache for specific path
                 result = DelegateResult("allow", "test", "test", 0.9)
@@ -193,7 +195,8 @@ class TestDecisionCaching:
             cache_db = Path(tmpdir) / "test_cache.db"
 
             with patch(
-                "policy_federation.delegate._get_cache_db", return_value=cache_db,
+                "policy_federation.delegate._get_cache_db",
+                return_value=cache_db,
             ):
                 clear_cache()
 
@@ -371,7 +374,8 @@ class TestDelegateAskIntegration:
 
         # No harness configured, should return ask
         with patch(
-            "policy_federation.delegate._auto_detect_harness", return_value=None,
+            "policy_federation.delegate._auto_detect_harness",
+            return_value=None,
         ):
             result = delegate_ask(ctx, use_local_fast=True, use_cache=False)
             assert result.decision == "ask"

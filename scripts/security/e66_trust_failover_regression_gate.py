@@ -5,6 +5,7 @@ import json
 import pathlib
 import sys
 
+
 def _rows(path: pathlib.Path) -> list[dict]:
     if path.suffix.lower() == ".csv":
         return list(csv.DictReader(path.open()))
@@ -20,6 +21,7 @@ def _rows(path: pathlib.Path) -> list[dict]:
             return data["signals"]
     return []
 
+
 def _is_regression(r: dict) -> bool:
     if bool(r.get("regression")):
         return True
@@ -33,17 +35,23 @@ def _is_regression(r: dict) -> bool:
         pass
     return False
 
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--report", required=True)
     p.add_argument("--max-regressions", type=int, default=0)
     a = p.parse_args()
-    bad = [str(r.get("id") or r.get("check") or r.get("name") or "") for r in _rows(pathlib.Path(a.report)) if _is_regression(r)]
+    bad = [
+        str(r.get("id") or r.get("check") or r.get("name") or "")
+        for r in _rows(pathlib.Path(a.report))
+        if _is_regression(r)
+    ]
     if len(bad) > a.max_regressions:
         bad.sort()
         print(f"E66 trust failover regressions: {len(bad)}", file=sys.stderr)
         return 2
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

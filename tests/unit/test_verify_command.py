@@ -22,7 +22,8 @@ class VerifyCommandTest(unittest.TestCase):
             policies_dir = repo_root / "policies" / "system"
             policies_dir.mkdir(parents=True)
             (policies_dir / "base.yaml").write_text(
-                "id: test\npolicy: {}\n", encoding="utf-8",
+                "id: test\npolicy: {}\n",
+                encoding="utf-8",
             )
 
             baseline_file = repo_root / ".policyctl.verify"
@@ -110,7 +111,8 @@ class VerifyCommandTest(unittest.TestCase):
             policies_dir = repo_root / "policies" / "system"
             policies_dir.mkdir(parents=True)
             (policies_dir / "base.yaml").write_text(
-                "id: test\npolicy: {}\n", encoding="utf-8",
+                "id: test\npolicy: {}\n",
+                encoding="utf-8",
             )
 
             # Use explicit repo-root
@@ -136,7 +138,8 @@ class VerifyCommandTest(unittest.TestCase):
                 scope_dir.mkdir(parents=True)
                 for i in range(2):
                     (scope_dir / f"policy{i}.yaml").write_text(
-                        f"id: {scope}_policy{i}\npolicy: {{}}\n", encoding="utf-8",
+                        f"id: {scope}_policy{i}\npolicy: {{}}\n",
+                        encoding="utf-8",
                     )
 
             args = argparse.Namespace(repo_root=str(repo_root))

@@ -87,8 +87,7 @@ def main() -> int:
         _fail(f"D70 suppression expiry quality gate failed: expired={expired}")
     if missing_owner > args.max_missing_owner:
         _fail(
-            f"D70 suppression expiry quality gate failed: "
-            f"missing_owner={missing_owner}"
+            f"D70 suppression expiry quality gate failed: missing_owner={missing_owner}"
         )
     if missing_rationale > args.max_missing_rationale:
         _fail(
@@ -97,8 +96,7 @@ def main() -> int:
         )
     if quality_score < args.min_quality_score:
         _fail(
-            f"D70 suppression expiry quality gate failed: "
-            f"quality_score={quality_score}"
+            f"D70 suppression expiry quality gate failed: quality_score={quality_score}"
         )
     return 0
 

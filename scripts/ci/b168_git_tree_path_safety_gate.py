@@ -11,6 +11,7 @@ Exit codes:
   2  forbidden characters detected (printed on stderr)
   3  git invocation failed
 """
+
 from __future__ import annotations
 
 import argparse
@@ -59,11 +60,16 @@ def main() -> int:
     try:
         bad = scan(args.ref)
     except subprocess.CalledProcessError as exc:
-        print(f"git ls-tree failed (rc={exc.returncode}): {exc.stderr}", file=sys.stderr)
+        print(
+            f"git ls-tree failed (rc={exc.returncode}): {exc.stderr}", file=sys.stderr
+        )
         return 3
 
     if bad:
-        print(f"CRLF/wildcard guard: {len(bad)} bad tree path(s) in {args.ref}:", file=sys.stderr)
+        print(
+            f"CRLF/wildcard guard: {len(bad)} bad tree path(s) in {args.ref}:",
+            file=sys.stderr,
+        )
         for path, reason in bad:
             print(f"  - {path!r}: {reason}", file=sys.stderr)
         print(
@@ -74,7 +80,9 @@ def main() -> int:
         )
         return 2
 
-    print(f"CRLF/wildcard guard: {args.ref} tree is clean ({sum(1 for _ in iter_tree_paths(args.ref))} paths scanned).")
+    print(
+        f"CRLF/wildcard guard: {args.ref} tree is clean ({sum(1 for _ in iter_tree_paths(args.ref))} paths scanned)."
+    )
     return 0
 
 

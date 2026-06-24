@@ -5,11 +5,21 @@ import json
 import pathlib
 import sys
 
-UNSTABLE_STATUSES = {"unstable", "regression", "degradation", "drop", "error", "fail", "rollback"}
+UNSTABLE_STATUSES = {
+    "unstable",
+    "regression",
+    "degradation",
+    "drop",
+    "error",
+    "fail",
+    "rollback",
+}
 
 
 def fail(message: str) -> None:
-    print(f"E145 trust boundary stability budget gate failed: {message}", file=sys.stderr)
+    print(
+        f"E145 trust boundary stability budget gate failed: {message}", file=sys.stderr
+    )
     raise SystemExit(2)
 
 
@@ -35,7 +45,9 @@ def load_rows(path: pathlib.Path) -> list[dict]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows
-    fail("transitions payload must be list or object with transitions/records/items/entries/attestations")
+    fail(
+        "transitions payload must be list or object with transitions/records/items/entries/attestations"
+    )
 
 
 def is_unstable_row(
@@ -76,7 +88,9 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.instability_threshold < 0:
-        fail(f"instability-threshold must be non-negative: {args.instability_threshold}")
+        fail(
+            f"instability-threshold must be non-negative: {args.instability_threshold}"
+        )
     if args.max_unstable < 0:
         fail(f"max-unstable must be non-negative: {args.max_unstable}")
     if args.max_unstable_rate < 0 or args.max_unstable_rate > 1:
@@ -89,7 +103,9 @@ def main() -> int:
             f"{args.max_unstable_per_window}"
         )
     if args.max_window_violations < 0:
-        fail(f"max-window-violations must be non-negative: {args.max_window_violations}")
+        fail(
+            f"max-window-violations must be non-negative: {args.max_window_violations}"
+        )
 
     rows = load_rows(pathlib.Path(args.transitions))
     if not rows:
@@ -99,7 +115,9 @@ def main() -> int:
     for index, row in enumerate(rows):
         if not isinstance(row, dict):
             continue
-        previous = rows[index - 1] if index > 0 and isinstance(rows[index - 1], dict) else None
+        previous = (
+            rows[index - 1] if index > 0 and isinstance(rows[index - 1], dict) else None
+        )
         unstable_flags.append(
             is_unstable_row(
                 row,
@@ -129,7 +147,9 @@ def main() -> int:
             violations += 1
 
     if violations > args.max_window_violations:
-        fail(f"window_violations={violations} exceeds max_window_violations={args.max_window_violations}")
+        fail(
+            f"window_violations={violations} exceeds max_window_violations={args.max_window_violations}"
+        )
 
     return 0
 

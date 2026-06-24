@@ -44,7 +44,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("board payload must be a JSON object or non-empty list of objects")
 
@@ -54,20 +58,26 @@ def main() -> int:
     parser.add_argument("--board", required=True)
     parser.add_argument("--threshold-drift-field", default="threshold_drift")
     parser.add_argument("--max-threshold-drift", type=float, default=0.05)
-    parser.add_argument("--drift-violations-field", default="threshold_drift_violation_count")
+    parser.add_argument(
+        "--drift-violations-field", default="threshold_drift_violation_count"
+    )
     parser.add_argument("--max-drift-violations", type=int, default=0)
     args = parser.parse_args()
 
     records = load_records(pathlib.Path(args.board))
     for index, record in enumerate(records):
-        threshold_drift = to_float(record.get(args.threshold_drift_field), args.threshold_drift_field, index)
+        threshold_drift = to_float(
+            record.get(args.threshold_drift_field), args.threshold_drift_field, index
+        )
         if threshold_drift > args.max_threshold_drift:
             fail(
                 f"{args.threshold_drift_field}={threshold_drift} > "
                 f"{args.max_threshold_drift} at index {index}"
             )
 
-        drift_violations = to_int(record.get(args.drift_violations_field), args.drift_violations_field, index)
+        drift_violations = to_int(
+            record.get(args.drift_violations_field), args.drift_violations_field, index
+        )
         if drift_violations > args.max_drift_violations:
             fail(
                 f"{args.drift_violations_field}={drift_violations} > "

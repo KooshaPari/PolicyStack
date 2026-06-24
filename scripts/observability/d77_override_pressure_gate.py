@@ -64,7 +64,9 @@ def main() -> int:
     _require_file(csv_path, "overrides")
 
     report = _load_json(report_path)
-    rows = _load_csv(csv_path, {"override_id", "status", "pressure_score", "days_since_update"})
+    rows = _load_csv(
+        csv_path, {"override_id", "status", "pressure_score", "days_since_update"}
+    )
 
     report_pressure = float(report.get("override_pressure_score", 0.0))
     report_pressure_count = int(report.get("pressured_overrides", 0))
@@ -79,16 +81,23 @@ def main() -> int:
         max_pressure = max(max_pressure, pressure)
         if pressure > args.max_pressure_score:
             pressured_count += 1
-        if int((row.get("days_since_update") or "").strip() or 0) > args.max_pressure_days:
+        if (
+            int((row.get("days_since_update") or "").strip() or 0)
+            > args.max_pressure_days
+        ):
             pressured_count += 1
 
     pressured_count = max(pressured_count, report_pressure_count)
     effective_pressure = max(max_pressure, report_pressure)
 
     if effective_pressure > args.max_pressure_score:
-        _fail(f"D77 override pressure gate failed: max_pressure_score={effective_pressure}")
+        _fail(
+            f"D77 override pressure gate failed: max_pressure_score={effective_pressure}"
+        )
     if pressured_count > args.max_pressured_overrides:
-        _fail(f"D77 override pressure gate failed: pressured_overrides={pressured_count}")
+        _fail(
+            f"D77 override pressure gate failed: pressured_overrides={pressured_count}"
+        )
     return 0
 
 

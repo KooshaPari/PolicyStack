@@ -37,7 +37,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("recert payload must be a JSON object or non-empty list of objects")
 
@@ -53,16 +57,22 @@ def main() -> int:
 
     records = load_records(pathlib.Path(args.recert))
     for index, record in enumerate(records):
-        stability_score = to_float(record.get(args.stability_score_field), args.stability_score_field, index)
+        stability_score = to_float(
+            record.get(args.stability_score_field), args.stability_score_field, index
+        )
         if stability_score < args.min_stability_score:
             fail(
                 f"{args.stability_score_field}={stability_score} < "
                 f"{args.min_stability_score} at index {index}"
             )
 
-        volatility = to_float(record.get(args.volatility_field), args.volatility_field, index)
+        volatility = to_float(
+            record.get(args.volatility_field), args.volatility_field, index
+        )
         if volatility > args.max_volatility:
-            fail(f"{args.volatility_field}={volatility} > {args.max_volatility} at index {index}")
+            fail(
+                f"{args.volatility_field}={volatility} > {args.max_volatility} at index {index}"
+            )
 
     return 0
 

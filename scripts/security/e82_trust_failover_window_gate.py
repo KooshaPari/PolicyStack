@@ -21,7 +21,10 @@ def _load_rows(path: pathlib.Path) -> tuple[list[dict], str | None]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows, None
-    return [], "E82 invalid input: expected list or dict with failovers/trust_failovers/items/events/records"
+    return (
+        [],
+        "E82 invalid input: expected list or dict with failovers/trust_failovers/items/events/records",
+    )
 
 
 def _parse_datetime(v: object) -> datetime | None:
@@ -31,18 +34,29 @@ def _parse_datetime(v: object) -> datetime | None:
     if not text:
         return None
     try:
-        return datetime.fromisoformat(text.replace("Z", "+00:00")).astimezone(timezone.utc)
+        return datetime.fromisoformat(text.replace("Z", "+00:00")).astimezone(
+            timezone.utc
+        )
     except ValueError:
         return None
 
 
 def _is_breached(r: dict, max_minutes: int) -> bool:
-    if str(r.get("status", "")).strip().lower() in {"failed", "breached", "degraded", "timed_out"}:
+    if str(r.get("status", "")).strip().lower() in {
+        "failed",
+        "breached",
+        "degraded",
+        "timed_out",
+    }:
         return True
     if bool(r.get("breach") or r.get("window_breach")):
         return True
-    start = _parse_datetime(r.get("started_at") or r.get("failover_started_at") or r.get("detected_at"))
-    end = _parse_datetime(r.get("ended_at") or r.get("resolved_at") or r.get("recovered_at"))
+    start = _parse_datetime(
+        r.get("started_at") or r.get("failover_started_at") or r.get("detected_at")
+    )
+    end = _parse_datetime(
+        r.get("ended_at") or r.get("resolved_at") or r.get("recovered_at")
+    )
     if start is None:
         return True
     if end is None:

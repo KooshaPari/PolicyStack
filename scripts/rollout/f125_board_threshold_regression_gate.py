@@ -44,7 +44,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("board payload must be a JSON object or non-empty list of objects")
 
@@ -55,7 +59,8 @@ def main() -> int:
     parser.add_argument("--threshold-regression-field", default="threshold_regression")
     parser.add_argument("--max-threshold-regression", type=float, default=0.0)
     parser.add_argument(
-        "--threshold-regression-violations-field", default="threshold_regression_violation_count"
+        "--threshold-regression-violations-field",
+        default="threshold_regression_violation_count",
     )
     parser.add_argument("--max-threshold-regression-violations", type=int, default=0)
     args = parser.parse_args()
@@ -63,7 +68,9 @@ def main() -> int:
     records = load_records(pathlib.Path(args.board))
     for index, record in enumerate(records):
         threshold_regression = to_float(
-            record.get(args.threshold_regression_field), args.threshold_regression_field, index
+            record.get(args.threshold_regression_field),
+            args.threshold_regression_field,
+            index,
         )
         if threshold_regression > args.max_threshold_regression:
             fail(

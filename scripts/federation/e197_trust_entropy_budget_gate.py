@@ -68,9 +68,9 @@ def is_unstable_transition(
     if previous_value is None or current_value is None:
         return False
 
-    return abs(parse_float(current_value, trust_col) - parse_float(previous_value, trust_col)) > (
-        instability_threshold
-    )
+    return abs(
+        parse_float(current_value, trust_col) - parse_float(previous_value, trust_col)
+    ) > (instability_threshold)
 
 
 def main() -> int:
@@ -89,8 +89,7 @@ def main() -> int:
 
     if args.instability_threshold < 0:
         fail(
-            "instability-threshold must be non-negative: "
-            f"{args.instability_threshold}"
+            f"instability-threshold must be non-negative: {args.instability_threshold}"
         )
     if args.max_unstable < 0:
         fail(f"max-unstable must be non-negative: {args.max_unstable}")
@@ -104,7 +103,9 @@ def main() -> int:
             f"{args.max_unstable_per_window}"
         )
     if args.max_window_violations < 0:
-        fail(f"max-window-violations must be non-negative: {args.max_window_violations}")
+        fail(
+            f"max-window-violations must be non-negative: {args.max_window_violations}"
+        )
     if args.min_stable_window_ratio < 0 or args.min_stable_window_ratio > 1:
         fail(
             "min-stable-window-ratio must be between 0 and 1: "
@@ -119,7 +120,9 @@ def main() -> int:
     for index, row in enumerate(rows):
         if not isinstance(row, dict):
             continue
-        previous = rows[index - 1] if index > 0 and isinstance(rows[index - 1], dict) else None
+        previous = (
+            rows[index - 1] if index > 0 and isinstance(rows[index - 1], dict) else None
+        )
         unstable_flags.append(
             is_unstable_transition(
                 row,

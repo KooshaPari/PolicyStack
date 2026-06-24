@@ -123,7 +123,9 @@ def main() -> int:
         if operations < 0:
             fail(f"operations for {args.operations_key} must be >= 0; got {operations}")
         if regressions < 0:
-            fail(f"regressions for {args.regressions_key} must be >= 0; got {regressions}")
+            fail(
+                f"regressions for {args.regressions_key} must be >= 0; got {regressions}"
+            )
         if critical_regressions < 0:
             fail(
                 f"critical regressions for {args.critical_regressions_key} must be >= 0; got "
@@ -146,7 +148,9 @@ def main() -> int:
                 f"critical_regressions={critical_regressions} cannot exceed regressions={regressions}"
             )
         if reclaim_failures > operations:
-            fail(f"reclaim_failures={reclaim_failures} cannot exceed operations={operations}")
+            fail(
+                f"reclaim_failures={reclaim_failures} cannot exceed operations={operations}"
+            )
 
         total_operations += operations
         total_regressions += regressions
@@ -159,7 +163,9 @@ def main() -> int:
         window_regressions[window] = window_regressions.get(window, 0) + regressions
 
     if total_operations < args.min_total_operations:
-        fail(f"total_operations={total_operations} < min_total_operations={args.min_total_operations}")
+        fail(
+            f"total_operations={total_operations} < min_total_operations={args.min_total_operations}"
+        )
 
     total_regression_rate = total_regressions / total_operations
     if total_regression_rate > args.max_total_regression_rate:

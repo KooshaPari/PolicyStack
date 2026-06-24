@@ -10,7 +10,10 @@ REGRESSION_STATUSES = {"regression", "degradation", "drop", "error", "fail", "ro
 
 
 def fail(message: str) -> None:
-    print(f"E141 trust regression window stability gate failed: {message}", file=sys.stderr)
+    print(
+        f"E141 trust regression window stability gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -36,7 +39,9 @@ def load_rows(path: pathlib.Path) -> list[dict]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows
-    fail("transitions payload must be list or object with transitions/records/items/entries/attestations")
+    fail(
+        "transitions payload must be list or object with transitions/records/items/entries/attestations"
+    )
 
 
 def is_regression_row(
@@ -83,7 +88,9 @@ def main() -> int:
             f"{args.max_regressions_per_window}"
         )
     if args.max_window_violations < 0:
-        fail(f"max-window-violations must be non-negative: {args.max_window_violations}")
+        fail(
+            f"max-window-violations must be non-negative: {args.max_window_violations}"
+        )
     if args.min_stable_window_ratio < 0 or args.min_stable_window_ratio > 1:
         fail(
             "min-stable-window-ratio must be between 0 and 1: "
@@ -98,9 +105,13 @@ def main() -> int:
     for index, row in enumerate(rows):
         if not isinstance(row, dict):
             continue
-        previous = rows[index - 1] if index > 0 and isinstance(rows[index - 1], dict) else None
+        previous = (
+            rows[index - 1] if index > 0 and isinstance(rows[index - 1], dict) else None
+        )
         regression_flags.append(
-            is_regression_row(row, previous, args.trust_col, args.status_col, args.drop_threshold)
+            is_regression_row(
+                row, previous, args.trust_col, args.status_col, args.drop_threshold
+            )
         )
 
     if not regression_flags:
@@ -121,7 +132,9 @@ def main() -> int:
     stable_windows = window_count - violations
     stable_ratio = stable_windows / window_count
     if violations > args.max_window_violations:
-        fail(f"window_violations={violations} exceeds max_window_violations={args.max_window_violations}")
+        fail(
+            f"window_violations={violations} exceeds max_window_violations={args.max_window_violations}"
+        )
     if stable_ratio < args.min_stable_window_ratio:
         fail(
             f"stable_window_ratio={stable_ratio:.6f} below min_stable_window_ratio="

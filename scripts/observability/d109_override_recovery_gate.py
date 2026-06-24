@@ -75,9 +75,15 @@ def main() -> int:
     if not rows:
         fail("D109 override recovery gate failed: empty override data")
 
-    ordered = sorted(rows, key=lambda row: (row.get(args.time_field) or ""))
-    open_counts = [_to_int(row.get(args.open_field, ""), csv_path, args.open_field) for row in ordered]
-    recoveries = [_to_float(row.get(args.recovery_field, ""), csv_path, args.recovery_field) for row in ordered]
+    ordered = sorted(rows, key=lambda row: row.get(args.time_field) or "")
+    open_counts = [
+        _to_int(row.get(args.open_field, ""), csv_path, args.open_field)
+        for row in ordered
+    ]
+    recoveries = [
+        _to_float(row.get(args.recovery_field, ""), csv_path, args.recovery_field)
+        for row in ordered
+    ]
 
     max_open = max(open_counts)
     report_open = int(report.get("override_open_count", 0))
@@ -90,9 +96,13 @@ def main() -> int:
         max_recovery = report_recovery
 
     if max_open > args.max_open_overrides:
-        fail(f"D109 max_open_overrides={max_open} > max_open_overrides={args.max_open_overrides}")
+        fail(
+            f"D109 max_open_overrides={max_open} > max_open_overrides={args.max_open_overrides}"
+        )
     if max_recovery > args.max_recovery_time:
-        fail(f"D109 max_recovery_time={max_recovery} > max_recovery_time={args.max_recovery_time}")
+        fail(
+            f"D109 max_recovery_time={max_recovery} > max_recovery_time={args.max_recovery_time}"
+        )
 
     return 0
 

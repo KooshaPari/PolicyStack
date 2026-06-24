@@ -6,6 +6,7 @@ import pathlib
 import sys
 from datetime import datetime, timezone
 
+
 def _load_rows(path: pathlib.Path) -> tuple[list[dict], str | None]:
     try:
         if path.suffix.lower() == ".csv":
@@ -21,7 +22,10 @@ def _load_rows(path: pathlib.Path) -> tuple[list[dict], str | None]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows, None
-    return [], "E76 invalid input: expected list or dict with custody/cases/items/records"
+    return (
+        [],
+        "E76 invalid input: expected list or dict with custody/cases/items/records",
+    )
 
 
 def _parse_datetime(v: object) -> datetime | None:
@@ -39,7 +43,9 @@ def _parse_datetime(v: object) -> datetime | None:
 def _is_renewal_gap(r: dict, max_gap_days: int) -> bool:
     if bool(r.get("renewal_complete") or r.get("renewed") or r.get("active")):
         return False
-    due = _parse_datetime(r.get("renewal_due") or r.get("expires_at") or r.get("valid_until"))
+    due = _parse_datetime(
+        r.get("renewal_due") or r.get("expires_at") or r.get("valid_until")
+    )
     if due is None:
         status = str(r.get("status", "")).strip().lower()
         return status in {"renewal_overdue", "overdue", "expired", "open"}
@@ -60,7 +66,11 @@ def main() -> int:
     if err:
         print(err, file=sys.stderr)
         return 2
-    bad = [str(r.get("id") or r.get("custody_id") or r.get("case_id") or "") for r in rows if _is_renewal_gap(r, args.max_gap_days)]
+    bad = [
+        str(r.get("id") or r.get("custody_id") or r.get("case_id") or "")
+        for r in rows
+        if _is_renewal_gap(r, args.max_gap_days)
+    ]
     if len(bad) > args.max_renewal_gaps:
         bad.sort()
         print(f"E76 custody renewal gap breach: {len(bad)}", file=sys.stderr)

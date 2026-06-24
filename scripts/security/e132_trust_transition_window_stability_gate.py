@@ -6,11 +6,22 @@ import pathlib
 import sys
 
 
-UNSTABLE_STATUSES = {"unstable", "regression", "degradation", "drop", "error", "fail", "rollback"}
+UNSTABLE_STATUSES = {
+    "unstable",
+    "regression",
+    "degradation",
+    "drop",
+    "error",
+    "fail",
+    "rollback",
+}
 
 
 def fail(message: str) -> None:
-    print(f"E132 trust transition window stability gate failed: {message}", file=sys.stderr)
+    print(
+        f"E132 trust transition window stability gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -36,7 +47,9 @@ def load_rows(path: pathlib.Path) -> list[dict]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows
-    fail("transitions payload must be list or object with transitions/records/items/entries/attestations")
+    fail(
+        "transitions payload must be list or object with transitions/records/items/entries/attestations"
+    )
 
 
 def is_unstable_transition(
@@ -70,9 +83,13 @@ def main() -> int:
     if args.window_size <= 0:
         fail(f"window-size must be positive: {args.window_size}")
     if args.max_unstable_per_window < 0:
-        fail(f"max-unstable-per-window must be non-negative: {args.max_unstable_per_window}")
+        fail(
+            f"max-unstable-per-window must be non-negative: {args.max_unstable_per_window}"
+        )
     if args.max_window_violations < 0:
-        fail(f"max-window-violations must be non-negative: {args.max_window_violations}")
+        fail(
+            f"max-window-violations must be non-negative: {args.max_window_violations}"
+        )
 
     rows = load_rows(pathlib.Path(args.transitions))
     if not rows:
@@ -100,7 +117,9 @@ def main() -> int:
             violations += 1
 
     if violations > args.max_window_violations:
-        fail(f"window_violations={violations} exceeds max_window_violations={args.max_window_violations}")
+        fail(
+            f"window_violations={violations} exceeds max_window_violations={args.max_window_violations}"
+        )
 
     return 0
 

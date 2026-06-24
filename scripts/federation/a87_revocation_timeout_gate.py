@@ -26,11 +26,15 @@ args = p.parse_args()
 
 t = load(args.timings)
 timeout = to_float(
-    t.get("revocation_timeout_ms", t.get("max_revocation_timeout_ms", t.get("max_timeout_ms", 0)))
+    t.get(
+        "revocation_timeout_ms",
+        t.get("max_revocation_timeout_ms", t.get("max_timeout_ms", 0)),
+    )
 )
-failures = int(to_float(t.get("timeout_failures", t.get("revocation_timeout_failures", 0))))
+failures = int(
+    to_float(t.get("timeout_failures", t.get("revocation_timeout_failures", 0)))
+)
 
 if timeout > args.max_timeout_ms or failures > args.max_failures:
     print("A87 revocation timeout gate failed", file=sys.stderr)
     raise SystemExit(2)
-

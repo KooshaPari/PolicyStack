@@ -5,6 +5,7 @@ import datetime
 import pathlib
 import sys
 
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--csv", required=True)
@@ -21,6 +22,7 @@ def main() -> int:
         print(f"E49 stale attestations: {len(stale)}", file=sys.stderr)
         return 2
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

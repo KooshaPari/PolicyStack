@@ -7,7 +7,9 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E132 C132 playbook guardrail entropy gate failed: {message}", file=sys.stderr)
+    print(
+        f"E132 C132 playbook guardrail entropy gate failed: {message}", file=sys.stderr
+    )
     raise SystemExit(2)
 
 
@@ -51,7 +53,10 @@ def main() -> int:
             continue
         total += 1
         entropy = to_float(
-            row.get("guardrail_entropy", row.get("entropy", row.get("playbook_entropy", 0.0))),
+            row.get(
+                "guardrail_entropy",
+                row.get("entropy", row.get("playbook_entropy", 0.0)),
+            ),
             "guardrail_entropy",
         )
         if args.max_entropy and entropy > args.max_entropy:

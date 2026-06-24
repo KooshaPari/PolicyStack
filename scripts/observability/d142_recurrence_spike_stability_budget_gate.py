@@ -7,7 +7,10 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E142 recurrence spike stability budget gate failed: {message}", file=sys.stderr)
+    print(
+        f"E142 recurrence spike stability budget gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -33,7 +36,9 @@ def _read_json(path: pathlib.Path, label: str) -> list[dict]:
     return _to_records(payload, path, label)
 
 
-def _read_csv(path: pathlib.Path, required: set[str], label: str) -> list[dict[str, str]]:
+def _read_csv(
+    path: pathlib.Path, required: set[str], label: str
+) -> list[dict[str, str]]:
     try:
         with path.open(newline="") as handle:
             reader = csv.DictReader(handle)
@@ -98,15 +103,24 @@ def main() -> int:
         fail("E142 empty recurrence data")
 
     ordered = sorted(rows, key=lambda row: str(row.get(args.time_field, "")))
-    rates = [_to_float(row[args.rate_field], recurrence_path, args.rate_field) for row in ordered]
+    rates = [
+        _to_float(row[args.rate_field], recurrence_path, args.rate_field)
+        for row in ordered
+    ]
     budgets = [
-        _to_float(row[args.stability_budget_field], recurrence_path, args.stability_budget_field)
+        _to_float(
+            row[args.stability_budget_field],
+            recurrence_path,
+            args.stability_budget_field,
+        )
         for row in ordered
     ]
 
     spikes = [max(0.0, curr - prev) for prev, curr in zip(rates, rates[1:])]
     aligned_budgets = budgets[1:] if len(budgets) > 1 else []
-    stability_gaps = [max(0.0, spike - budget) for spike, budget in zip(spikes, aligned_budgets)]
+    stability_gaps = [
+        max(0.0, spike - budget) for spike, budget in zip(spikes, aligned_budgets)
+    ]
 
     stability_gap = max(stability_gaps) if stability_gaps else 0.0
     stability_gap_mean = (
@@ -142,7 +156,9 @@ def main() -> int:
         over_budget_count = report_over_budget_count
 
     if stability_gap > args.max_stability_gap:
-        fail(f"E142 stability_gap={stability_gap} > max_stability_gap={args.max_stability_gap}")
+        fail(
+            f"E142 stability_gap={stability_gap} > max_stability_gap={args.max_stability_gap}"
+        )
     if stability_gap_mean > args.max_stability_gap_mean:
         fail(
             f"E142 stability_gap_mean={stability_gap_mean} > "

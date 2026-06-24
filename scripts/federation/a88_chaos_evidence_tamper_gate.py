@@ -29,7 +29,10 @@ tamper = to_int(e.get("tamper_events", e.get("tamper_count", 0)))
 hash_mismatch = to_int(e.get("hash_mismatches", e.get("evidence_hash_mismatches", 0)))
 signature_ok = bool(e.get("signatures_valid", e.get("signature_chain_valid", True)))
 
-if tamper > args.max_tamper_events or hash_mismatch > args.max_hash_mismatches or not signature_ok:
+if (
+    tamper > args.max_tamper_events
+    or hash_mismatch > args.max_hash_mismatches
+    or not signature_ok
+):
     print("A88 chaos evidence tamper gate failed", file=sys.stderr)
     raise SystemExit(2)
-

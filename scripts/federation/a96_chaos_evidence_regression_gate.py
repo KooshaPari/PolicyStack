@@ -28,6 +28,7 @@ def _to_float(value: object, label: str) -> float:
         print(f"A96 invalid float for {label}: {value!r}", file=sys.stderr)
         raise SystemExit(2)
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--chaos-evidence", required=True)
 parser.add_argument("--max-regressions", type=int, default=0)
@@ -38,7 +39,9 @@ args = parser.parse_args()
 data = _load(pathlib.Path(args.chaos_evidence))
 
 if isinstance(data, dict):
-    regressions = _to_int(data.get("regressions", data.get("regression_count", 0)), "regressions")
+    regressions = _to_int(
+        data.get("regressions", data.get("regression_count", 0)), "regressions"
+    )
     gap = _to_int(data.get("regression_gap", data.get("max_gap", 0)), "regression_gap")
     rate = _to_float(
         data.get("regression_rate", data.get("evidence_regression_rate", 0.0)),

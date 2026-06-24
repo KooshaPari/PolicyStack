@@ -7,7 +7,9 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E121 C121 forensic bundle freshness gate failed: {message}", file=sys.stderr)
+    print(
+        f"E121 C121 forensic bundle freshness gate failed: {message}", file=sys.stderr
+    )
     raise SystemExit(2)
 
 
@@ -66,7 +68,9 @@ def main() -> int:
     stale_rate = stale / total
     if args.max_stale_bundles and stale > args.max_stale_bundles:
         fail(f"stale_bundles={stale}")
-    if args.max_stale_rate and stale_rate > to_float(args.max_stale_rate, "max_stale_rate"):
+    if args.max_stale_rate and stale_rate > to_float(
+        args.max_stale_rate, "max_stale_rate"
+    ):
         fail(f"stale_rate={stale_rate:.6f}")
     return 0
 

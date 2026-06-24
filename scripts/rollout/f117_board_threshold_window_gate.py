@@ -44,7 +44,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("board payload must be a JSON object or non-empty list of objects")
 
@@ -60,7 +64,9 @@ def main() -> int:
 
     records = load_records(pathlib.Path(args.board))
     for index, record in enumerate(records):
-        fatigue = to_float(record.get(args.fatigue_score_field), args.fatigue_score_field, index)
+        fatigue = to_float(
+            record.get(args.fatigue_score_field), args.fatigue_score_field, index
+        )
         if fatigue > args.max_fatigue_score:
             fail(
                 f"{args.fatigue_score_field}={fatigue} > {args.max_fatigue_score} at index {index}"
@@ -68,7 +74,9 @@ def main() -> int:
 
         actions = to_int(record.get(args.actions_field), args.actions_field, index)
         if actions > args.max_open_actions:
-            fail(f"{args.actions_field}={actions} > {args.max_open_actions} at index {index}")
+            fail(
+                f"{args.actions_field}={actions} > {args.max_open_actions} at index {index}"
+            )
 
     return 0
 

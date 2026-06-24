@@ -10,7 +10,10 @@ from typing import Any
 
 
 def fail(message: str) -> None:
-    print(f"E180 federation threshold window regression gate failed: {message}", file=sys.stderr)
+    print(
+        f"E180 federation threshold window regression gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -29,8 +32,11 @@ def extract_rows(
 ) -> list[dict[str, Any]]:
     if isinstance(payload, list):
         return [row for row in payload if isinstance(row, dict)]
-    rows = payload.get("items") or payload.get("records") or payload.get("entries") or payload.get(
-        lane_key
+    rows = (
+        payload.get("items")
+        or payload.get("records")
+        or payload.get("entries")
+        or payload.get(lane_key)
     )
     if isinstance(rows, list):
         return [row for row in rows if isinstance(row, dict)]
@@ -56,9 +62,15 @@ def parse_int(value: object, label: str) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--threshold-window-regression-report", required=True)
-    parser.add_argument("--max-threshold-window-regression-rate", type=float, default=0.02)
-    parser.add_argument("--min-threshold-window-consistency-rate", type=float, default=0.98)
-    parser.add_argument("--max-threshold-window-regression-breach-count", type=int, default=0)
+    parser.add_argument(
+        "--max-threshold-window-regression-rate", type=float, default=0.02
+    )
+    parser.add_argument(
+        "--min-threshold-window-consistency-rate", type=float, default=0.98
+    )
+    parser.add_argument(
+        "--max-threshold-window-regression-breach-count", type=int, default=0
+    )
     args = parser.parse_args()
 
     payload = load_report(pathlib.Path(args.threshold_window_regression_report))
@@ -105,7 +117,8 @@ def main() -> int:
 
     if (
         max_threshold_window_regression_rate > args.max_threshold_window_regression_rate
-        or threshold_window_consistency_rate < args.min_threshold_window_consistency_rate
+        or threshold_window_consistency_rate
+        < args.min_threshold_window_consistency_rate
         or threshold_window_regression_breach_count
         > args.max_threshold_window_regression_breach_count
     ):

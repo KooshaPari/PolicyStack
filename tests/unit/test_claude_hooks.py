@@ -85,7 +85,8 @@ class ClaudeHooksTest(unittest.TestCase):
             "session_id": "session-3",
         }
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "thegent", "POLICY_TASK_DOMAIN": "devops"},
+            "os.environ",
+            {"POLICY_REPO": "thegent", "POLICY_TASK_DOMAIN": "devops"},
         ):
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
         assert result == {"continue": True, "suppressOutput": True}
@@ -124,7 +125,8 @@ class ClaudeHooksTest(unittest.TestCase):
             "session_id": "session-6",
         }
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "heliosApp", "POLICY_TASK_DOMAIN": "devops"},
+            "os.environ",
+            {"POLICY_REPO": "heliosApp", "POLICY_TASK_DOMAIN": "devops"},
         ):
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
         assert result == {"continue": True, "suppressOutput": True}
@@ -139,7 +141,8 @@ class ClaudeHooksTest(unittest.TestCase):
             "session_id": "session-8",
         }
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "thegent", "POLICY_TASK_DOMAIN": "devops"},
+            "os.environ",
+            {"POLICY_REPO": "thegent", "POLICY_TASK_DOMAIN": "devops"},
         ):
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
         assert result == {"continue": True, "suppressOutput": True}
@@ -154,7 +157,8 @@ class ClaudeHooksTest(unittest.TestCase):
             "session_id": "session-9",
         }
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "thegent", "POLICY_TASK_DOMAIN": "devops"},
+            "os.environ",
+            {"POLICY_REPO": "thegent", "POLICY_TASK_DOMAIN": "devops"},
         ):
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
         assert result == {"continue": True, "suppressOutput": True}
@@ -196,7 +200,8 @@ class ClaudeHooksTest(unittest.TestCase):
             "session_id": "session-5",
         }
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "heliosApp", "POLICY_TASK_DOMAIN": "devops"},
+            "os.environ",
+            {"POLICY_REPO": "heliosApp", "POLICY_TASK_DOMAIN": "devops"},
         ):
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
         assert result == {"continue": True, "suppressOutput": True}
@@ -218,7 +223,8 @@ class ClaudeHooksTest(unittest.TestCase):
             "session_id": "session-trace-stub",
         }
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "trace", "POLICY_TASK_DOMAIN": "devops"},
+            "os.environ",
+            {"POLICY_REPO": "trace", "POLICY_TASK_DOMAIN": "devops"},
         ):
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
         assert result == {"continue": True, "suppressOutput": True}
@@ -238,7 +244,8 @@ class ClaudeHooksTest(unittest.TestCase):
             "session_id": "session-4",
         }
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "thegent", "POLICY_TASK_DOMAIN": "devops"},
+            "os.environ",
+            {"POLICY_REPO": "thegent", "POLICY_TASK_DOMAIN": "devops"},
         ):
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
         assert result == {"continue": True, "suppressOutput": True}
@@ -250,7 +257,8 @@ class ClaudeHooksTest(unittest.TestCase):
             "cwd": "/tmp",
         }
         with patch.dict(
-            "os.environ", {"POLICY_REPO": "thegent", "POLICY_TASK_DOMAIN": "devops"},
+            "os.environ",
+            {"POLICY_REPO": "thegent", "POLICY_TASK_DOMAIN": "devops"},
         ):
             result = evaluate_claude_pretool_payload(payload, repo_root=REPO_ROOT)
         hook = result["hookSpecificOutput"]
@@ -258,7 +266,11 @@ class ClaudeHooksTest(unittest.TestCase):
         assert hook["permissionDecision"] in ["ask", "deny"]
         # Check for any worktree-related rule
         reason = hook["permissionDecisionReason"]
-        assert "worktree" in reason.lower() or "write" in reason.lower() or "policy-federation" in reason, f"Reason should mention worktree/write/policy-federation, got: {reason}"
+        assert (
+            "worktree" in reason.lower()
+            or "write" in reason.lower()
+            or "policy-federation" in reason
+        ), f"Reason should mention worktree/write/policy-federation, got: {reason}"
 
     def test_claude_pretool_hook_allows_non_managed_tools_to_continue(self) -> None:
         payload = {
@@ -298,7 +310,9 @@ class ClaudeHooksTest(unittest.TestCase):
 
         assert result["continue"]
         assert not result["suppressOutput"]
-        assert "Guardian (guardian): Reviewed and allowed" in result["hookSpecificOutput"]
+        assert (
+            "Guardian (guardian): Reviewed and allowed" in result["hookSpecificOutput"]
+        )
         assert "Rule: suspicious-shell" in result["hookSpecificOutput"]
         assert "Reasoning: The command looks safe" in result["hookSpecificOutput"]
 

@@ -71,17 +71,26 @@ def main() -> int:
             continue
         total += 1
         baseline_score = to_float(
-            row.get("baseline_guardrail_score", row.get("previous_guardrail_score", 0.0)),
+            row.get(
+                "baseline_guardrail_score", row.get("previous_guardrail_score", 0.0)
+            ),
             "baseline_guardrail_score",
         )
         current_score = to_float(
-            row.get("guardrail_score", row.get("current_guardrail_score", baseline_score)),
+            row.get(
+                "guardrail_score", row.get("current_guardrail_score", baseline_score)
+            ),
             "guardrail_score",
         )
         explicit_regression = to_bool(
-            row.get("regression", row.get("guardrail_regression", row.get("window_regression", False)))
+            row.get(
+                "regression",
+                row.get("guardrail_regression", row.get("window_regression", False)),
+            )
         )
-        if explicit_regression or (baseline_score - current_score > args.allowed_regression_delta):
+        if explicit_regression or (
+            baseline_score - current_score > args.allowed_regression_delta
+        ):
             regressions += 1
 
     if total == 0:

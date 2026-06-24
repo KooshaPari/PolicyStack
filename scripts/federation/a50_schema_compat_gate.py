@@ -4,6 +4,7 @@ import json
 import pathlib
 import sys
 
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--matrix", required=True)
@@ -17,6 +18,7 @@ def main() -> int:
         print(f"A50 incompatible schema pair: {key}", file=sys.stderr)
         return 2
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

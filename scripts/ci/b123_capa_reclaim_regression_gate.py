@@ -88,7 +88,9 @@ def main() -> int:
     parser.add_argument("--max-average-regression-score", type=float, default=0.0)
     parser.add_argument("--max-average-reclaim-ms", type=float, default=0.0)
     parser.add_argument("--max-rollback-count", type=int, default=0)
-    parser.add_argument("--max-window-average-regression-score", type=float, default=0.0)
+    parser.add_argument(
+        "--max-window-average-regression-score", type=float, default=0.0
+    )
     args = parser.parse_args()
 
     path = pathlib.Path(args.input)
@@ -102,9 +104,13 @@ def main() -> int:
     window_counts: dict[str, int] = {}
 
     for row in records:
-        regression_score = parse_float(row.get(args.regression_score_key), args.regression_score_key)
+        regression_score = parse_float(
+            row.get(args.regression_score_key), args.regression_score_key
+        )
         reclaim_ms = parse_float(row.get(args.reclaim_ms_key, 0), args.reclaim_ms_key)
-        rolled_back = parse_int(row.get(args.rollback_flag_key, 0), args.rollback_flag_key)
+        rolled_back = parse_int(
+            row.get(args.rollback_flag_key, 0), args.rollback_flag_key
+        )
 
         regression_total += regression_score
         reclaim_ms_total += reclaim_ms
@@ -131,10 +137,14 @@ def main() -> int:
         )
 
     if regression_count > args.max_regression_count:
-        fail(f"regression_count={regression_count} > max_regression_count={args.max_regression_count}")
+        fail(
+            f"regression_count={regression_count} > max_regression_count={args.max_regression_count}"
+        )
 
     if rollback_count > args.max_rollback_count:
-        fail(f"rollback_count={rollback_count} > max_rollback_count={args.max_rollback_count}")
+        fail(
+            f"rollback_count={rollback_count} > max_rollback_count={args.max_rollback_count}"
+        )
 
     for window, count in sorted(window_counts.items()):
         average = window_totals[window] / count

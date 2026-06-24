@@ -33,7 +33,9 @@ def _read_json(path: pathlib.Path, label: str) -> list[dict]:
     return _to_records(payload, path, label)
 
 
-def _read_csv(path: pathlib.Path, required: set[str], label: str) -> list[dict[str, str]]:
+def _read_csv(
+    path: pathlib.Path, required: set[str], label: str
+) -> list[dict[str, str]]:
     try:
         with path.open(newline="") as handle:
             reader = csv.DictReader(handle)
@@ -72,7 +74,9 @@ def _to_float(value: object, path: pathlib.Path, field: str) -> float:
 def _max_abs_step(values: list[float]) -> float:
     if len(values) < 2:
         return 0.0
-    return max((abs(curr - prev) for prev, curr in zip(values, values[1:])), default=0.0)
+    return max(
+        (abs(curr - prev) for prev, curr in zip(values, values[1:])), default=0.0
+    )
 
 
 def main() -> int:
@@ -103,7 +107,10 @@ def main() -> int:
         fail("E131 empty suppression data")
 
     ordered = sorted(rows, key=lambda row: str(row.get(args.time_field, "")))
-    entropies = [_to_float(row[args.entropy_field], suppression_path, args.entropy_field) for row in ordered]
+    entropies = [
+        _to_float(row[args.entropy_field], suppression_path, args.entropy_field)
+        for row in ordered
+    ]
 
     entropy_span = max(entropies) - min(entropies)
     entropy_step = _max_abs_step(entropies)
@@ -133,11 +140,17 @@ def main() -> int:
         entropy_drift = report_drift
 
     if entropy_span > args.max_entropy_span:
-        fail(f"E131 entropy_span={entropy_span} > max_entropy_span={args.max_entropy_span}")
+        fail(
+            f"E131 entropy_span={entropy_span} > max_entropy_span={args.max_entropy_span}"
+        )
     if entropy_step > args.max_entropy_step:
-        fail(f"E131 entropy_step={entropy_step} > max_entropy_step={args.max_entropy_step}")
+        fail(
+            f"E131 entropy_step={entropy_step} > max_entropy_step={args.max_entropy_step}"
+        )
     if entropy_drift > args.max_entropy_drift:
-        fail(f"E131 entropy_drift={entropy_drift} > max_entropy_drift={args.max_entropy_drift}")
+        fail(
+            f"E131 entropy_drift={entropy_drift} > max_entropy_drift={args.max_entropy_drift}"
+        )
 
     return 0
 

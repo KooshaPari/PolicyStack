@@ -68,9 +68,14 @@ def main() -> int:
     if not rows:
         fail("D113 override pressure gate failed: empty override data")
 
-    ordered = sorted(rows, key=lambda row: (row.get(args.time_field) or ""))
-    open_counts = [_to_int(row[args.open_field], csv_path, args.open_field) for row in ordered]
-    stalled_counts = [_to_int(row[args.stalled_field], csv_path, args.stalled_field) for row in ordered]
+    ordered = sorted(rows, key=lambda row: row.get(args.time_field) or "")
+    open_counts = [
+        _to_int(row[args.open_field], csv_path, args.open_field) for row in ordered
+    ]
+    stalled_counts = [
+        _to_int(row[args.stalled_field], csv_path, args.stalled_field)
+        for row in ordered
+    ]
 
     max_open = max(open_counts)
     max_stalled = max(stalled_counts)
@@ -83,7 +88,9 @@ def main() -> int:
         max_stalled = report_stalled
 
     if max_open > args.max_open_overrides:
-        fail(f"D113 max_open_overrides={max_open} > max_open_overrides={args.max_open_overrides}")
+        fail(
+            f"D113 max_open_overrides={max_open} > max_open_overrides={args.max_open_overrides}"
+        )
     if max_stalled > args.max_stalled_overrides:
         fail(
             f"D113 max_stalled_overrides={max_stalled} > "

@@ -7,7 +7,10 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E146 attestation window regression budget gate failed: {message}", file=sys.stderr)
+    print(
+        f"E146 attestation window regression budget gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -33,7 +36,9 @@ def load_rows(path: pathlib.Path) -> list[dict]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows
-    fail("attestations payload must be list or object with attestations/records/items/entries/transitions")
+    fail(
+        "attestations payload must be list or object with attestations/records/items/entries/transitions"
+    )
 
 
 def main() -> int:
@@ -58,13 +63,17 @@ def main() -> int:
             f"{args.max_regressions_per_window}"
         )
     if args.max_window_violations < 0:
-        fail(f"max-window-violations must be non-negative: {args.max_window_violations}")
+        fail(
+            f"max-window-violations must be non-negative: {args.max_window_violations}"
+        )
     if args.max_regressions < 0:
         fail(f"max-regressions must be non-negative: {args.max_regressions}")
     if args.max_regression_rate < 0 or args.max_regression_rate > 1:
         fail(f"max-regression-rate must be between 0 and 1: {args.max_regression_rate}")
     if args.max_total_regression_drop < 0:
-        fail(f"max-total-regression-drop must be non-negative: {args.max_total_regression_drop}")
+        fail(
+            f"max-total-regression-drop must be non-negative: {args.max_total_regression_drop}"
+        )
 
     rows = load_rows(pathlib.Path(args.attestations))
     if not rows:
@@ -103,7 +112,9 @@ def main() -> int:
 
     regression_rate = regressions / row_count
     if regressions > args.max_regressions:
-        fail(f"regressions={regressions} exceeds max_regressions={args.max_regressions}")
+        fail(
+            f"regressions={regressions} exceeds max_regressions={args.max_regressions}"
+        )
     if regression_rate > args.max_regression_rate:
         fail(
             f"regression_rate={regression_rate:.6f} exceeds max_regression_rate={args.max_regression_rate}"
@@ -126,7 +137,9 @@ def main() -> int:
             violations += 1
 
     if violations > args.max_window_violations:
-        fail(f"window_violations={violations} exceeds max_window_violations={args.max_window_violations}")
+        fail(
+            f"window_violations={violations} exceeds max_window_violations={args.max_window_violations}"
+        )
 
     return 0
 

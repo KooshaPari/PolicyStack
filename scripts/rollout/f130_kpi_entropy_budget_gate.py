@@ -44,7 +44,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("kpi payload must be a JSON object or non-empty list of objects")
 
@@ -54,14 +58,18 @@ def main() -> int:
     parser.add_argument("--kpi", required=True)
     parser.add_argument("--entropy-budget-spent-field", default="entropy_budget_spent")
     parser.add_argument("--max-entropy-budget-spent", type=float, default=1.0)
-    parser.add_argument("--over-entropy-budget-kpi-count-field", default="over_entropy_budget_kpi_count")
+    parser.add_argument(
+        "--over-entropy-budget-kpi-count-field", default="over_entropy_budget_kpi_count"
+    )
     parser.add_argument("--max-over-entropy-budget-kpi-count", type=int, default=0)
     args = parser.parse_args()
 
     records = load_records(pathlib.Path(args.kpi))
     for index, record in enumerate(records):
         entropy_budget_spent = to_float(
-            record.get(args.entropy_budget_spent_field), args.entropy_budget_spent_field, index
+            record.get(args.entropy_budget_spent_field),
+            args.entropy_budget_spent_field,
+            index,
         )
         if entropy_budget_spent > args.max_entropy_budget_spent:
             fail(

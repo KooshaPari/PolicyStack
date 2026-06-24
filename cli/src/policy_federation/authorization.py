@@ -117,7 +117,9 @@ def validate_authorization_block(doc: dict) -> None:
             or not actions
             or not all(isinstance(action, str) and action for action in actions)
         ):
-            msg = f"authorization rule {rule_id} actions must be a non-empty string list"
+            msg = (
+                f"authorization rule {rule_id} actions must be a non-empty string list"
+            )
             raise ValueError(
                 msg,
             )
@@ -167,17 +169,19 @@ def evaluate_authorization(
     for rule in rules:
         if action not in rule.actions and "*" not in rule.actions:
             continue
-        if rule.command_patterns and (not command or not any(
-            fnmatch(command, pattern) for pattern in rule.command_patterns
-        )):
+        if rule.command_patterns and (
+            not command
+            or not any(fnmatch(command, pattern) for pattern in rule.command_patterns)
+        ):
             continue
-        if rule.cwd_patterns and (not cwd or not any(
-            fnmatch(cwd, pattern) for pattern in rule.cwd_patterns
-        )):
+        if rule.cwd_patterns and (
+            not cwd or not any(fnmatch(cwd, pattern) for pattern in rule.cwd_patterns)
+        ):
             continue
-        if rule.actor_patterns and (not actor or not any(
-            fnmatch(actor, pattern) for pattern in rule.actor_patterns
-        )):
+        if rule.actor_patterns and (
+            not actor
+            or not any(fnmatch(actor, pattern) for pattern in rule.actor_patterns)
+        ):
             continue
         if rule.target_path_patterns:
             if not target_paths:

@@ -7,7 +7,10 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E143 recert exception regression budget gate failed: {message}", file=sys.stderr)
+    print(
+        f"E143 recert exception regression budget gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -44,7 +47,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("recert payload must be a JSON object or non-empty list of objects")
 
@@ -56,12 +63,16 @@ def main() -> int:
         "--exception-regression-budget-spent-field",
         default="exception_regression_budget_spent",
     )
-    parser.add_argument("--max-exception-regression-budget-spent", type=float, default=1.0)
+    parser.add_argument(
+        "--max-exception-regression-budget-spent", type=float, default=1.0
+    )
     parser.add_argument(
         "--over-exception-regression-budget-count-field",
         default="over_exception_regression_budget_count",
     )
-    parser.add_argument("--max-over-exception-regression-budget-count", type=int, default=0)
+    parser.add_argument(
+        "--max-over-exception-regression-budget-count", type=int, default=0
+    )
     args = parser.parse_args()
 
     records = load_records(pathlib.Path(args.recert))
@@ -71,7 +82,10 @@ def main() -> int:
             args.exception_regression_budget_spent_field,
             index,
         )
-        if exception_regression_budget_spent > args.max_exception_regression_budget_spent:
+        if (
+            exception_regression_budget_spent
+            > args.max_exception_regression_budget_spent
+        ):
             fail(
                 f"{args.exception_regression_budget_spent_field}="
                 f"{exception_regression_budget_spent} > "

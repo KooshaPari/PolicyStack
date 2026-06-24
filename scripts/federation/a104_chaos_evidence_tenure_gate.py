@@ -29,7 +29,13 @@ def main() -> int:
     except Exception as exc:
         fail(f"invalid evidence json: {exc}")
 
-    items = data if isinstance(data, list) else data.get("evidence", []) if isinstance(data, dict) else []
+    items = (
+        data
+        if isinstance(data, list)
+        else data.get("evidence", [])
+        if isinstance(data, dict)
+        else []
+    )
     if not isinstance(items, list):
         fail("evidence payload must be list or object with evidence list")
 

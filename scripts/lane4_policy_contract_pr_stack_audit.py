@@ -121,7 +121,9 @@ def _is_stacked_target(branch_name: str) -> bool:
     return branch_name in STACK_TARGET_BRANCHES or branch_name.startswith("stack/")
 
 
-def _looks_like_stacked(pr: dict[str, Any], head_to_pr: dict[str, dict[str, Any]]) -> bool:
+def _looks_like_stacked(
+    pr: dict[str, Any], head_to_pr: dict[str, dict[str, Any]]
+) -> bool:
     source = pr.get("headRefName")
     target = pr.get("baseRefName")
     if not isinstance(source, str) or not isinstance(target, str):
@@ -137,7 +139,9 @@ def _looks_like_stacked(pr: dict[str, Any], head_to_pr: dict[str, dict[str, Any]
     return is_stacked_pair or is_stacked_chain
 
 
-def list_open_prs(repo: str, limit: int) -> tuple[bool, list[dict[str, Any]] | None, str | None]:
+def list_open_prs(
+    repo: str, limit: int
+) -> tuple[bool, list[dict[str, Any]] | None, str | None]:
     fields = "number,title,headRefName,baseRefName,state,isDraft,labels,body,url"
     cmd = [
         "gh",
@@ -492,13 +496,17 @@ def find_stacked_and_token_findings(
         ),
     )
 
-    return stacked_records, missing_records, FindingsSummary(
-        repo=repo,
-        scanned_prs=len(prs),
-        stacked_prs=len(stacked_records),
-        missing_token_count=len(missing_records),
-        comment_scan_errors=comment_scan_errors,
-        missing_token_findings_by_source=dict(missing_sources),
+    return (
+        stacked_records,
+        missing_records,
+        FindingsSummary(
+            repo=repo,
+            scanned_prs=len(prs),
+            stacked_prs=len(stacked_records),
+            missing_token_count=len(missing_records),
+            comment_scan_errors=comment_scan_errors,
+            missing_token_findings_by_source=dict(missing_sources),
+        ),
     )
 
 

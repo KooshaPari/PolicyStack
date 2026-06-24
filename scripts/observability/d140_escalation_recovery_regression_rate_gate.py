@@ -7,7 +7,10 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E140 escalation recovery regression rate gate failed: {message}", file=sys.stderr)
+    print(
+        f"E140 escalation recovery regression rate gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -33,7 +36,9 @@ def _read_json(path: pathlib.Path, label: str) -> list[dict]:
     return _to_records(payload, path, label)
 
 
-def _read_csv(path: pathlib.Path, required: set[str], label: str) -> list[dict[str, str]]:
+def _read_csv(
+    path: pathlib.Path, required: set[str], label: str
+) -> list[dict[str, str]]:
     try:
         with path.open(newline="") as handle:
             reader = csv.DictReader(handle)
@@ -79,7 +84,9 @@ def _to_int(value: object, path: pathlib.Path, field: str) -> int:
 def _max_positive_step(values: list[float]) -> float:
     if len(values) < 2:
         return 0.0
-    return max((max(0.0, curr - prev) for prev, curr in zip(values, values[1:])), default=0.0)
+    return max(
+        (max(0.0, curr - prev) for prev, curr in zip(values, values[1:])), default=0.0
+    )
 
 
 def main() -> int:
@@ -117,23 +124,34 @@ def main() -> int:
         fail("E140 empty escalation data")
 
     ordered = sorted(rows, key=lambda row: str(row.get(args.time_field, "")))
-    open_counts = [_to_int(row[args.open_field], escalations_path, args.open_field) for row in ordered]
+    open_counts = [
+        _to_int(row[args.open_field], escalations_path, args.open_field)
+        for row in ordered
+    ]
     recovered_counts = [
         _to_int(row[args.recovered_field], escalations_path, args.recovered_field)
         for row in ordered
     ]
     recovery_windows = [
-        _to_float(row[args.recovery_window_field], escalations_path, args.recovery_window_field)
+        _to_float(
+            row[args.recovery_window_field],
+            escalations_path,
+            args.recovery_window_field,
+        )
         for row in ordered
     ]
 
     regression_series: list[float] = []
     unrecovered_ratios: list[float] = []
-    for open_count, recovered_count, window in zip(open_counts, recovered_counts, recovery_windows):
+    for open_count, recovered_count, window in zip(
+        open_counts, recovered_counts, recovery_windows
+    ):
         if open_count <= 0:
             unrecovered_ratio = 0.0
         else:
-            recovered_ratio = min(1.0, max(0.0, float(recovered_count) / float(open_count)))
+            recovered_ratio = min(
+                1.0, max(0.0, float(recovered_count) / float(open_count))
+            )
             unrecovered_ratio = 1.0 - recovered_ratio
         unrecovered_ratios.append(unrecovered_ratio)
         regression_series.append(unrecovered_ratio * max(0.0, window))

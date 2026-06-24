@@ -7,7 +7,10 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E128 C128 playbook guardrail regression gate failed: {message}", file=sys.stderr)
+    print(
+        f"E128 C128 playbook guardrail regression gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -57,15 +60,23 @@ def main() -> int:
             continue
         total += 1
         previous_score = to_float(
-            row.get("baseline_guardrail_score", row.get("previous_guardrail_score", 0.0)),
+            row.get(
+                "baseline_guardrail_score", row.get("previous_guardrail_score", 0.0)
+            ),
             "baseline_guardrail_score",
         )
         current_score = to_float(
-            row.get("guardrail_score", row.get("current_guardrail_score", previous_score)),
+            row.get(
+                "guardrail_score", row.get("current_guardrail_score", previous_score)
+            ),
             "guardrail_score",
         )
-        explicit_regression = to_bool(row.get("regression", row.get("guardrail_regression", False)))
-        if explicit_regression or (previous_score - current_score > args.allowed_regression_delta):
+        explicit_regression = to_bool(
+            row.get("regression", row.get("guardrail_regression", False))
+        )
+        if explicit_regression or (
+            previous_score - current_score > args.allowed_regression_delta
+        ):
             regressions += 1
 
     if total == 0:

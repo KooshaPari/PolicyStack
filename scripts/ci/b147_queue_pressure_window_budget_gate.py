@@ -84,8 +84,12 @@ def main() -> int:
     parser.add_argument("--pressure-key", default="pressure")
     parser.add_argument("--pressure-budget-used-key", default="pressure_budget_used")
     parser.add_argument("--pressure-budget-total-key", default="pressure_budget_total")
-    parser.add_argument("--pressure-overrun-events-key", default="pressure_overrun_events")
-    parser.add_argument("--pressure-throttle-events-key", default="pressure_throttle_events")
+    parser.add_argument(
+        "--pressure-overrun-events-key", default="pressure_overrun_events"
+    )
+    parser.add_argument(
+        "--pressure-throttle-events-key", default="pressure_throttle_events"
+    )
     parser.add_argument("--min-total-samples", type=float, default=1.0)
     parser.add_argument("--max-average-pressure", type=float, default=0.0)
     parser.add_argument("--max-window-average-pressure", type=float, default=0.0)
@@ -146,7 +150,9 @@ def main() -> int:
                 f"got {throttle_events}"
             )
         if budget_used < 0:
-            fail(f"pressure_budget_used for {args.pressure_budget_used_key} must be >= 0; got {budget_used}")
+            fail(
+                f"pressure_budget_used for {args.pressure_budget_used_key} must be >= 0; got {budget_used}"
+            )
         if budget_total <= 0:
             fail(
                 f"pressure_budget_total for {args.pressure_budget_total_key} must be > 0; got "
@@ -168,12 +174,18 @@ def main() -> int:
 
         window = str(row.get(args.window_key, "default"))
         window_samples[window] = window_samples.get(window, 0.0) + samples
-        window_pressure_totals[window] = window_pressure_totals.get(window, 0.0) + pressure * samples
+        window_pressure_totals[window] = (
+            window_pressure_totals.get(window, 0.0) + pressure * samples
+        )
         window_budget_used[window] = window_budget_used.get(window, 0.0) + budget_used
-        window_budget_total[window] = window_budget_total.get(window, 0.0) + budget_total
+        window_budget_total[window] = (
+            window_budget_total.get(window, 0.0) + budget_total
+        )
 
     if total_samples < args.min_total_samples:
-        fail(f"total_samples={total_samples} < min_total_samples={args.min_total_samples}")
+        fail(
+            f"total_samples={total_samples} < min_total_samples={args.min_total_samples}"
+        )
 
     if total_samples <= 0:
         fail(f"total_samples={total_samples} must be > 0")
@@ -237,4 +249,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

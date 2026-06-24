@@ -29,8 +29,11 @@ def extract_rows(
 ) -> list[dict[str, Any]]:
     if isinstance(payload, list):
         return [row for row in payload if isinstance(row, dict)]
-    rows = payload.get("items") or payload.get("records") or payload.get("entries") or payload.get(
-        lane_key
+    rows = (
+        payload.get("items")
+        or payload.get("records")
+        or payload.get("entries")
+        or payload.get(lane_key)
     )
     if isinstance(rows, list):
         return [row for row in rows if isinstance(row, dict)]
@@ -56,8 +59,12 @@ def parse_int(value: object, label: str) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--recovery-entropy-budget-report", required=True)
-    parser.add_argument("--max-recovery-entropy-over-budget-rate", type=float, default=0.0)
-    parser.add_argument("--min-recovery-entropy-stability-rate", type=float, default=0.95)
+    parser.add_argument(
+        "--max-recovery-entropy-over-budget-rate", type=float, default=0.0
+    )
+    parser.add_argument(
+        "--min-recovery-entropy-stability-rate", type=float, default=0.95
+    )
     parser.add_argument("--max-recovery-entropy-breach-count", type=int, default=0)
     args = parser.parse_args()
 
@@ -98,7 +105,8 @@ def main() -> int:
         )
 
     if (
-        max_recovery_entropy_over_budget_rate > args.max_recovery_entropy_over_budget_rate
+        max_recovery_entropy_over_budget_rate
+        > args.max_recovery_entropy_over_budget_rate
         or recovery_entropy_stability_rate < args.min_recovery_entropy_stability_rate
         or recovery_entropy_breach_count > args.max_recovery_entropy_breach_count
     ):

@@ -86,7 +86,9 @@ def main() -> int:
             _to_float(row.get("debt_age_days", ""), overrides_path, "debt_age_days"),
         )
         if (
-            _to_int(row.get("days_since_update", ""), overrides_path, "days_since_update")
+            _to_int(
+                row.get("days_since_update", ""), overrides_path, "days_since_update"
+            )
             > args.max_stale_days
         ):
             stale_count += 1

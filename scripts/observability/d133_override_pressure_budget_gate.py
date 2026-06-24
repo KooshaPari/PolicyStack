@@ -33,7 +33,9 @@ def _read_json(path: pathlib.Path, label: str) -> list[dict]:
     return _to_records(payload, path, label)
 
 
-def _read_csv(path: pathlib.Path, required: set[str], label: str) -> list[dict[str, str]]:
+def _read_csv(
+    path: pathlib.Path, required: set[str], label: str
+) -> list[dict[str, str]]:
     try:
         with path.open(newline="") as handle:
             reader = csv.DictReader(handle)
@@ -100,7 +102,9 @@ def main() -> int:
     ordered = sorted(rows, key=lambda row: str(row.get(args.time_field, "")))
     gaps: list[float] = []
     for row in ordered:
-        pressure = _to_float(row[args.pressure_field], overrides_path, args.pressure_field)
+        pressure = _to_float(
+            row[args.pressure_field], overrides_path, args.pressure_field
+        )
         budget = _to_float(row[args.budget_field], overrides_path, args.budget_field)
         gaps.append(max(0.0, pressure - budget))
 

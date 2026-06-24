@@ -24,6 +24,7 @@ def _to_float(value: object, field: str) -> float:
     except Exception:
         _fail(f"invalid float {field}: {value!r}")
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--board", required=True)
 parser.add_argument("--reviews", required=True)
@@ -38,14 +39,22 @@ if not isinstance(board, dict):
 
 reviews = list(csv.DictReader(pathlib.Path(args.reviews).read_text().splitlines()))
 
-maturity = _to_float(board.get("review_maturity", board.get("maturity_score", 0.0)), "review_maturity")
+maturity = _to_float(
+    board.get("review_maturity", board.get("maturity_score", 0.0)), "review_maturity"
+)
 if maturity < args.min_maturity:
     _fail(f"review_maturity={maturity}")
 
-stale = sum(1 for r in reviews if _to_int(r.get("days_since_review", 0), "days_since_review") > 30)
+stale = sum(
+    1
+    for r in reviews
+    if _to_int(r.get("days_since_review", 0), "days_since_review") > 30
+)
 if stale > args.max_stale_reviews:
     _fail(f"stale_reviews={stale}")
 
-untracked = _to_int(board.get("untracked_items", board.get("untracked", 0)), "untracked_items")
+untracked = _to_int(
+    board.get("untracked_items", board.get("untracked", 0)), "untracked_items"
+)
 if untracked > args.max_untracked:
     _fail(f"untracked_items={untracked}")

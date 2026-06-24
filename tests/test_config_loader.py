@@ -216,7 +216,8 @@ class TestHelperFunctions:
         config.delegation.primary = "kilo"
 
         with patch(
-            "policy_federation.config_loader._auto_detect_harness", return_value=None,
+            "policy_federation.config_loader._auto_detect_harness",
+            return_value=None,
         ):
             harness = get_active_harness(config)
             assert harness == "kilo"

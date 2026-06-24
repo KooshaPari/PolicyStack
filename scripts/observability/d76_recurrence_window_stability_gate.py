@@ -77,14 +77,18 @@ def main() -> int:
         try:
             values.append(float((row.get("open_recurrence") or "").strip()))
         except ValueError as exc:
-            _fail(f"D76 recurrence window stability gate failed: invalid open_recurrence value: {exc}")
+            _fail(
+                f"D76 recurrence window stability gate failed: invalid open_recurrence value: {exc}"
+            )
     for previous, current in zip(values, values[1:]):
         if current > previous:
             worsening += 1
 
-    variance = max(
-        values[i + 1] - values[i] for i in range(len(values) - 1)
-    ) if len(values) > 1 else 0.0
+    variance = (
+        max(values[i + 1] - values[i] for i in range(len(values) - 1))
+        if len(values) > 1
+        else 0.0
+    )
     max_variance = max(report_variance, variance)
     worsening = max(worsening, report_worsening)
 
@@ -94,7 +98,9 @@ def main() -> int:
             f"max_window_variance={max_variance}"
         )
     if worsening > args.max_window_worsen_count:
-        _fail(f"D76 recurrence window stability gate failed: worsening_windows={worsening}")
+        _fail(
+            f"D76 recurrence window stability gate failed: worsening_windows={worsening}"
+        )
     return 0
 
 

@@ -242,7 +242,10 @@ class TestHeadlessReviewIntegration:
     @patch("policy_federation.headless_review._run_reviewer_binary")
     @patch("policy_federation.headless_review._run_new_delegate_review")
     def test_run_headless_review_uses_new_system_first(
-        self, mock_new_review, mock_legacy, repo_root,
+        self,
+        mock_new_review,
+        mock_legacy,
+        repo_root,
     ):
         """run_headless_review should try new system before legacy."""
         mock_new_review.return_value = {
@@ -269,7 +272,10 @@ class TestHeadlessReviewIntegration:
     @patch("policy_federation.headless_review._run_reviewer_binary")
     @patch("policy_federation.headless_review._run_new_delegate_review")
     def test_run_headless_review_falls_back_to_legacy(
-        self, mock_new_review, mock_legacy, repo_root,
+        self,
+        mock_new_review,
+        mock_legacy,
+        repo_root,
     ):
         """run_headless_review should fall back to legacy when new system fails."""
         # New system fails
@@ -353,7 +359,9 @@ class TestDecisionConsistency:
         for cmd in test_commands["tier_2_worktree"]:
             # In worktree - Tier 2
             result_worktree = assess_risk_tiered(
-                command=cmd, cwd="/path/.worktrees/branch", is_worktree=True,
+                command=cmd,
+                cwd="/path/.worktrees/branch",
+                is_worktree=True,
             )
             assert result_worktree.tier == RiskTier.TIER_2_LOW, (
                 f"{cmd} in worktree should be Tier 2"
@@ -361,7 +369,9 @@ class TestDecisionConsistency:
 
             # In canonical - NOT Tier 2
             result_canonical = assess_risk_tiered(
-                command=cmd, cwd="/path/repo/main", is_worktree=False,
+                command=cmd,
+                cwd="/path/repo/main",
+                is_worktree=False,
             )
             assert result_canonical.tier != RiskTier.TIER_2_LOW, (
                 f"{cmd} in canonical should NOT be Tier 2"
@@ -387,7 +397,8 @@ class TestCacheIntegration:
             cache_db = Path(tmpdir) / "test_cache.db"
 
             with patch(
-                "policy_federation.delegate._get_cache_db", return_value=cache_db,
+                "policy_federation.delegate._get_cache_db",
+                return_value=cache_db,
             ):
                 # First call - cache miss
                 start = time.time()
@@ -457,7 +468,9 @@ class TestPerformanceTargets:
         for _ in range(100):
             start = time.perf_counter()
             assess_risk_tiered(
-                command="git status", cwd="/tmp", is_worktree=False,
+                command="git status",
+                cwd="/tmp",
+                is_worktree=False,
             )
             elapsed = (time.perf_counter() - start) * 1000
             times.append(elapsed)

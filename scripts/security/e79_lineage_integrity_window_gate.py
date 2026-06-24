@@ -22,7 +22,10 @@ def _load_rows(path: pathlib.Path) -> tuple[list[dict], str | None]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows, None
-    return [], "E79 invalid input: expected list or dict with lineage/records/items/events/entries"
+    return (
+        [],
+        "E79 invalid input: expected list or dict with lineage/records/items/events/entries",
+    )
 
 
 def _pick(row: dict, keys: tuple[str, ...]) -> str:
@@ -41,15 +44,27 @@ def _time(value: object) -> datetime | None:
     if not text:
         return None
     try:
-        return datetime.fromisoformat(text.replace("Z", "+00:00")).astimezone(timezone.utc)
+        return datetime.fromisoformat(text.replace("Z", "+00:00")).astimezone(
+            timezone.utc
+        )
     except ValueError:
         return None
 
 
 def _in_window_violation(row: dict, max_age_minutes: int) -> bool:
-    if str(row.get("integrity_breach", "")).strip().lower() in {"1", "true", "yes", "on"}:
+    if str(row.get("integrity_breach", "")).strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }:
         return True
-    if str(row.get("integrity_status", "")).strip().lower() in {"broken", "mismatch", "tampered", "invalid"}:
+    if str(row.get("integrity_status", "")).strip().lower() in {
+        "broken",
+        "mismatch",
+        "tampered",
+        "invalid",
+    }:
         return True
 
     verified = _time(_pick(row, ("verified_at", "integrity_checked_at", "checked_at")))

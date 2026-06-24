@@ -358,7 +358,6 @@ def _print_diff_with_color(diff_result: dict) -> None:
     """Print policy diff results with colored output."""
     # ANSI color codes
 
-
     # Added rules (green)
     added = diff_result.get("added_rules", [])
     if added:
@@ -565,7 +564,8 @@ def learn_command(args: argparse.Namespace) -> None:
         repo_root = Path(
             args.repo_root
             or os.environ.get(
-                "POLICY_REPO_ROOT", str(Path(__file__).resolve().parents[3]),
+                "POLICY_REPO_ROOT",
+                str(Path(__file__).resolve().parents[3]),
             ),
         )
         output_dir = repo_root / "policies" / "suggestions"
@@ -596,7 +596,6 @@ def gaps_command(args: argparse.Namespace) -> None:
         task_domain=args.domain or "devops",
         min_ask_frequency=args.min_frequency,
     )
-
 
 
 def main() -> None:
@@ -638,7 +637,9 @@ def main() -> None:
 
     compile_parser = sub.add_parser("compile")
     compile_parser.add_argument(
-        "--target", required=True, choices=sorted(SUPPORTED_TARGETS),
+        "--target",
+        required=True,
+        choices=sorted(SUPPORTED_TARGETS),
     )
     compile_parser.add_argument("--harness", required=True)
     compile_parser.add_argument("--domain", required=True)
@@ -659,7 +660,9 @@ def main() -> None:
     intercept_parser.add_argument("--actor")
     intercept_parser.add_argument("--target-path", action="append", default=[])
     intercept_parser.add_argument(
-        "--ask-mode", choices=["fail", "allow", "prompt"], default="fail",
+        "--ask-mode",
+        choices=["fail", "allow", "prompt"],
+        default="fail",
     )
     intercept_parser.add_argument("--prompt-text")
     intercept_parser.set_defaults(func=intercept_command_cli)
@@ -674,7 +677,9 @@ def main() -> None:
     exec_parser.add_argument("--actor")
     exec_parser.add_argument("--target-path", action="append", default=[])
     exec_parser.add_argument(
-        "--ask-mode", choices=["fail", "allow", "prompt"], default="fail",
+        "--ask-mode",
+        choices=["fail", "allow", "prompt"],
+        default="fail",
     )
     exec_parser.add_argument("--prompt-text")
     exec_parser.add_argument("--sidecar-path")
@@ -694,7 +699,9 @@ def main() -> None:
     write_parser.add_argument("--command")
     write_parser.add_argument("--target-path", action="append", required=True)
     write_parser.add_argument(
-        "--ask-mode", choices=["fail", "allow", "prompt"], default="fail",
+        "--ask-mode",
+        choices=["fail", "allow", "prompt"],
+        default="fail",
     )
     write_parser.add_argument("--prompt-text")
     write_parser.set_defaults(func=write_check_command)
@@ -709,7 +716,9 @@ def main() -> None:
     network_parser.add_argument("--actor")
     network_parser.add_argument("--command", required=True)
     network_parser.add_argument(
-        "--ask-mode", choices=["fail", "allow", "prompt"], default="fail",
+        "--ask-mode",
+        choices=["fail", "allow", "prompt"],
+        default="fail",
     )
     network_parser.add_argument("--prompt-text")
     network_parser.set_defaults(func=network_check_command)
@@ -736,16 +745,23 @@ def main() -> None:
         help="Filter events until ISO-8601 datetime (e.g., 2024-12-31T23:59:59Z)",
     )
     audit_parser.add_argument(
-        "--action", choices=["exec", "write", "network"], help="Filter by action type",
+        "--action",
+        choices=["exec", "write", "network"],
+        help="Filter by action type",
     )
     audit_parser.add_argument(
-        "--decision", choices=["allow", "deny", "ask"], help="Filter by decision",
+        "--decision",
+        choices=["allow", "deny", "ask"],
+        help="Filter by decision",
     )
     audit_parser.add_argument(
-        "--actor", help="Filter by actor (regex pattern or substring)",
+        "--actor",
+        help="Filter by actor (regex pattern or substring)",
     )
     audit_parser.add_argument(
-        "--verify-chain", action="store_true", help="Verify audit chain integrity",
+        "--verify-chain",
+        action="store_true",
+        help="Verify audit chain integrity",
     )
     audit_parser.add_argument(
         "--summary",
@@ -761,14 +777,22 @@ def main() -> None:
 
     add_rule_parser = sub.add_parser("add-rule")
     add_rule_parser.add_argument(
-        "--file", required=True, help="Path to policy YAML file",
+        "--file",
+        required=True,
+        help="Path to policy YAML file",
     )
     add_rule_parser.add_argument("--id", required=True, help="Unique rule ID")
     add_rule_parser.add_argument(
-        "--effect", required=True, choices=["allow", "deny", "ask"], help="Rule effect",
+        "--effect",
+        required=True,
+        choices=["allow", "deny", "ask"],
+        help="Rule effect",
     )
     add_rule_parser.add_argument(
-        "--priority", required=True, type=int, help="Rule priority (integer)",
+        "--priority",
+        required=True,
+        type=int,
+        help="Rule priority (integer)",
     )
     add_rule_parser.add_argument(
         "--actions",
@@ -776,32 +800,40 @@ def main() -> None:
         help="Comma-separated list of actions (e.g., exec,write,network)",
     )
     add_rule_parser.add_argument(
-        "--command-patterns", help="Comma-separated command pattern list",
+        "--command-patterns",
+        help="Comma-separated command pattern list",
     )
     add_rule_parser.add_argument(
-        "--target-path-patterns", help="Comma-separated target path pattern list",
+        "--target-path-patterns",
+        help="Comma-separated target path pattern list",
     )
     add_rule_parser.add_argument(
-        "--cwd-patterns", help="Comma-separated cwd pattern list",
+        "--cwd-patterns",
+        help="Comma-separated cwd pattern list",
     )
     add_rule_parser.add_argument(
-        "--audit-log-path", help="Optional path to audit log for recording the change",
+        "--audit-log-path",
+        help="Optional path to audit log for recording the change",
     )
     add_rule_parser.set_defaults(func=add_rule_command)
 
     remove_rule_parser = sub.add_parser("remove-rule")
     remove_rule_parser.add_argument(
-        "--file", required=True, help="Path to policy YAML file",
+        "--file",
+        required=True,
+        help="Path to policy YAML file",
     )
     remove_rule_parser.add_argument("--id", required=True, help="Rule ID to remove")
     remove_rule_parser.add_argument(
-        "--audit-log-path", help="Optional path to audit log for recording the change",
+        "--audit-log-path",
+        help="Optional path to audit log for recording the change",
     )
     remove_rule_parser.set_defaults(func=remove_rule_command)
 
     verify_parser = sub.add_parser("verify")
     verify_parser.add_argument(
-        "--repo-root", help="Path to repository root (default: inferred)",
+        "--repo-root",
+        help="Path to repository root (default: inferred)",
     )
     verify_parser.set_defaults(func=verify_command)
 

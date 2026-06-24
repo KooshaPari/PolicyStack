@@ -34,6 +34,7 @@ def _to_int(value: object, field: str) -> int:
     except Exception:
         _fail(f"invalid integer {field}: {value!r}")
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--report", required=True)
 parser.add_argument("--suppressions", required=True)
@@ -45,11 +46,16 @@ args = parser.parse_args()
 report = _read_json(pathlib.Path(args.report))
 rows = _read_csv(pathlib.Path(args.suppressions))
 
-hard = _to_int(report.get("hard_suppression_count", report.get("hard_count", 0)), "hard_suppression_count")
+hard = _to_int(
+    report.get("hard_suppression_count", report.get("hard_count", 0)),
+    "hard_suppression_count",
+)
 if hard > args.max_hard_suppression:
     _fail(f"hard_suppression_count={hard}")
 
-flap_ratio = float(report.get("flap_ratio", report.get("suppression_flap_ratio", 0.0) or 0.0))
+flap_ratio = float(
+    report.get("flap_ratio", report.get("suppression_flap_ratio", 0.0) or 0.0)
+)
 if flap_ratio > args.max_flap_ratio:
     _fail(f"flap_ratio={flap_ratio}")
 
@@ -61,4 +67,3 @@ if noise_values:
     max_noise = max(noise_values)
     if max_noise > args.max_noise_score:
         _fail(f"max_noise_score={max_noise}")
-

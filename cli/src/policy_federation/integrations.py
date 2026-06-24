@@ -77,7 +77,9 @@ def install_runtime_integrations(repo_root: Path, home: Path) -> dict:
     }
 
     patch_cursor_config(
-        cursor_config, cursor_bin, runtime_dir / "cursor_runtime_manifest.json",
+        cursor_config,
+        cursor_bin,
+        runtime_dir / "cursor_runtime_manifest.json",
     )
     patch_factory_config(
         factory_settings,

@@ -58,11 +58,15 @@ def main() -> int:
             continue
         total += 1
         spent = to_float(
-            row.get("integrity_spend", row.get("integrity_cost", row.get("budget_spend", 0.0))),
+            row.get(
+                "integrity_spend",
+                row.get("integrity_cost", row.get("budget_spend", 0.0)),
+            ),
             "integrity_spend",
         )
         violations = to_int(
-            row.get("integrity_violations", row.get("violation_count", 0)), "integrity_violations"
+            row.get("integrity_violations", row.get("violation_count", 0)),
+            "integrity_violations",
         )
         effective_spend = spent + float(violations)
         if args.integrity_budget and effective_spend > args.integrity_budget:

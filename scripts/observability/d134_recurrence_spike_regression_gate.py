@@ -33,7 +33,9 @@ def _read_json(path: pathlib.Path, label: str) -> list[dict]:
     return _to_records(payload, path, label)
 
 
-def _read_csv(path: pathlib.Path, required: set[str], label: str) -> list[dict[str, str]]:
+def _read_csv(
+    path: pathlib.Path, required: set[str], label: str
+) -> list[dict[str, str]]:
     try:
         with path.open(newline="") as handle:
             reader = csv.DictReader(handle)
@@ -72,7 +74,9 @@ def _to_float(value: object, path: pathlib.Path, field: str) -> float:
 def _max_positive_step(values: list[float]) -> float:
     if len(values) < 2:
         return 0.0
-    return max((max(0.0, curr - prev) for prev, curr in zip(values, values[1:])), default=0.0)
+    return max(
+        (max(0.0, curr - prev) for prev, curr in zip(values, values[1:])), default=0.0
+    )
 
 
 def main() -> int:
@@ -106,7 +110,10 @@ def main() -> int:
         fail("E134 empty recurrence data")
 
     ordered = sorted(rows, key=lambda row: str(row.get(args.time_field, "")))
-    rates = [_to_float(row[args.rate_field], recurrence_path, args.rate_field) for row in ordered]
+    rates = [
+        _to_float(row[args.rate_field], recurrence_path, args.rate_field)
+        for row in ordered
+    ]
     regressions = [
         _to_float(row[args.regression_field], recurrence_path, args.regression_field)
         for row in ordered

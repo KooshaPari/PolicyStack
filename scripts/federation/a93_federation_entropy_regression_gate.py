@@ -39,10 +39,17 @@ args = parser.parse_args()
 data = _load(pathlib.Path(args.evidence))
 
 if isinstance(data, dict):
-    spike_count = _to_int(data.get("entropy_spikes", data.get("spike_count", 0)), "entropy_spikes")
-    regressions = _to_int(data.get("state_regressions", data.get("regressions", 0)), "state_regressions")
+    spike_count = _to_int(
+        data.get("entropy_spikes", data.get("spike_count", 0)), "entropy_spikes"
+    )
+    regressions = _to_int(
+        data.get("state_regressions", data.get("regressions", 0)), "state_regressions"
+    )
     entropy_score = _to_float(
-        data.get("entropy_score", data.get("avg_entropy_score", data.get("entropy_mean", 0.0))),
+        data.get(
+            "entropy_score",
+            data.get("avg_entropy_score", data.get("entropy_mean", 0.0)),
+        ),
         "entropy_score",
     )
 elif isinstance(data, list):
@@ -52,8 +59,16 @@ elif isinstance(data, list):
     for row in data:
         if not isinstance(row, dict):
             continue
-        spike_count += int(_to_int(row.get("entropy_spike", row.get("spike", 0)), "entropy_spike"))
-        if _to_int(row.get("state_regression", row.get("regression", 0)), "state_regression") > 0:
+        spike_count += int(
+            _to_int(row.get("entropy_spike", row.get("spike", 0)), "entropy_spike")
+        )
+        if (
+            _to_int(
+                row.get("state_regression", row.get("regression", 0)),
+                "state_regression",
+            )
+            > 0
+        ):
             regressions += 1
         score = row.get("entropy_score")
         if score is not None:

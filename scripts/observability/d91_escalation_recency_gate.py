@@ -65,16 +65,20 @@ def main() -> int:
     _require_file(csv_path, "escalations")
 
     report = _load_json(report_path)
-    rows = _load_csv(csv_path, {"escalation_id", "status", args.recency_field, args.score_field})
+    rows = _load_csv(
+        csv_path, {"escalation_id", "status", args.recency_field, args.score_field}
+    )
 
     max_score = float(report.get("escalation_recency_score", 0.0))
     stale_breaches = int(report.get("stale_escalations", 0))
 
-    for row in sorted(rows, key=lambda row: (row.get("escalation_id") or "")):
+    for row in sorted(rows, key=lambda row: row.get("escalation_id") or ""):
         status = (row.get("status") or "").strip().lower()
         if status not in {"open", "active", "in_progress"}:
             continue
-        stale_days = _to_float(row.get(args.recency_field), csv_path, args.recency_field)
+        stale_days = _to_float(
+            row.get(args.recency_field), csv_path, args.recency_field
+        )
         score = _to_float(row.get(args.score_field), csv_path, args.score_field)
         max_score = max(max_score, score)
         if stale_days > args.max_stale_days:

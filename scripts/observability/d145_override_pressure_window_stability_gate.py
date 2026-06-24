@@ -7,7 +7,10 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E145 override pressure window stability gate failed: {message}", file=sys.stderr)
+    print(
+        f"E145 override pressure window stability gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -33,7 +36,9 @@ def _read_json(path: pathlib.Path, label: str) -> list[dict]:
     return _to_records(payload, path, label)
 
 
-def _read_csv(path: pathlib.Path, required: set[str], label: str) -> list[dict[str, str]]:
+def _read_csv(
+    path: pathlib.Path, required: set[str], label: str
+) -> list[dict[str, str]]:
     try:
         with path.open(newline="") as handle:
             reader = csv.DictReader(handle)
@@ -74,7 +79,10 @@ def _window_pairs(values: list[float], window_size: int) -> list[list[float]]:
         return []
     if window_size <= 0 or window_size > len(values):
         return [values]
-    return [values[start : start + window_size] for start in range(0, len(values) - window_size + 1)]
+    return [
+        values[start : start + window_size]
+        for start in range(0, len(values) - window_size + 1)
+    ]
 
 
 def main() -> int:
@@ -112,18 +120,19 @@ def main() -> int:
         for row in ordered
     ]
     budgets = [
-        _to_float(row[args.stability_budget_field], overrides_path, args.stability_budget_field)
+        _to_float(
+            row[args.stability_budget_field],
+            overrides_path,
+            args.stability_budget_field,
+        )
         for row in ordered
     ]
 
-    stability_steps = [
-        abs(curr - prev) for prev, curr in zip(pressures, pressures[1:])
-    ]
+    stability_steps = [abs(curr - prev) for prev, curr in zip(pressures, pressures[1:])]
     paired_budgets = budgets[1:] if budgets else []
 
     stability_gaps = [
-        max(0.0, step - budget)
-        for step, budget in zip(stability_steps, paired_budgets)
+        max(0.0, step - budget) for step, budget in zip(stability_steps, paired_budgets)
     ]
 
     window_values = _window_pairs(stability_gaps, args.window_size)
@@ -150,7 +159,9 @@ def main() -> int:
     report_window_stability_over_budget_count = int(
         round(
             _to_float(
-                report.get("override_pressure_window_stability_over_budget_count_max", 0),
+                report.get(
+                    "override_pressure_window_stability_over_budget_count_max", 0
+                ),
                 report_path,
                 "override_pressure_window_stability_over_budget_count_max",
             )

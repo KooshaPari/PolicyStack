@@ -119,9 +119,15 @@ def main() -> int:
     for row in records:
         samples = parse_float(row.get(args.samples_key), args.samples_key)
         regressions = parse_int(row.get(args.regressions_key, 0), args.regressions_key)
-        stability_score = parse_float(row.get(args.stability_score_key), args.stability_score_key)
-        queue_depth = parse_float(row.get(args.queue_depth_key, 0), args.queue_depth_key)
-        queue_jitter = parse_float(row.get(args.queue_jitter_key, 0), args.queue_jitter_key)
+        stability_score = parse_float(
+            row.get(args.stability_score_key), args.stability_score_key
+        )
+        queue_depth = parse_float(
+            row.get(args.queue_depth_key, 0), args.queue_depth_key
+        )
+        queue_jitter = parse_float(
+            row.get(args.queue_jitter_key, 0), args.queue_jitter_key
+        )
         instability_events = parse_int(
             row.get(args.instability_events_key, 0),
             args.instability_events_key,
@@ -130,16 +136,22 @@ def main() -> int:
         if samples < 0:
             fail(f"samples for {args.samples_key} must be >= 0; got {samples}")
         if regressions < 0:
-            fail(f"regressions for {args.regressions_key} must be >= 0; got {regressions}")
+            fail(
+                f"regressions for {args.regressions_key} must be >= 0; got {regressions}"
+            )
         if stability_score < 0 or stability_score > 1:
             fail(
                 f"stability_score for {args.stability_score_key} must be within [0, 1]; got "
                 f"{stability_score}"
             )
         if queue_depth < 0:
-            fail(f"queue_depth for {args.queue_depth_key} must be >= 0; got {queue_depth}")
+            fail(
+                f"queue_depth for {args.queue_depth_key} must be >= 0; got {queue_depth}"
+            )
         if queue_jitter < 0:
-            fail(f"queue_jitter for {args.queue_jitter_key} must be >= 0; got {queue_jitter}")
+            fail(
+                f"queue_jitter for {args.queue_jitter_key} must be >= 0; got {queue_jitter}"
+            )
         if instability_events < 0:
             fail(
                 f"instability_events for {args.instability_events_key} must be >= 0; got "
@@ -164,17 +176,23 @@ def main() -> int:
         window = str(row.get(args.window_key, "default"))
         window_samples[window] = window_samples.get(window, 0.0) + samples
         window_regressions[window] = window_regressions.get(window, 0) + regressions
-        window_weighted_stability[window] = (
-            window_weighted_stability.get(window, 0.0) + (stability_score * samples)
-        )
+        window_weighted_stability[window] = window_weighted_stability.get(
+            window, 0.0
+        ) + (stability_score * samples)
         window_queue_depth_totals[window] = (
             window_queue_depth_totals.get(window, 0.0) + queue_depth
         )
-        window_queue_depth_max[window] = max(window_queue_depth_max.get(window, 0.0), queue_depth)
-        window_queue_jitter[window] = window_queue_jitter.get(window, 0.0) + queue_jitter
+        window_queue_depth_max[window] = max(
+            window_queue_depth_max.get(window, 0.0), queue_depth
+        )
+        window_queue_jitter[window] = (
+            window_queue_jitter.get(window, 0.0) + queue_jitter
+        )
 
     if total_samples < args.min_total_samples:
-        fail(f"total_samples={total_samples} < min_total_samples={args.min_total_samples}")
+        fail(
+            f"total_samples={total_samples} < min_total_samples={args.min_total_samples}"
+        )
 
     total_regression_rate = total_regressions / total_samples
     if total_regression_rate > args.max_total_regression_rate:
@@ -198,7 +216,9 @@ def main() -> int:
         )
 
     if max_queue_depth > args.max_queue_depth:
-        fail(f"max_queue_depth={max_queue_depth} > max_queue_depth={args.max_queue_depth}")
+        fail(
+            f"max_queue_depth={max_queue_depth} > max_queue_depth={args.max_queue_depth}"
+        )
 
     if total_queue_jitter > args.max_total_queue_jitter:
         fail(
@@ -239,7 +259,9 @@ def main() -> int:
                 f"max_window_average_queue_depth={args.max_window_average_queue_depth}"
             )
 
-        window_instability_rate = (window_regressions[window] if window_regressions[window] else 0) / samples
+        window_instability_rate = (
+            window_regressions[window] if window_regressions[window] else 0
+        ) / samples
         if window_instability_rate > args.max_window_instability_rate:
             fail(
                 f"window={window} instability_rate={window_instability_rate} > "

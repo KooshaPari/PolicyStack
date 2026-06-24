@@ -31,7 +31,9 @@ args = parser.parse_args()
 
 data = load(args.audit)
 gap_events = to_int(
-    data.get("audit_gap_events", data.get("cutover_audit_gaps", data.get("gap_events", 0)))
+    data.get(
+        "audit_gap_events", data.get("cutover_audit_gaps", data.get("gap_events", 0))
+    )
 )
 missing_events = to_int(
     data.get(
@@ -39,7 +41,9 @@ missing_events = to_int(
         data.get("missing_events", data.get("unobserved_events", 0)),
     )
 )
-coverage = to_float(data.get("audit_coverage", data.get("coverage", data.get("coverage_ratio", 1.0))))
+coverage = to_float(
+    data.get("audit_coverage", data.get("coverage", data.get("coverage_ratio", 1.0)))
+)
 
 if (
     gap_events > args.max_audit_gap_events

@@ -147,7 +147,8 @@ def write_sidecar(
     """Write a session sidecar JSON artifact."""
     sidecar_path.parent.mkdir(parents=True, exist_ok=True)
     sidecar_path.write_text(
-        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8",
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
     )
 
 

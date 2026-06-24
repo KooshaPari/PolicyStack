@@ -70,7 +70,10 @@ def main() -> int:
         _fail("D92 recurrence damping gate failed: empty recurrence csv")
 
     ordered = sorted(rows, key=lambda row: (row.get(args.time_field) or "").strip())
-    values = [_to_float(row.get(args.value_field), csv_path, args.value_field) for row in ordered]
+    values = [
+        _to_float(row.get(args.value_field), csv_path, args.value_field)
+        for row in ordered
+    ]
 
     max_tail = float(report.get("recurrence_damping_tail", 0.0))
     damping_steps = int(report.get("recurrence_damping_steps", 0))
@@ -78,7 +81,9 @@ def main() -> int:
     if len(values) < 2:
         max_amplitude = 0.0
     else:
-        deltas = [abs(current - previous) for previous, current in zip(values, values[1:])]
+        deltas = [
+            abs(current - previous) for previous, current in zip(values, values[1:])
+        ]
         max_amplitude = max(deltas) if deltas else 0.0
         for first, second in zip(values, values[1:]):
             if abs(second - first) > 0:
@@ -86,14 +91,16 @@ def main() -> int:
 
     effective_tail = max(max_amplitude, max_tail)
     if effective_tail > args.max_tail_amplitude:
-        _fail(f"D92 recurrence damping gate failed: max_tail_amplitude={effective_tail}")
+        _fail(
+            f"D92 recurrence damping gate failed: max_tail_amplitude={effective_tail}"
+        )
 
     if damping_steps > args.max_damping_steps:
         _fail(f"D92 recurrence damping gate failed: damping_steps={damping_steps}")
 
     if len(values) > max(1, args.max_damping_duration):
         tail = values[-args.max_damping_duration :]
-        baseline = sum(values[:-args.max_damping_duration]) / (
+        baseline = sum(values[: -args.max_damping_duration]) / (
             len(values) - args.max_damping_duration
         )
         tail_avg = sum(tail) / len(tail)

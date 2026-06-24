@@ -7,7 +7,9 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E151 suppression drift budget window gate failed: {message}", file=sys.stderr)
+    print(
+        f"E151 suppression drift budget window gate failed: {message}", file=sys.stderr
+    )
     raise SystemExit(2)
 
 
@@ -33,7 +35,9 @@ def _read_json(path: pathlib.Path, label: str) -> list[dict]:
     return _to_records(payload, path, label)
 
 
-def _read_csv(path: pathlib.Path, required: set[str], label: str) -> list[dict[str, str]]:
+def _read_csv(
+    path: pathlib.Path, required: set[str], label: str
+) -> list[dict[str, str]]:
     try:
         with path.open(newline="") as handle:
             reader = csv.DictReader(handle)
@@ -74,7 +78,10 @@ def _window_pairs(values: list[float], window_size: int) -> list[list[float]]:
         return []
     if window_size <= 0 or window_size > len(values):
         return [values]
-    return [values[start : start + window_size] for start in range(0, len(values) - window_size + 1)]
+    return [
+        values[start : start + window_size]
+        for start in range(0, len(values) - window_size + 1)
+    ]
 
 
 def main() -> int:
@@ -101,7 +108,12 @@ def main() -> int:
 
     rows = _load_records(
         suppression_path,
-        {args.time_field, args.entropy_field, args.drift_entropy_field, args.drift_budget_field},
+        {
+            args.time_field,
+            args.entropy_field,
+            args.drift_entropy_field,
+            args.drift_budget_field,
+        },
         "suppression",
     )
     if len(rows) < 2:
@@ -113,11 +125,15 @@ def main() -> int:
         for row in ordered
     ]
     measured_drifts = [
-        _to_float(row[args.drift_entropy_field], suppression_path, args.drift_entropy_field)
+        _to_float(
+            row[args.drift_entropy_field], suppression_path, args.drift_entropy_field
+        )
         for row in ordered
     ]
     budgets = [
-        _to_float(row[args.drift_budget_field], suppression_path, args.drift_budget_field)
+        _to_float(
+            row[args.drift_budget_field], suppression_path, args.drift_budget_field
+        )
         for row in ordered
     ]
 
@@ -126,7 +142,9 @@ def main() -> int:
     budgets_values = budgets[1:] if len(budgets) > 1 else []
     drift_gaps = [
         max(0.0, abs(measured) - expected - budget)
-        for measured, expected, budget in zip(measured_drift_values, expected_drifts, budgets_values)
+        for measured, expected, budget in zip(
+            measured_drift_values, expected_drifts, budgets_values
+        )
     ]
 
     window_values = _window_pairs(drift_gaps, args.window_size)
@@ -153,7 +171,9 @@ def main() -> int:
     report_window_over_budget_count = int(
         round(
             _to_float(
-                report.get("suppression_drift_entropy_budget_window_over_budget_count_max", 0),
+                report.get(
+                    "suppression_drift_entropy_budget_window_over_budget_count_max", 0
+                ),
                 report_path,
                 "suppression_drift_entropy_budget_window_over_budget_count_max",
             )

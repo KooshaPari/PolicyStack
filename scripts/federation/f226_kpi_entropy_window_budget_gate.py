@@ -37,7 +37,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("kpi payload must be a JSON object or non-empty list of objects")
 
@@ -45,7 +49,9 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--kpi", required=True)
-    parser.add_argument("--window-regression-count-field", default="window_regression_count")
+    parser.add_argument(
+        "--window-regression-count-field", default="window_regression_count"
+    )
     parser.add_argument("--max-window-regression-count", type=int, default=0)
     parser.add_argument("--window-days-field", default="window_days")
     parser.add_argument("--max-window-days", type=int, default=30)
@@ -69,7 +75,9 @@ def main() -> int:
             record.get(args.window_days_field), args.window_days_field, index
         )
         if window_days > args.max_window_days:
-            fail(f"{args.window_days_field}={window_days} > {args.max_window_days} at index {index}")
+            fail(
+                f"{args.window_days_field}={window_days} > {args.max_window_days} at index {index}"
+            )
 
     return 0
 

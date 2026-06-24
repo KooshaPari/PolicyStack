@@ -22,7 +22,10 @@ def _load_rows(path: pathlib.Path) -> tuple[list[dict], str | None]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows, None
-    return [], "E78 invalid input: expected list or dict with transitions/events/items/checks/records"
+    return (
+        [],
+        "E78 invalid input: expected list or dict with transitions/events/items/checks/records",
+    )
 
 
 def _pick(row: dict, keys: tuple[str, ...]) -> str:
@@ -41,7 +44,9 @@ def _time(value: object) -> datetime | None:
     if not text:
         return None
     try:
-        return datetime.fromisoformat(text.replace("Z", "+00:00")).astimezone(timezone.utc)
+        return datetime.fromisoformat(text.replace("Z", "+00:00")).astimezone(
+            timezone.utc
+        )
     except ValueError:
         return None
 
@@ -62,7 +67,12 @@ def _trust_score(value: object) -> int | None:
 def _is_drift(row: dict, max_step: int, max_open_minutes: int) -> bool:
     if str(row.get("drift", "")).strip().lower() in {"1", "true", "yes", "on"}:
         return True
-    if str(row.get("transition_drift", "")).strip().lower() in {"1", "true", "yes", "on"}:
+    if str(row.get("transition_drift", "")).strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }:
         return True
 
     before = _trust_score(_pick(row, ("from_trust", "previous_trust", "source_trust")))

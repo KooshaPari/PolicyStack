@@ -30,7 +30,9 @@ def main() -> int:
     if not isinstance(data, dict):
         fail("board payload must be a JSON object")
 
-    enabled = _to_bool(data.get("federation_policy_enabled"), "federation_policy_enabled")
+    enabled = _to_bool(
+        data.get("federation_policy_enabled"), "federation_policy_enabled"
+    )
     if args.require_policy and not enabled:
         fail("federation_policy_enabled is false")
 

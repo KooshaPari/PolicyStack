@@ -91,7 +91,10 @@ def main() -> int:
         regression = to_bool(
             row.get(
                 "regression",
-                row.get("playbook_transition_regression", row.get("transition_regression", False)),
+                row.get(
+                    "playbook_transition_regression",
+                    row.get("transition_regression", False),
+                ),
             )
         ) or (baseline - current > args.allowed_regression_delta)
         if regression or (actual - budget > args.allowed_budget_overrun):
@@ -102,7 +105,9 @@ def main() -> int:
     breach_rate = breaches / total
     if args.max_breaches and breaches > args.max_breaches:
         fail(f"breaches={breaches}")
-    if args.max_breach_rate and breach_rate > to_float(args.max_breach_rate, "max_breach_rate"):
+    if args.max_breach_rate and breach_rate > to_float(
+        args.max_breach_rate, "max_breach_rate"
+    ):
         fail(f"breach_rate={breach_rate:.6f}")
     return 0
 

@@ -41,11 +41,15 @@ def main() -> int:
     if not isinstance(payload, dict):
         fail("succession payload must be a JSON object")
 
-    readiness = to_float(payload.get(args.readiness_score_field), args.readiness_score_field)
+    readiness = to_float(
+        payload.get(args.readiness_score_field), args.readiness_score_field
+    )
     if readiness < args.min_readiness_score:
         fail(f"{args.readiness_score_field}={readiness} < {args.min_readiness_score}")
 
-    handoff_risk = to_float(payload.get(args.handoff_risk_field), args.handoff_risk_field)
+    handoff_risk = to_float(
+        payload.get(args.handoff_risk_field), args.handoff_risk_field
+    )
     if handoff_risk > args.max_handoff_risk:
         fail(f"{args.handoff_risk_field}={handoff_risk} > {args.max_handoff_risk}")
 

@@ -5,6 +5,7 @@ import json
 import pathlib
 import sys
 
+
 def _rows(path: pathlib.Path) -> list[dict]:
     if path.suffix.lower() == ".csv":
         return list(csv.DictReader(path.open()))
@@ -20,6 +21,7 @@ def _rows(path: pathlib.Path) -> list[dict]:
             return data["failover"]
     return []
 
+
 def _inconsistent(r: dict) -> bool:
     if bool(r.get("inconsistent") or r.get("trust_mismatch")):
         return True
@@ -31,17 +33,23 @@ def _inconsistent(r: dict) -> bool:
     fh = str(r.get("failover_hash") or r.get("failover_digest") or "").strip()
     return bool(ph and fh and ph != fh)
 
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--report", required=True)
     p.add_argument("--max-inconsistencies", type=int, default=0)
     a = p.parse_args()
-    bad = [str(r.get("id") or r.get("check") or r.get("region") or r.get("name") or "") for r in _rows(pathlib.Path(a.report)) if _inconsistent(r)]
+    bad = [
+        str(r.get("id") or r.get("check") or r.get("region") or r.get("name") or "")
+        for r in _rows(pathlib.Path(a.report))
+        if _inconsistent(r)
+    ]
     if len(bad) > a.max_inconsistencies:
         bad.sort()
         print(f"E70 failover trust consistency breach: {len(bad)}", file=sys.stderr)
         return 2
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

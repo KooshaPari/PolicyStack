@@ -29,7 +29,9 @@ def main() -> int:
     if not rows:
         fail("no KPI rows")
 
-    coverages = [_to_float(r.get(args.coverage_column), args.coverage_column) for r in rows]
+    coverages = [
+        _to_float(r.get(args.coverage_column), args.coverage_column) for r in rows
+    ]
     below = [x for x in coverages if x < args.min_coverage]
     if below:
         fail(f"min_coverage={args.min_coverage} violated by {len(below)} rows")

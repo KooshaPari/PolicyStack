@@ -28,6 +28,7 @@ def _to_ratio(value: object, label: str) -> float:
         print(f"A94 invalid ratio for {label}: {value!r}", file=sys.stderr)
         raise SystemExit(2)
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--drift", required=True)
 parser.add_argument("--max-drift-count", type=int, default=0)
@@ -38,10 +39,17 @@ args = parser.parse_args()
 data = _load(pathlib.Path(args.drift))
 
 if isinstance(data, dict):
-    drift_count = _to_int(data.get("drift_count", data.get("schema_drift_count", 0)), "drift_count")
-    missing_required = _to_int(data.get("missing_required", data.get("required_missing", 0)), "missing_required")
+    drift_count = _to_int(
+        data.get("drift_count", data.get("schema_drift_count", 0)), "drift_count"
+    )
+    missing_required = _to_int(
+        data.get("missing_required", data.get("required_missing", 0)),
+        "missing_required",
+    )
     match_ratio = _to_ratio(
-        data.get("schema_match_ratio", data.get("drift_ratio", data.get("schema_match", 0.0))),
+        data.get(
+            "schema_match_ratio", data.get("drift_ratio", data.get("schema_match", 0.0))
+        ),
         "schema_match_ratio",
     )
 elif isinstance(data, list):
@@ -53,7 +61,12 @@ elif isinstance(data, list):
             continue
         if _to_int(row.get("is_drift", row.get("drift", 0)), "is_drift") > 0:
             drift_count += 1
-        if _to_int(row.get("required_missing", row.get("missing", 0)), "required_missing") > 0:
+        if (
+            _to_int(
+                row.get("required_missing", row.get("missing", 0)), "required_missing"
+            )
+            > 0
+        ):
             missing_required += 1
         m = row.get("match_ratio")
         if m is not None:

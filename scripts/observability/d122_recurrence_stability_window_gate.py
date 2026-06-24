@@ -33,7 +33,9 @@ def _read_json(path: pathlib.Path, label: str) -> list[dict]:
     return _to_records(payload, path, label)
 
 
-def _read_csv(path: pathlib.Path, required: set[str], label: str) -> list[dict[str, str]]:
+def _read_csv(
+    path: pathlib.Path, required: set[str], label: str
+) -> list[dict[str, str]]:
     try:
         with path.open(newline="") as handle:
             reader = csv.DictReader(handle)
@@ -87,11 +89,15 @@ def _window_max_step(values: list[float], window_size: int) -> float:
     if len(values) < 2:
         return 0.0
     if window_size <= 1:
-        return max((abs(curr - prev) for prev, curr in zip(values, values[1:])), default=0.0)
+        return max(
+            (abs(curr - prev) for prev, curr in zip(values, values[1:])), default=0.0
+        )
     best = 0.0
     for start in range(0, len(values) - window_size + 1):
         window = values[start : start + window_size]
-        step = max((abs(curr - prev) for prev, curr in zip(window, window[1:])), default=0.0)
+        step = max(
+            (abs(curr - prev) for prev, curr in zip(window, window[1:])), default=0.0
+        )
         if step > best:
             best = step
     return best
@@ -125,7 +131,10 @@ def main() -> int:
         fail("E122 empty recurrence data")
 
     ordered = sorted(rows, key=lambda row: str(row.get(args.time_field, "")))
-    stabilities = [_to_float(row[args.stability_field], recurrence_path, args.stability_field) for row in ordered]
+    stabilities = [
+        _to_float(row[args.stability_field], recurrence_path, args.stability_field)
+        for row in ordered
+    ]
 
     window_span = _window_max_span(stabilities, args.window_size)
     window_step = _window_max_step(stabilities, args.window_size)

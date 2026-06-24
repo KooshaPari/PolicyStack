@@ -117,13 +117,17 @@ def main() -> int:
             args.critical_regressions_key,
         )
         budget_used = parse_float(row.get(args.budget_used_key), args.budget_used_key)
-        budget_total = parse_float(row.get(args.budget_total_key), args.budget_total_key)
+        budget_total = parse_float(
+            row.get(args.budget_total_key), args.budget_total_key
+        )
         retry_count = parse_int(row.get(args.retry_count_key, 0), args.retry_count_key)
 
         if samples < 0:
             fail(f"samples for {args.samples_key} must be >= 0; got {samples}")
         if regressions < 0:
-            fail(f"regressions for {args.regressions_key} must be >= 0; got {regressions}")
+            fail(
+                f"regressions for {args.regressions_key} must be >= 0; got {regressions}"
+            )
         if critical_regressions < 0:
             fail(
                 f"critical regressions for {args.critical_regressions_key} must be >= 0; got "
@@ -136,13 +140,19 @@ def main() -> int:
                 f"critical_regressions={critical_regressions} cannot exceed regressions={regressions}"
             )
         if budget_used < 0:
-            fail(f"budget_used for {args.budget_used_key} must be >= 0; got {budget_used}")
+            fail(
+                f"budget_used for {args.budget_used_key} must be >= 0; got {budget_used}"
+            )
         if budget_total <= 0:
-            fail(f"budget_total for {args.budget_total_key} must be > 0; got {budget_total}")
+            fail(
+                f"budget_total for {args.budget_total_key} must be > 0; got {budget_total}"
+            )
         if budget_used > budget_total:
             fail(f"budget_used={budget_used} cannot exceed budget_total={budget_total}")
         if retry_count < 0:
-            fail(f"retry_count for {args.retry_count_key} must be >= 0; got {retry_count}")
+            fail(
+                f"retry_count for {args.retry_count_key} must be >= 0; got {retry_count}"
+            )
 
         total_samples += samples
         total_regressions += regressions
@@ -155,10 +165,14 @@ def main() -> int:
         window_samples[window] = window_samples.get(window, 0.0) + samples
         window_regressions[window] = window_regressions.get(window, 0) + regressions
         window_budget_used[window] = window_budget_used.get(window, 0.0) + budget_used
-        window_budget_total[window] = window_budget_total.get(window, 0.0) + budget_total
+        window_budget_total[window] = (
+            window_budget_total.get(window, 0.0) + budget_total
+        )
 
     if total_samples < args.min_total_samples:
-        fail(f"total_samples={total_samples} < min_total_samples={args.min_total_samples}")
+        fail(
+            f"total_samples={total_samples} < min_total_samples={args.min_total_samples}"
+        )
 
     if total_budget_total <= 0:
         fail(f"total_budget_total={total_budget_total} must be > 0")
@@ -203,9 +217,13 @@ def main() -> int:
 
         window_budget_total_value = window_budget_total[window]
         if window_budget_total_value <= 0:
-            fail(f"window={window} budget_total={window_budget_total_value} must be > 0")
+            fail(
+                f"window={window} budget_total={window_budget_total_value} must be > 0"
+            )
 
-        window_budget_usage_ratio = window_budget_used[window] / window_budget_total_value
+        window_budget_usage_ratio = (
+            window_budget_used[window] / window_budget_total_value
+        )
         if window_budget_usage_ratio > args.max_window_budget_usage_ratio:
             fail(
                 f"window={window} budget_usage_ratio={window_budget_usage_ratio} > "

@@ -67,8 +67,11 @@ def main() -> int:
     if not rows:
         fail("D115 suppression entropy gate failed: empty suppression data")
 
-    ordered = sorted(rows, key=lambda row: (row.get(args.time_field) or ""))
-    entropies = [_to_float(row.get(args.entropy_field, ""), csv_path, args.entropy_field) for row in ordered]
+    ordered = sorted(rows, key=lambda row: row.get(args.time_field) or "")
+    entropies = [
+        _to_float(row.get(args.entropy_field, ""), csv_path, args.entropy_field)
+        for row in ordered
+    ]
     max_entropy = max(entropies)
 
     if len(entropies) > 1:
@@ -86,7 +89,9 @@ def main() -> int:
     if max_entropy > args.max_entropy:
         fail(f"D115 max_entropy={max_entropy} > max_entropy={args.max_entropy}")
     if max_step_change > args.max_step_change:
-        fail(f"D115 max_step_change={max_step_change} > max_step_change={args.max_step_change}")
+        fail(
+            f"D115 max_step_change={max_step_change} > max_step_change={args.max_step_change}"
+        )
 
     return 0
 

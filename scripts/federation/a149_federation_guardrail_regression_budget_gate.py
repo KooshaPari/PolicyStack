@@ -10,7 +10,10 @@ from typing import Any
 
 
 def fail(message: str) -> None:
-    print(f"E149 federation guardrail regression budget gate failed: {message}", file=sys.stderr)
+    print(
+        f"E149 federation guardrail regression budget gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -26,8 +29,11 @@ def extract_rows(
 ) -> list[dict[str, Any]]:
     if isinstance(payload, list):
         return [row for row in payload if isinstance(row, dict)]
-    rows = payload.get("items") or payload.get("records") or payload.get("entries") or payload.get(
-        lane_key
+    rows = (
+        payload.get("items")
+        or payload.get("records")
+        or payload.get("entries")
+        or payload.get(lane_key)
     )
     if isinstance(rows, list):
         return [row for row in rows if isinstance(row, dict)]

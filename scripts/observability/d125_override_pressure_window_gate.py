@@ -33,7 +33,9 @@ def _read_json(path: pathlib.Path, label: str) -> list[dict]:
     return _to_records(payload, path, label)
 
 
-def _read_csv(path: pathlib.Path, required: set[str], label: str) -> list[dict[str, str]]:
+def _read_csv(
+    path: pathlib.Path, required: set[str], label: str
+) -> list[dict[str, str]]:
     try:
         with path.open(newline="") as handle:
             reader = csv.DictReader(handle)
@@ -87,11 +89,17 @@ def _window_max_rise(values: list[float], window_size: int) -> float:
     if len(values) < 2:
         return 0.0
     if window_size <= 1 or window_size > len(values):
-        return max((max(0.0, curr - prev) for prev, curr in zip(values, values[1:])), default=0.0)
+        return max(
+            (max(0.0, curr - prev) for prev, curr in zip(values, values[1:])),
+            default=0.0,
+        )
     best = 0.0
     for start in range(0, len(values) - window_size + 1):
         window = values[start : start + window_size]
-        rise = max((max(0.0, curr - prev) for prev, curr in zip(window, window[1:])), default=0.0)
+        rise = max(
+            (max(0.0, curr - prev) for prev, curr in zip(window, window[1:])),
+            default=0.0,
+        )
         if rise > best:
             best = rise
     return best
@@ -125,7 +133,10 @@ def main() -> int:
         fail("E125 empty override data")
 
     ordered = sorted(rows, key=lambda row: str(row.get(args.time_field, "")))
-    pressures = [_to_float(row[args.pressure_field], overrides_path, args.pressure_field) for row in ordered]
+    pressures = [
+        _to_float(row[args.pressure_field], overrides_path, args.pressure_field)
+        for row in ordered
+    ]
 
     window_span = _window_max_span(pressures, args.window_size)
     window_rise = _window_max_rise(pressures, args.window_size)

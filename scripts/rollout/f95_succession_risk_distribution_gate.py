@@ -17,6 +17,7 @@ def _to_int(value: object, field: str) -> int:
     except Exception:
         _fail(f"invalid integer {field}: {value!r}")
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--distribution", required=True)
 parser.add_argument("--succesion-csv", required=True)
@@ -31,11 +32,15 @@ rows = list(csv.DictReader(pathlib.Path(args.succesion_csv).read_text().splitlin
 if not isinstance(report, dict):
     _fail("distribution must be JSON object")
 
-high_risk = _to_int(report.get("high_risk_count", report.get("high_risk", 0)), "high_risk_count")
+high_risk = _to_int(
+    report.get("high_risk_count", report.get("high_risk", 0)), "high_risk_count"
+)
 if high_risk > args.max_high_risk:
     _fail(f"high_risk_count={high_risk}")
 
-risk_total = _to_int(report.get("total_records", report.get("risk_total", len(rows))), "total_records")
+risk_total = _to_int(
+    report.get("total_records", report.get("risk_total", len(rows))), "total_records"
+)
 covered = sum(1 for row in rows if str(row.get("risk_bucket", "")).strip())
 coverage = covered / max(1, len(rows))
 if coverage < args.max_missing_coverage:

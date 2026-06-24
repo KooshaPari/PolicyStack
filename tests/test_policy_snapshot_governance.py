@@ -65,10 +65,12 @@ class TestPolicySnapshotGovernanceScript(TestCase):
             config_root = root / "policy-contract" / "policy-config"
             self._write_policy(config_root / "harness" / "codex.yaml", "harness")
             self._write_policy(
-                config_root / "task-domain" / "deployment.yaml", "task_domain",
+                config_root / "task-domain" / "deployment.yaml",
+                "task_domain",
             )
             self._write_policy(
-                config_root / "task-domain" / "query.yaml", "task_domain",
+                config_root / "task-domain" / "query.yaml",
+                "task_domain",
             )
             snapshot_path = root / "snapshots" / "unit.json"
 
@@ -96,7 +98,10 @@ class TestPolicySnapshotGovernanceScript(TestCase):
             assert "policy_hash" in payload
             assert "scopes" in payload
             assert payload["scopes"][0]["scope"] == "system"
-            assert payload["scopes"][0]["path"] == "policy-contract/policy-config/system.yaml"
+            assert (
+                payload["scopes"][0]["path"]
+                == "policy-contract/policy-config/system.yaml"
+            )
 
             check = subprocess.run(
                 [
@@ -191,10 +196,12 @@ class TestPolicySnapshotGovernanceScript(TestCase):
             config_root = root / "policy-contract" / "policy-config"
             self._write_policy(config_root / "harness" / "codex.yaml", "harness")
             self._write_policy(
-                config_root / "task-domain" / "deployment.yaml", "task_domain",
+                config_root / "task-domain" / "deployment.yaml",
+                "task_domain",
             )
             self._write_policy(
-                config_root / "task-domain" / "query.yaml", "task_domain",
+                config_root / "task-domain" / "query.yaml",
+                "task_domain",
             )
 
             write_canonical = subprocess.run(
@@ -210,17 +217,30 @@ class TestPolicySnapshotGovernanceScript(TestCase):
                 text=True,
                 check=False,
             )
-            assert write_canonical.returncode == 0, write_canonical.stdout + write_canonical.stderr
+            assert write_canonical.returncode == 0, (
+                write_canonical.stdout + write_canonical.stderr
+            )
             write_payload = json.loads(write_canonical.stdout)
-            assert set(write_payload.keys()) == {"status", "kind", "message", "snapshot_count", "output_paths"}
+            assert set(write_payload.keys()) == {
+                "status",
+                "kind",
+                "message",
+                "snapshot_count",
+                "output_paths",
+            }
             assert write_payload["status"] == "ok"
             assert write_payload["kind"] == "write_canonical"
             assert write_payload["message"] == "wrote canonical snapshots"
             assert write_payload["snapshot_count"] == 2
             assert isinstance(write_payload["output_paths"], list)
             assert len(write_payload["output_paths"]) == 2
-            assert write_payload["output_paths"] == sorted(write_payload["output_paths"])
-            assert write_payload["output_paths"] == ["policy-contract/policy-config/snapshots/policy_snapshot_codex_deployment.json", "policy-contract/policy-config/snapshots/policy_snapshot_codex_query.json"]
+            assert write_payload["output_paths"] == sorted(
+                write_payload["output_paths"]
+            )
+            assert write_payload["output_paths"] == [
+                "policy-contract/policy-config/snapshots/policy_snapshot_codex_deployment.json",
+                "policy-contract/policy-config/snapshots/policy_snapshot_codex_query.json",
+            ]
 
             for task_domain in ("deployment", "query"):
                 output_rel = (
@@ -261,10 +281,12 @@ class TestPolicySnapshotGovernanceScript(TestCase):
             config_root = root / "policy-contract" / "policy-config"
             self._write_policy(config_root / "harness" / "codex.yaml", "harness")
             self._write_policy(
-                config_root / "task-domain" / "deployment.yaml", "task_domain",
+                config_root / "task-domain" / "deployment.yaml",
+                "task_domain",
             )
             self._write_policy(
-                config_root / "task-domain" / "query.yaml", "task_domain",
+                config_root / "task-domain" / "query.yaml",
+                "task_domain",
             )
             canonical_dir = root / "custom-snapshots"
 
@@ -283,7 +305,9 @@ class TestPolicySnapshotGovernanceScript(TestCase):
                 text=True,
                 check=False,
             )
-            assert write_canonical.returncode == 0, write_canonical.stdout + write_canonical.stderr
+            assert write_canonical.returncode == 0, (
+                write_canonical.stdout + write_canonical.stderr
+            )
 
             validate = subprocess.run(
                 [
@@ -302,7 +326,13 @@ class TestPolicySnapshotGovernanceScript(TestCase):
             )
             assert validate.returncode == 0, validate.stdout + validate.stderr
             payload = json.loads(validate.stdout)
-            assert set(payload.keys()) == {"status", "kind", "message", "snapshot_count", "output_paths"}
+            assert set(payload.keys()) == {
+                "status",
+                "kind",
+                "message",
+                "snapshot_count",
+                "output_paths",
+            }
             assert payload["status"] == "ok"
             assert payload["kind"] == "validate_canonical"
             assert payload["message"] == "canonical snapshots match"
@@ -310,7 +340,10 @@ class TestPolicySnapshotGovernanceScript(TestCase):
             assert isinstance(payload["output_paths"], list)
             assert len(payload["output_paths"]) == 2
             assert payload["output_paths"] == sorted(payload["output_paths"])
-            assert payload["output_paths"] == ["custom-snapshots/policy_snapshot_codex_deployment.json", "custom-snapshots/policy_snapshot_codex_query.json"]
+            assert payload["output_paths"] == [
+                "custom-snapshots/policy_snapshot_codex_deployment.json",
+                "custom-snapshots/policy_snapshot_codex_query.json",
+            ]
 
     def test_snapshot_validate_canonical_fails_when_snapshot_missing(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -319,10 +352,12 @@ class TestPolicySnapshotGovernanceScript(TestCase):
             config_root = root / "policy-contract" / "policy-config"
             self._write_policy(config_root / "harness" / "codex.yaml", "harness")
             self._write_policy(
-                config_root / "task-domain" / "deployment.yaml", "task_domain",
+                config_root / "task-domain" / "deployment.yaml",
+                "task_domain",
             )
             self._write_policy(
-                config_root / "task-domain" / "query.yaml", "task_domain",
+                config_root / "task-domain" / "query.yaml",
+                "task_domain",
             )
 
             validate = subprocess.run(
@@ -407,7 +442,8 @@ class TestPolicySnapshotGovernanceScript(TestCase):
             payload["commands"].setdefault("allow", [])
             payload["commands"]["allow"].append("deterministic-drift-command")
             repo_file.write_text(
-                yaml.safe_dump(payload, sort_keys=False), encoding="utf-8",
+                yaml.safe_dump(payload, sort_keys=False),
+                encoding="utf-8",
             )
 
             check = subprocess.run(
@@ -468,7 +504,8 @@ class TestPolicySnapshotGovernanceScript(TestCase):
             payload["commands"].setdefault("allow", [])
             payload["commands"]["allow"].append("deterministic-drift-command")
             repo_file.write_text(
-                yaml.safe_dump(payload, sort_keys=False), encoding="utf-8",
+                yaml.safe_dump(payload, sort_keys=False),
+                encoding="utf-8",
             )
 
             check = subprocess.run(

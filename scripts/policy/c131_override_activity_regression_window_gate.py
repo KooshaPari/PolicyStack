@@ -7,7 +7,10 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E131 C131 override activity regression window gate failed: {message}", file=sys.stderr)
+    print(
+        f"E131 C131 override activity regression window gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -76,9 +79,14 @@ def main() -> int:
             "activity_rate",
         )
         explicit_regression = to_bool(
-            row.get("regression", row.get("activity_regression", row.get("rate_regression", False)))
+            row.get(
+                "regression",
+                row.get("activity_regression", row.get("rate_regression", False)),
+            )
         )
-        if explicit_regression or (baseline_rate - current_rate > args.allowed_regression_delta):
+        if explicit_regression or (
+            baseline_rate - current_rate > args.allowed_regression_delta
+        ):
             regressions += 1
 
     if total == 0:

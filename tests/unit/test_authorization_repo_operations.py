@@ -78,7 +78,10 @@ class AuthorizationRepoOperationsTest(unittest.TestCase):
             ],
         )
         assert result["decision"] == "allow"
-        assert result["winning_rule"]["id"] in ["phenotype-allow-worktree-writes", "phenotype-allow-worktree-writes-any-cwd"]
+        assert result["winning_rule"]["id"] in [
+            "phenotype-allow-worktree-writes",
+            "phenotype-allow-worktree-writes-any-cwd",
+        ]
 
     def test_trace_cli_stub_storage_write_is_allowed(self) -> None:
         resolved = resolve(
@@ -102,7 +105,10 @@ class AuthorizationRepoOperationsTest(unittest.TestCase):
             ],
         )
         assert result["decision"] == "allow"
-        assert result["winning_rule"]["id"] in ["phenotype-allow-worktree-writes", "phenotype-allow-worktree-writes-any-cwd"]
+        assert result["winning_rule"]["id"] in [
+            "phenotype-allow-worktree-writes",
+            "phenotype-allow-worktree-writes-any-cwd",
+        ]
 
     def test_pwd_is_allowed_in_worktree(self) -> None:
         resolved = resolve(

@@ -11,7 +11,8 @@ from typing import Any
 
 def fail(message: str) -> None:
     print(
-        f"E152 federation entropy reliability budget gate failed: {message}", file=sys.stderr
+        f"E152 federation entropy reliability budget gate failed: {message}",
+        file=sys.stderr,
     )
     raise SystemExit(2)
 
@@ -28,8 +29,11 @@ def extract_rows(
 ) -> list[dict[str, Any]]:
     if isinstance(payload, list):
         return [row for row in payload if isinstance(row, dict)]
-    rows = payload.get("items") or payload.get("records") or payload.get("entries") or payload.get(
-        lane_key
+    rows = (
+        payload.get("items")
+        or payload.get("records")
+        or payload.get("entries")
+        or payload.get(lane_key)
     )
     if isinstance(rows, list):
         return [row for row in rows if isinstance(row, dict)]
@@ -55,7 +59,9 @@ def parse_int(value: object, label: str) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--entropy-reliability-budget-report", required=True)
-    parser.add_argument("--max-entropy-reliability-breach-rate", type=float, default=0.03)
+    parser.add_argument(
+        "--max-entropy-reliability-breach-rate", type=float, default=0.03
+    )
     parser.add_argument(
         "--min-entropy-reliability-stability-rate", type=float, default=0.95
     )

@@ -33,7 +33,9 @@ def load_rows(path: pathlib.Path) -> list[dict]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows
-    fail("custody payload must be list or object with records/items/entries/transitions/attestations")
+    fail(
+        "custody payload must be list or object with records/items/entries/transitions/attestations"
+    )
 
 
 def is_regression_row(
@@ -78,15 +80,21 @@ def main() -> int:
         if not isinstance(row, dict):
             continue
         dict_rows_seen += 1
-        previous = rows[index - 1] if index > 0 and isinstance(rows[index - 1], dict) else None
-        if is_regression_row(row, previous, args.gap_col, args.gap_threshold, args.regression_delta):
+        previous = (
+            rows[index - 1] if index > 0 and isinstance(rows[index - 1], dict) else None
+        )
+        if is_regression_row(
+            row, previous, args.gap_col, args.gap_threshold, args.regression_delta
+        ):
             regressions += 1
 
     if dict_rows_seen == 0:
         fail("records payload must contain dict rows")
 
     if regressions > args.max_regressions:
-        fail(f"regressions={regressions} exceeds max_regressions={args.max_regressions}")
+        fail(
+            f"regressions={regressions} exceeds max_regressions={args.max_regressions}"
+        )
 
     return 0
 

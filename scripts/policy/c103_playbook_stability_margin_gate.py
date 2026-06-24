@@ -31,7 +31,9 @@ def main() -> int:
     parser.add_argument("--max-violations", type=int, default=0)
     args = parser.parse_args()
 
-    rows = list(csv.DictReader(pathlib.Path(args.playbooks_csv).read_text().splitlines()))
+    rows = list(
+        csv.DictReader(pathlib.Path(args.playbooks_csv).read_text().splitlines())
+    )
     violations = 0
     for row in rows:
         score = to_float(row.get("stability_margin", "0.0"), "stability_margin")
@@ -42,5 +44,5 @@ def main() -> int:
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     raise SystemExit(main())

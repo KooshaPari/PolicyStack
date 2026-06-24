@@ -149,7 +149,9 @@ def main() -> None:
     args = parse_args()
     policy_dir = Path(args.policy_dir)
     manifest_dir = Path(args.manifest_dir)
-    extension_list = [item.strip() for item in args.extensions.split(",") if item.strip()]
+    extension_list = [
+        item.strip() for item in args.extensions.split(",") if item.strip()
+    ]
 
     layers, files, missing = collect_files(
         repo=args.repo,
@@ -211,8 +213,9 @@ def main() -> None:
 
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-
+    out_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
 
 
 if __name__ == "__main__":

@@ -44,7 +44,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("recert payload must be a JSON object or non-empty list of objects")
 
@@ -52,9 +56,13 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--recert", required=True)
-    parser.add_argument("--exception-stability-score-field", default="exception_stability_score")
+    parser.add_argument(
+        "--exception-stability-score-field", default="exception_stability_score"
+    )
     parser.add_argument("--min-exception-stability-score", type=float, default=1.0)
-    parser.add_argument("--unstable-exception-count-field", default="unstable_exception_count")
+    parser.add_argument(
+        "--unstable-exception-count-field", default="unstable_exception_count"
+    )
     parser.add_argument("--max-unstable-exception-count", type=int, default=0)
     args = parser.parse_args()
 

@@ -27,7 +27,10 @@ _WRITE_VIA_EXEC_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
             re.DOTALL,
         ),
     ),
-    ("shell-redirect-write", re.compile(r"(?:^|&&|;|\|)\s*[^2]?>\s*/|(?<![12=&])>\s*/\S", re.MULTILINE)),
+    (
+        "shell-redirect-write",
+        re.compile(r"(?:^|&&|;|\|)\s*[^2]?>\s*/|(?<![12=&])>\s*/\S", re.MULTILINE),
+    ),
     ("tee-write", re.compile(r"\btee\b")),
     ("dd-write", re.compile(r"\bdd\b.*\bof=")),
     ("heredoc-write", re.compile(r'<<\s*[\'"]?EOF')),
@@ -225,9 +228,7 @@ def _extract_sed_target_paths(command: str, cwd: str) -> list[str]:
 
     target_paths: list[str] = []
     for part in reversed(parts):
-        if (
-            part in {"sed", "-i"} or part.startswith(("-", "s/"))
-        ):
+        if part in {"sed", "-i"} or part.startswith(("-", "s/")):
             continue
         target_paths.append(_resolve_target_path(part, cwd))
         break
@@ -387,7 +388,8 @@ def _should_deny_unapproved_write(
 
 
 def evaluate_claude_pretool_payload(
-    payload: dict, repo_root: Path | None = None,
+    payload: dict,
+    repo_root: Path | None = None,
 ) -> dict:
     """Evaluate Claude hook payload and return Claude-compatible hook output."""
     request = _extract_request(payload)
@@ -445,7 +447,8 @@ def evaluate_claude_pretool_payload(
         if headless_review:
             winning_rule = evaluation.get("winning_rule") or {}
             rule_id = winning_rule.get("id") or evaluation.get(
-                "reason", "default-allow",
+                "reason",
+                "default-allow",
             )
             rule_id = rule_id.removeprefix("matched rule ")
 

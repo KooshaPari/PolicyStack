@@ -1,0 +1,32 @@
+name: Traceability
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  traceability:
+    name: Traceability check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Verify AI traceability artifact
+        run: |
+          test -f .phenotype/ai-traceability.yaml || {
+            echo "::error::Missing .phenotype/ai-traceability.yaml"
+            exit 1
+          }
+          python -c "import yaml,sys; d=yaml.safe_load(open('.phenotype/ai-traceability.yaml')); assert isinstance(d, dict), 'ai-traceability.yaml must be a mapping'"

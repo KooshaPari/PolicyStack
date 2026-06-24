@@ -73,7 +73,7 @@ def main() -> int:
     )
     max_decay_score = 0.0
     for row in rows:
-        if (value := (row.get("decay_score") or "").strip()):
+        if value := (row.get("decay_score") or "").strip():
             max_decay_score = max(max_decay_score, float(value))
 
     decayed = max(decayed, report_decay_count)

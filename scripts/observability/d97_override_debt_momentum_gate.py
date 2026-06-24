@@ -78,12 +78,21 @@ def main() -> int:
         _fail("D97 override debt momentum gate failed: empty override csv")
 
     ordered = sorted(rows, key=lambda row: (row.get(args.time_field) or "").strip())
-    values = [_to_float(row.get(args.value_field, ""), csv_path, args.value_field) for row in ordered]
+    values = [
+        _to_float(row.get(args.value_field, ""), csv_path, args.value_field)
+        for row in ordered
+    ]
     if len(values) < 2:
-        _fail("D97 override debt momentum gate failed: insufficient override debt points")
+        _fail(
+            "D97 override debt momentum gate failed: insufficient override debt points"
+        )
 
     reported_momentum = float(report.get("override_debt_momentum", 0.0))
-    breaches = _to_int(str(report.get("override_debt_momentum_breaches", 0)), csv_path, "override_debt_momentum_breaches")
+    breaches = _to_int(
+        str(report.get("override_debt_momentum_breaches", 0)),
+        csv_path,
+        "override_debt_momentum_breaches",
+    )
 
     max_momentum = 0.0
     positive_steps = 0
@@ -102,7 +111,9 @@ def main() -> int:
         row.get(args.momentum_field, "").strip() for row in ordered
     ):
         for row in ordered:
-            explicit = _to_float(row.get(args.momentum_field, ""), csv_path, args.momentum_field)
+            explicit = _to_float(
+                row.get(args.momentum_field, ""), csv_path, args.momentum_field
+            )
             if explicit > args.max_max_momentum:
                 breaches += 1
             max_momentum = max(max_momentum, explicit)
@@ -110,7 +121,9 @@ def main() -> int:
     if max_momentum > args.max_max_momentum:
         _fail(f"D97 override debt momentum gate failed: max_momentum={max_momentum}")
     if positive_steps > args.max_positive_momentum_steps:
-        _fail(f"D97 override debt momentum gate failed: positive_momentum_steps={positive_steps}")
+        _fail(
+            f"D97 override debt momentum gate failed: positive_momentum_steps={positive_steps}"
+        )
     if breaches > args.max_momentum_breaches:
         _fail(f"D97 override debt momentum gate failed: momentum_breaches={breaches}")
 

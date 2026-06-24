@@ -7,7 +7,9 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E144 trust transition window budget gate failed: {message}", file=sys.stderr)
+    print(
+        f"E144 trust transition window budget gate failed: {message}", file=sys.stderr
+    )
     raise SystemExit(2)
 
 
@@ -33,7 +35,9 @@ def load_rows(path: pathlib.Path) -> list[dict]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows
-    fail("transitions payload must be list or object with transitions/records/items/entries/attestations")
+    fail(
+        "transitions payload must be list or object with transitions/records/items/entries/attestations"
+    )
 
 
 def main() -> int:
@@ -65,7 +69,9 @@ def main() -> int:
             f"{args.max_transition_per_window}"
         )
     if args.max_window_violations < 0:
-        fail(f"max-window-violations must be non-negative: {args.max_window_violations}")
+        fail(
+            f"max-window-violations must be non-negative: {args.max_window_violations}"
+        )
 
     rows = load_rows(pathlib.Path(args.transitions))
     if not rows:
@@ -102,7 +108,9 @@ def main() -> int:
             violations += 1
 
     if violations > args.max_window_violations:
-        fail(f"window_violations={violations} exceeds max_window_violations={args.max_window_violations}")
+        fail(
+            f"window_violations={violations} exceeds max_window_violations={args.max_window_violations}"
+        )
 
     return 0
 

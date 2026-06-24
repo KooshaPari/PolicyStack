@@ -66,7 +66,7 @@ def main() -> int:
     report_fatigue = float(report.get("override_fatigue_score", 0.0))
     row_fatigue_max = 0.0
     for row in rows:
-        if (value := (row.get("fatigue_score") or "").strip()):
+        if value := (row.get("fatigue_score") or "").strip():
             row_fatigue_max = max(row_fatigue_max, float(value))
     fatigued = sum(
         1

@@ -7,7 +7,9 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E125 C125 forensic bundle integrity gate failed: {message}", file=sys.stderr)
+    print(
+        f"E125 C125 forensic bundle integrity gate failed: {message}", file=sys.stderr
+    )
     raise SystemExit(2)
 
 
@@ -58,7 +60,10 @@ def main() -> int:
         integrity_ok = to_bool(
             row.get(
                 "integrity_ok",
-                row.get("bundle_integrity_ok", row.get("checksum_match", row.get("verified", True))),
+                row.get(
+                    "bundle_integrity_ok",
+                    row.get("checksum_match", row.get("verified", True)),
+                ),
             )
         )
         if not integrity_ok:

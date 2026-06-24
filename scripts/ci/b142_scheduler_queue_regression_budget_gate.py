@@ -132,7 +132,9 @@ def main() -> int:
         if samples < 0:
             fail(f"samples for {args.samples_key} must be >= 0; got {samples}")
         if regressions < 0:
-            fail(f"regressions for {args.regressions_key} must be >= 0; got {regressions}")
+            fail(
+                f"regressions for {args.regressions_key} must be >= 0; got {regressions}"
+            )
         if regressions > samples:
             fail(f"regressions={regressions} cannot exceed samples={samples}")
         if queue_budget_used < 0:
@@ -179,7 +181,9 @@ def main() -> int:
         )
 
     if total_samples < args.min_total_samples:
-        fail(f"total_samples={total_samples} < min_total_samples={args.min_total_samples}")
+        fail(
+            f"total_samples={total_samples} < min_total_samples={args.min_total_samples}"
+        )
 
     if total_queue_budget_total <= 0:
         fail(f"total_queue_budget_total={total_queue_budget_total} must be > 0")
@@ -224,9 +228,13 @@ def main() -> int:
 
         window_budget_total = window_queue_budget_total[window]
         if window_budget_total <= 0:
-            fail(f"window={window} queue_budget_total={window_budget_total} must be > 0")
+            fail(
+                f"window={window} queue_budget_total={window_budget_total} must be > 0"
+            )
 
-        window_budget_usage_ratio = window_queue_budget_used[window] / window_budget_total
+        window_budget_usage_ratio = (
+            window_queue_budget_used[window] / window_budget_total
+        )
         if window_budget_usage_ratio > args.max_window_budget_usage_ratio:
             fail(
                 f"window={window} budget_usage_ratio={window_budget_usage_ratio} > "

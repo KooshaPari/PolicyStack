@@ -82,8 +82,7 @@ def main() -> int:
         _fail(f"D69 override inventory hygiene gate failed: stale={stale}")
     if missing_owner > args.max_missing_owner:
         _fail(
-            f"D69 override inventory hygiene gate failed: "
-            f"missing_owner={missing_owner}"
+            f"D69 override inventory hygiene gate failed: missing_owner={missing_owner}"
         )
     if missing_ticket > args.max_missing_ticket:
         _fail(

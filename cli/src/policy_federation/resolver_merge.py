@@ -82,7 +82,9 @@ def _merge_maps(
 
 
 def _resolve_extend_reference(
-    repo_root: Path, reference: str, current_path: Path,
+    repo_root: Path,
+    reference: str,
+    current_path: Path,
 ) -> Path:
     """Resolve an extends reference to a concrete policy path."""
     if reference.endswith(".yaml"):
@@ -114,7 +116,9 @@ def _resolve_extend_reference(
 
 
 def _load_policy_document(
-    repo_root: Path, policy_path: Path, stack: tuple[Path, ...] = (),
+    repo_root: Path,
+    policy_path: Path,
+    stack: tuple[Path, ...] = (),
 ) -> dict:
     """Load one policy document and resolve any local inheritance chain."""
     normalized_path = policy_path.resolve()
@@ -133,7 +137,9 @@ def _load_policy_document(
     for reference in extends:
         parent_path = _resolve_extend_reference(repo_root, reference, normalized_path)
         parent_doc = _load_policy_document(
-            repo_root, parent_path, (*stack, normalized_path),
+            repo_root,
+            parent_path,
+            (*stack, normalized_path),
         )
         parent_strategy = parent_doc.get("merge", {}).get("strategy", "merge_map")
         inherited_policy = _merge_maps(

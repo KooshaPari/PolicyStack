@@ -7,7 +7,9 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E117 C117 forensic bundle staleness gate failed: {message}", file=sys.stderr)
+    print(
+        f"E117 C117 forensic bundle staleness gate failed: {message}", file=sys.stderr
+    )
     raise SystemExit(2)
 
 

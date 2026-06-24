@@ -26,10 +26,11 @@ args = p.parse_args()
 
 data = load(args.state)
 state = str(data.get("state", data.get("current_state", ""))).lower()
-invalid = to_int(data.get("invalid_transitions", data.get("invalid_transition_count", 0)))
+invalid = to_int(
+    data.get("invalid_transitions", data.get("invalid_transition_count", 0))
+)
 allowed = {s.strip().lower() for s in args.allowed_states.split(",") if s.strip()}
 
 if state not in allowed or invalid > args.max_invalid_transitions:
     print("A85 cutover state machine guard failed", file=sys.stderr)
     raise SystemExit(2)
-

@@ -7,7 +7,9 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E119 [lane B] capa reclaim efficiency gate failed: {message}", file=sys.stderr)
+    print(
+        f"E119 [lane B] capa reclaim efficiency gate failed: {message}", file=sys.stderr
+    )
     raise SystemExit(2)
 
 
@@ -117,7 +119,9 @@ def main() -> int:
 
     efficiency_ratio = total_reclaimed / total_requested
     if efficiency_ratio < args.min_efficiency_ratio:
-        fail(f"efficiency_ratio={efficiency_ratio} < min_efficiency_ratio={args.min_efficiency_ratio}")
+        fail(
+            f"efficiency_ratio={efficiency_ratio} < min_efficiency_ratio={args.min_efficiency_ratio}"
+        )
 
     average_reclaim_ms = total_reclaim_ms / len(records)
     if average_reclaim_ms > args.max_average_reclaim_ms:
@@ -127,7 +131,9 @@ def main() -> int:
         )
 
     if timeout_count > args.max_timeout_count:
-        fail(f"timeout_count={timeout_count} > max_timeout_count={args.max_timeout_count}")
+        fail(
+            f"timeout_count={timeout_count} > max_timeout_count={args.max_timeout_count}"
+        )
 
     for window in sorted(window_requested):
         requested = window_requested[window]

@@ -83,7 +83,9 @@ def main() -> int:
     parser.add_argument("--operations-key", default="operations")
     parser.add_argument("--errors-key", default="errors")
     parser.add_argument("--critical-errors-key", default="critical_errors")
-    parser.add_argument("--error-budget-breach-flag-key", default="error_budget_breached")
+    parser.add_argument(
+        "--error-budget-breach-flag-key", default="error_budget_breached"
+    )
     parser.add_argument("--max-total-error-rate", type=float, default=0.0)
     parser.add_argument("--max-window-error-rate", type=float, default=0.0)
     parser.add_argument("--max-total-critical-errors", type=int, default=0)
@@ -137,7 +139,9 @@ def main() -> int:
         window_errors[window] = window_errors.get(window, 0) + errors
 
     if total_operations < args.min_total_operations:
-        fail(f"total_operations={total_operations} < min_total_operations={args.min_total_operations}")
+        fail(
+            f"total_operations={total_operations} < min_total_operations={args.min_total_operations}"
+        )
 
     total_error_rate = total_errors / total_operations
     if total_error_rate > args.max_total_error_rate:
@@ -174,4 +178,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

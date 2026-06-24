@@ -7,7 +7,10 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E137 C137 forensic bundle regression rate gate failed: {message}", file=sys.stderr)
+    print(
+        f"E137 C137 forensic bundle regression rate gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -73,7 +76,9 @@ def main() -> int:
         explicit_regression = to_bool(
             row.get("regression", row.get("forensic_bundle_regression", False))
         )
-        if explicit_regression or (baseline_score - current_score > args.allowed_regression_delta):
+        if explicit_regression or (
+            baseline_score - current_score > args.allowed_regression_delta
+        ):
             regressions += 1
 
     if total == 0:

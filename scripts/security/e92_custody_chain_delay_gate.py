@@ -47,7 +47,9 @@ def _parse_datetime(value: object) -> datetime | None:
     if not text:
         return None
     try:
-        return datetime.fromisoformat(text.replace("Z", "+00:00")).astimezone(timezone.utc)
+        return datetime.fromisoformat(text.replace("Z", "+00:00")).astimezone(
+            timezone.utc
+        )
     except ValueError:
         return None
 
@@ -65,7 +67,12 @@ def _parse_seconds(value: object) -> float | None:
 
 
 def _is_delay_breach(row: dict, max_delay_minutes: float) -> bool:
-    if str(row.get("status", "")).strip().lower() in {"broken", "missing", "invalid", "failed"}:
+    if str(row.get("status", "")).strip().lower() in {
+        "broken",
+        "missing",
+        "invalid",
+        "failed",
+    }:
         return True
     if bool(
         row.get("chain_delay")
@@ -76,7 +83,9 @@ def _is_delay_breach(row: dict, max_delay_minutes: float) -> bool:
         return True
 
     delay = _parse_seconds(
-        row.get("chain_delay_seconds") or row.get("delay_seconds") or row.get("handoff_seconds")
+        row.get("chain_delay_seconds")
+        or row.get("delay_seconds")
+        or row.get("handoff_seconds")
     )
     if delay is not None:
         return delay / 60.0 > max_delay_minutes

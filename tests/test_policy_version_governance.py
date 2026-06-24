@@ -89,7 +89,11 @@ class TestPolicyVersionGovernanceScript(TestCase):
             assert payload["code"] == "ok"
             assert payload["message"] == "policy version governance passed"
             assert payload["details"]["version"] == "v1"
-            assert payload["details"]["summary"] == {"checked": 1, "missing_required": 0, "invalid_versions": 0}
+            assert payload["details"]["summary"] == {
+                "checked": 1,
+                "missing_required": 0,
+                "invalid_versions": 0,
+            }
 
     def test_rejects_disallowed_policy_version(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -146,7 +150,8 @@ class TestPolicyVersionGovernanceScript(TestCase):
             self._write_policy(config_root / "repo.yaml", "v1")
             self._write_policy(config_root / "harness" / "codex.yaml", "v1")
             self._write_policy_json(
-                config_root / "task-domain" / "deployment.json", "v2",
+                config_root / "task-domain" / "deployment.json",
+                "v2",
             )
 
             result = subprocess.run(
@@ -177,7 +182,8 @@ class TestPolicyVersionGovernanceScript(TestCase):
             self._write_policy_json(config_root / "harness" / "codex.json", "v1")
             self._write_policy(config_root / "task-domain" / "deployment.yaml", "v1")
             self._write_policy_json(
-                config_root / "task-instance" / "daily-sync.json", "v1",
+                config_root / "task-instance" / "daily-sync.json",
+                "v1",
             )
 
             result = subprocess.run(
@@ -263,7 +269,9 @@ class TestPolicyVersionGovernanceScript(TestCase):
             )
 
             assert result.returncode == 0, result.stdout + result.stderr
-            assert "[skip-required] policy-config/system.yaml (missing)" in result.stdout
+            assert (
+                "[skip-required] policy-config/system.yaml (missing)" in result.stdout
+            )
             assert "policy version governance passed: v1" in result.stdout
 
             json_result = subprocess.run(
@@ -283,7 +291,11 @@ class TestPolicyVersionGovernanceScript(TestCase):
             payload = json.loads(json_result.stdout)
             assert payload["code"] == "ok"
             assert payload["details"]["version"] == "v1"
-            assert payload["details"]["summary"] == {"checked": 3, "missing_required": 1, "invalid_versions": 0}
+            assert payload["details"]["summary"] == {
+                "checked": 3,
+                "missing_required": 1,
+                "invalid_versions": 0,
+            }
             assert "policy-config/system.yaml" in payload["details"]["missing_required"]
 
     def test_allow_missing_json_success_envelope_includes_json_discovery(self) -> None:
@@ -313,7 +325,11 @@ class TestPolicyVersionGovernanceScript(TestCase):
             assert payload["code"] == "ok"
             assert payload["message"] == "policy version governance passed"
             assert payload["details"]["version"] == "v1"
-            assert payload["details"]["summary"] == {"checked": 4, "missing_required": 1, "invalid_versions": 0}
+            assert payload["details"]["summary"] == {
+                "checked": 4,
+                "missing_required": 1,
+                "invalid_versions": 0,
+            }
             assert "policy-config/system.yaml" in payload["details"]["missing_required"]
 
     def test_default_discovery_order_is_deterministic_and_deduplicated(self) -> None:
@@ -348,5 +364,17 @@ class TestPolicyVersionGovernanceScript(TestCase):
             assert json_result.returncode == 0, json_result.stdout + json_result.stderr
             payload = json.loads(json_result.stdout)
             assert payload["code"] == "ok"
-            assert payload["details"]["policy_files"] == ["policy-config/system.yaml", "policy-config/user.yaml", "policy-config/repo.yaml", "policy-config/harness/beta.yaml", "policy-config/task-domain/alpha.json", "policy-config/task-domain/zeta.yaml", "policy-config/task-instance/item.yaml"]
-            assert payload["details"]["summary"] == {"checked": 7, "missing_required": 0, "invalid_versions": 0}
+            assert payload["details"]["policy_files"] == [
+                "policy-config/system.yaml",
+                "policy-config/user.yaml",
+                "policy-config/repo.yaml",
+                "policy-config/harness/beta.yaml",
+                "policy-config/task-domain/alpha.json",
+                "policy-config/task-domain/zeta.yaml",
+                "policy-config/task-instance/item.yaml",
+            ]
+            assert payload["details"]["summary"] == {
+                "checked": 7,
+                "missing_required": 0,
+                "invalid_versions": 0,
+            }

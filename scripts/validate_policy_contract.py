@@ -90,7 +90,9 @@ def main() -> int:
     try:
         args = _build_parser().parse_args()
     except ArgumentParsingError as exc:
-        emit_failure(json_mode=False, code="arg", message=f"argument parsing failed: {exc}")
+        emit_failure(
+            json_mode=False, code="arg", message=f"argument parsing failed: {exc}"
+        )
         print("  id=arg-parse-error")
         return EXIT_ARG
 
@@ -138,7 +140,9 @@ def main() -> int:
             )
             if not args.json:
                 print("  id=schema-invalid")
-            emit_summary(json_mode=args.json, checked=checked, missing=missing, invalid=invalid)
+            emit_summary(
+                json_mode=args.json, checked=checked, missing=missing, invalid=invalid
+            )
             return EXIT_SCHEMA
         validator = Draft202012Validator(schema)
 
@@ -202,7 +206,8 @@ def main() -> int:
                 if args.json:
                     details = [
                         {
-                            "location": ".".join(str(part) for part in err.path) or "<root>",
+                            "location": ".".join(str(part) for part in err.path)
+                            or "<root>",
                             "message": err.message,
                         }
                         for err in errors
@@ -230,7 +235,9 @@ def main() -> int:
                 code="validation",
                 message=f"validation failed: {validation_failures} file(s) invalid",
             )
-            emit_summary(json_mode=args.json, checked=checked, missing=missing, invalid=invalid)
+            emit_summary(
+                json_mode=args.json, checked=checked, missing=missing, invalid=invalid
+            )
             return EXIT_VALIDATION
         if missing_failures:
             emit_status(
@@ -238,10 +245,14 @@ def main() -> int:
                 code="missing",
                 message=f"validation failed: {missing_failures} required file(s) missing",
             )
-            emit_summary(json_mode=args.json, checked=checked, missing=missing, invalid=invalid)
+            emit_summary(
+                json_mode=args.json, checked=checked, missing=missing, invalid=invalid
+            )
             return EXIT_MISSING
         emit_status(json_mode=args.json, code="ok", message="validation passed")
-        emit_summary(json_mode=args.json, checked=checked, missing=missing, invalid=invalid)
+        emit_summary(
+            json_mode=args.json, checked=checked, missing=missing, invalid=invalid
+        )
         return EXIT_OK
     except Exception as exc:  # pragma: no cover
         emit_failure(

@@ -7,7 +7,10 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E139 C139 override activity window budget gate failed: {message}", file=sys.stderr)
+    print(
+        f"E139 C139 override activity window budget gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -64,22 +67,36 @@ def main() -> int:
         if not isinstance(row, dict):
             continue
         age = to_int(
-            row.get("age_hours", row.get("override_age_hours", row.get("window_age_hours", 0))),
+            row.get(
+                "age_hours",
+                row.get("override_age_hours", row.get("window_age_hours", 0)),
+            ),
             "age_hours",
         )
         if age > args.window_hours:
             continue
         total += 1
         budget = to_float(
-            row.get("activity_budget", row.get("override_activity_budget", row.get("budget", 0.0))),
+            row.get(
+                "activity_budget",
+                row.get("override_activity_budget", row.get("budget", 0.0)),
+            ),
             "activity_budget",
         )
         actual = to_float(
-            row.get("activity_spend", row.get("override_activity_spend", row.get("spend", budget))),
+            row.get(
+                "activity_spend",
+                row.get("override_activity_spend", row.get("spend", budget)),
+            ),
             "activity_spend",
         )
         explicit_breach = to_bool(
-            row.get("budget_breach", row.get("activity_budget_breach", row.get("override_budget_breach", False)))
+            row.get(
+                "budget_breach",
+                row.get(
+                    "activity_budget_breach", row.get("override_budget_breach", False)
+                ),
+            )
         )
         if explicit_breach or (actual - budget > args.allowed_budget_overrun):
             breaches += 1

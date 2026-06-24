@@ -7,7 +7,9 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E101 attestation chain completeness gate failed: {message}", file=sys.stderr)
+    print(
+        f"E101 attestation chain completeness gate failed: {message}", file=sys.stderr
+    )
     raise SystemExit(2)
 
 
@@ -22,7 +24,9 @@ def _load_rows(path: pathlib.Path) -> list[dict]:
                 return rows
         fail("attestations payload must include attestations/items/records/entries")
     if not isinstance(payload, list):
-        fail("attestations payload must be list or object with attestations/items/records/entries")
+        fail(
+            "attestations payload must be list or object with attestations/items/records/entries"
+        )
     return payload
 
 

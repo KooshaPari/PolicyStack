@@ -43,7 +43,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     compile_parser = sub.add_parser("compile")
     compile_parser.add_argument(
-        "--target", required=True, choices=sorted(SUPPORTED_TARGETS),
+        "--target",
+        required=True,
+        choices=sorted(SUPPORTED_TARGETS),
     )
     compile_parser.add_argument("--harness", required=True)
     compile_parser.add_argument("--domain", required=True)
@@ -63,7 +65,9 @@ def build_parser() -> argparse.ArgumentParser:
     intercept_parser.add_argument("--actor")
     intercept_parser.add_argument("--target-path", action="append", default=[])
     intercept_parser.add_argument(
-        "--ask-mode", choices=list(ASK_MODE_CHOICES), default=DEFAULT_ASK_MODE,
+        "--ask-mode",
+        choices=list(ASK_MODE_CHOICES),
+        default=DEFAULT_ASK_MODE,
     )
 
     review_parser = sub.add_parser("review")
@@ -88,7 +92,9 @@ def build_parser() -> argparse.ArgumentParser:
     exec_parser.add_argument("--actor")
     exec_parser.add_argument("--target-path", action="append", default=[])
     exec_parser.add_argument(
-        "--ask-mode", choices=list(ASK_MODE_CHOICES), default=DEFAULT_ASK_MODE,
+        "--ask-mode",
+        choices=list(ASK_MODE_CHOICES),
+        default=DEFAULT_ASK_MODE,
     )
     exec_parser.add_argument("--sidecar-path")
     exec_parser.add_argument("--audit-log-path")
@@ -106,7 +112,9 @@ def build_parser() -> argparse.ArgumentParser:
     write_parser.add_argument("--command")
     write_parser.add_argument("--target-path", action="append", required=True)
     write_parser.add_argument(
-        "--ask-mode", choices=list(ASK_MODE_CHOICES), default=DEFAULT_ASK_MODE,
+        "--ask-mode",
+        choices=list(ASK_MODE_CHOICES),
+        default=DEFAULT_ASK_MODE,
     )
 
     network_parser = sub.add_parser("network-check")
@@ -119,7 +127,9 @@ def build_parser() -> argparse.ArgumentParser:
     network_parser.add_argument("--actor")
     network_parser.add_argument("--command", required=True)
     network_parser.add_argument(
-        "--ask-mode", choices=list(ASK_MODE_CHOICES), default=DEFAULT_ASK_MODE,
+        "--ask-mode",
+        choices=list(ASK_MODE_CHOICES),
+        default=DEFAULT_ASK_MODE,
     )
 
     install_parser = sub.add_parser("install-runtime")

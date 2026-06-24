@@ -7,7 +7,10 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E120 [lane B] signature preflight stability gate failed: {message}", file=sys.stderr)
+    print(
+        f"E120 [lane B] signature preflight stability gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -97,7 +100,9 @@ def main() -> int:
             unstable_count += 1
 
         window = str(row.get(args.window_key, "default"))
-        window_stability_totals[window] = window_stability_totals.get(window, 0.0) + stability
+        window_stability_totals[window] = (
+            window_stability_totals.get(window, 0.0) + stability
+        )
         window_counts[window] = window_counts.get(window, 0) + 1
 
     average_stability = stability_total / len(records)
@@ -115,7 +120,9 @@ def main() -> int:
         )
 
     if unstable_count > args.max_unstable_count:
-        fail(f"unstable_count={unstable_count} > max_unstable_count={args.max_unstable_count}")
+        fail(
+            f"unstable_count={unstable_count} > max_unstable_count={args.max_unstable_count}"
+        )
 
     for window, count in sorted(window_counts.items()):
         average = window_stability_totals[window] / count

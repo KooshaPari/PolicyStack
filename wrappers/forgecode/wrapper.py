@@ -136,7 +136,11 @@ def main() -> None:
         pass
 
     sys.exit(
-        0 if result["decision"] == "allow" else 1 if result["decision"] == "deny" else 2,
+        0
+        if result["decision"] == "allow"
+        else 1
+        if result["decision"] == "deny"
+        else 2,
     )
 
 

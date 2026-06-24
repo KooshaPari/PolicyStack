@@ -67,7 +67,7 @@ def main() -> int:
     if not rows:
         fail("D111 recurrence resilience gate failed: empty recurrence data")
 
-    ordered = sorted(rows, key=lambda row: (row.get(args.time_field) or ""))
+    ordered = sorted(rows, key=lambda row: row.get(args.time_field) or "")
     values = [
         _to_float(row.get(args.value_field, ""), csv_path, args.value_field)
         for row in ordered
@@ -95,7 +95,9 @@ def main() -> int:
     max_run = max(max_run, reported_run)
 
     if max_increase > args.max_rate_increase:
-        fail(f"D111 max_rate_increase={max_increase} > max_rate_increase={args.max_rate_increase}")
+        fail(
+            f"D111 max_rate_increase={max_increase} > max_rate_increase={args.max_rate_increase}"
+        )
     if max_run > args.max_run_length:
         fail(f"D111 max_run_length={max_run} > max_run_length={args.max_run_length}")
 

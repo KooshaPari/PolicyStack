@@ -23,7 +23,10 @@ def compile_target(target: str, resolved_payload: dict) -> dict:
     ignored_rules: list[dict] = []
 
     def _shim_rule(
-        rule: dict, *, reason: str, command_patterns: list[str] | None = None,
+        rule: dict,
+        *,
+        reason: str,
+        command_patterns: list[str] | None = None,
     ) -> dict:
         payload = dict(rule)
         payload["reason"] = reason
@@ -118,7 +121,8 @@ def compile_target(target: str, resolved_payload: dict) -> dict:
             "commandAllowlist": sorted(dict.fromkeys(native_allow)),
             "commandDenylist": sorted(dict.fromkeys(native_deny)),
             "approvalMode": approvals.get(
-                "command_ask_mode", defaults.get("exec", "ask"),
+                "command_ask_mode",
+                defaults.get("exec", "ask"),
             ),
             "runtime_wrapper": {
                 "exec": "./scripts/runtime/factory_exec_guard.sh",

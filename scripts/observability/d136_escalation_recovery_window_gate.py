@@ -33,7 +33,9 @@ def _read_json(path: pathlib.Path, label: str) -> list[dict]:
     return _to_records(payload, path, label)
 
 
-def _read_csv(path: pathlib.Path, required: set[str], label: str) -> list[dict[str, str]]:
+def _read_csv(
+    path: pathlib.Path, required: set[str], label: str
+) -> list[dict[str, str]]:
     try:
         with path.open(newline="") as handle:
             reader = csv.DictReader(handle)
@@ -79,7 +81,9 @@ def _to_int(value: object, path: pathlib.Path, field: str) -> int:
 def _max_positive_step(values: list[float]) -> float:
     if len(values) < 2:
         return 0.0
-    return max((max(0.0, curr - prev) for prev, curr in zip(values, values[1:])), default=0.0)
+    return max(
+        (max(0.0, curr - prev) for prev, curr in zip(values, values[1:])), default=0.0
+    )
 
 
 def _window_pairs(values: list[float], window_size: int) -> list[list[float]]:
@@ -87,7 +91,10 @@ def _window_pairs(values: list[float], window_size: int) -> list[list[float]]:
         return []
     if window_size <= 0 or window_size > len(values):
         return [values]
-    return [values[start : start + window_size] for start in range(0, len(values) - window_size + 1)]
+    return [
+        values[start : start + window_size]
+        for start in range(0, len(values) - window_size + 1)
+    ]
 
 
 def main() -> int:
@@ -126,13 +133,20 @@ def main() -> int:
         fail("E136 empty escalation data")
 
     ordered = sorted(rows, key=lambda row: str(row.get(args.time_field, "")))
-    open_counts = [_to_int(row[args.open_field], escalations_path, args.open_field) for row in ordered]
+    open_counts = [
+        _to_int(row[args.open_field], escalations_path, args.open_field)
+        for row in ordered
+    ]
     recovered_counts = [
         _to_int(row[args.recovered_field], escalations_path, args.recovered_field)
         for row in ordered
     ]
     windows = [
-        _to_float(row[args.recovery_window_field], escalations_path, args.recovery_window_field)
+        _to_float(
+            row[args.recovery_window_field],
+            escalations_path,
+            args.recovery_window_field,
+        )
         for row in ordered
     ]
 
@@ -149,7 +163,11 @@ def main() -> int:
             recovered_ratio = min(1.0, max(0.0, recovered_sum / open_sum))
             gap_values.append(1.0 - recovered_ratio)
 
-    lag_values = [max(window) for window in _window_pairs(windows, args.window_size)] if windows else [0.0]
+    lag_values = (
+        [max(window) for window in _window_pairs(windows, args.window_size)]
+        if windows
+        else [0.0]
+    )
 
     window_gap = max(gap_values) if gap_values else 0.0
     window_lag = max(lag_values) if lag_values else 0.0

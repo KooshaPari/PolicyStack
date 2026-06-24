@@ -124,7 +124,9 @@ def main() -> int:
         window_errors[window] = window_errors.get(window, 0) + errors
 
     if total_samples < args.min_total_samples:
-        fail(f"total_samples={total_samples} < min_total_samples={args.min_total_samples}")
+        fail(
+            f"total_samples={total_samples} < min_total_samples={args.min_total_samples}"
+        )
 
     error_rate = total_errors / total_samples
     if error_rate > args.max_error_rate:

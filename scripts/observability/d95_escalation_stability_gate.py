@@ -34,6 +34,7 @@ def _to_float(value: object, field: str) -> float:
     except Exception:
         _fail(f"invalid float {field}: {value!r}")
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--report", required=True)
 parser.add_argument("--events-csv", required=True)
@@ -63,4 +64,3 @@ for row in rows:
 dup_ratio = float(duplicates) / max(1, len(rows))
 if dup_ratio > args.max_duplication:
     _fail(f"duplication_ratio={dup_ratio}")
-

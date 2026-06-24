@@ -87,7 +87,9 @@ def main() -> int:
     parser.add_argument("--min-total-reclaim-ratio", type=float, default=0.0)
     parser.add_argument("--min-window-reclaim-ratio", type=float, default=0.0)
     parser.add_argument("--max-average-reclaim-latency-ms", type=float, default=0.0)
-    parser.add_argument("--max-window-average-reclaim-latency-ms", type=float, default=0.0)
+    parser.add_argument(
+        "--max-window-average-reclaim-latency-ms", type=float, default=0.0
+    )
     parser.add_argument("--max-timeout-count", type=int, default=0)
     args = parser.parse_args()
 
@@ -115,7 +117,9 @@ def main() -> int:
         if reclaimed < 0:
             fail(f"reclaimed for {args.reclaimed_key} must be >= 0; got {reclaimed}")
         if reclaimable < 0:
-            fail(f"reclaimable for {args.reclaimable_key} must be >= 0; got {reclaimable}")
+            fail(
+                f"reclaimable for {args.reclaimable_key} must be >= 0; got {reclaimable}"
+            )
         if reclaimed > reclaimable:
             fail(f"reclaimed={reclaimed} cannot exceed reclaimable={reclaimable}")
         if reclaim_latency < 0:
@@ -132,7 +136,9 @@ def main() -> int:
         window = str(row.get(args.window_key, "default"))
         window_reclaimed[window] = window_reclaimed.get(window, 0.0) + reclaimed
         window_reclaimable[window] = window_reclaimable.get(window, 0.0) + reclaimable
-        window_latency_totals[window] = window_latency_totals.get(window, 0.0) + reclaim_latency
+        window_latency_totals[window] = (
+            window_latency_totals.get(window, 0.0) + reclaim_latency
+        )
         window_counts[window] = window_counts.get(window, 0) + 1
 
     if total_reclaimable <= 0:
@@ -152,7 +158,9 @@ def main() -> int:
         )
 
     if timeout_count > args.max_timeout_count:
-        fail(f"timeout_count={timeout_count} > max_timeout_count={args.max_timeout_count}")
+        fail(
+            f"timeout_count={timeout_count} > max_timeout_count={args.max_timeout_count}"
+        )
 
     for window in sorted(window_counts):
         reclaimable = window_reclaimable[window]

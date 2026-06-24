@@ -21,7 +21,10 @@ def _load_rows(path: pathlib.Path) -> tuple[list[dict], str | None]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows, None
-    return [], "E85 invalid input: expected list or dict with attestations/replays/events/items/rows"
+    return (
+        [],
+        "E85 invalid input: expected list or dict with attestations/replays/events/items/rows",
+    )
 
 
 def _pick(row: dict, keys: tuple[str, ...]) -> str:
@@ -42,7 +45,9 @@ def _parse_time(v: object) -> datetime | None:
     if not text:
         return None
     try:
-        return datetime.fromisoformat(text.replace("Z", "+00:00")).astimezone(timezone.utc)
+        return datetime.fromisoformat(text.replace("Z", "+00:00")).astimezone(
+            timezone.utc
+        )
     except ValueError:
         return None
 
@@ -56,7 +61,12 @@ def _is_replay(row: dict) -> bool:
 
 
 def _is_stale(row: dict, max_age_hours: int) -> bool:
-    if str(row.get("status", "")).strip().lower() in {"failed", "invalid", "stale", "timed_out"}:
+    if str(row.get("status", "")).strip().lower() in {
+        "failed",
+        "invalid",
+        "stale",
+        "timed_out",
+    }:
         return True
 
     ts = (
@@ -70,7 +80,9 @@ def _is_stale(row: dict, max_age_hours: int) -> bool:
     observed = _parse_time(ts)
     if observed is None:
         return True
-    return (datetime.now(timezone.utc) - observed).total_seconds() > max_age_hours * 3600
+    return (
+        datetime.now(timezone.utc) - observed
+    ).total_seconds() > max_age_hours * 3600
 
 
 def main() -> int:

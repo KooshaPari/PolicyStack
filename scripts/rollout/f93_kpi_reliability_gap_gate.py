@@ -24,6 +24,7 @@ def _to_float(value: object, field: str) -> float:
     except Exception:
         _fail(f"invalid float {field}: {value!r}")
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--kpi", required=True)
 parser.add_argument("--reliability-csv", required=True)
@@ -41,8 +42,13 @@ if not rows:
     _fail("empty reliability csv")
 
 gaps = _to_int(kpi.get("gap_segments", 0), "gap_segments")
-severity = _to_float(kpi.get("max_gap_severity", kpi.get("gap_severity", 0.0)), "max_gap_severity")
-ratios = [_to_float(r.get("unreliable_ratio", r.get("ratio", 0.0)), "unreliable_ratio") for r in rows]
+severity = _to_float(
+    kpi.get("max_gap_severity", kpi.get("gap_severity", 0.0)), "max_gap_severity"
+)
+ratios = [
+    _to_float(r.get("unreliable_ratio", r.get("ratio", 0.0)), "unreliable_ratio")
+    for r in rows
+]
 max_ratio = max(ratios) if ratios else 0.0
 
 if gaps > args.max_gap_segments:

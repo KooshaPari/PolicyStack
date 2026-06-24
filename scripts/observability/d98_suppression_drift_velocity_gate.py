@@ -77,7 +77,10 @@ def main() -> int:
         _fail("D98 suppression drift velocity gate failed: empty suppression csv")
 
     ordered = sorted(rows, key=lambda row: (row.get(args.time_field) or "").strip())
-    values = [_to_float(row.get(args.value_field, ""), csv_path, args.value_field) for row in ordered]
+    values = [
+        _to_float(row.get(args.value_field, ""), csv_path, args.value_field)
+        for row in ordered
+    ]
 
     velocities = []
     for prior, current in zip(values, values[1:]):
@@ -98,10 +101,17 @@ def main() -> int:
             breaches += 1
 
     if max_velocity > args.max_velocity:
-        _fail(f"D98 suppression drift velocity gate failed: max_velocity={max_velocity}")
+        _fail(
+            f"D98 suppression drift velocity gate failed: max_velocity={max_velocity}"
+        )
     if breaches > args.max_velocity_breaches:
-        _fail(f"D98 suppression drift velocity gate failed: velocity_breaches={breaches}")
-    if args.velocity_threshold <= 0 and report.get("suppression_drift_velocity_peak", 0.0) > args.max_velocity:
+        _fail(
+            f"D98 suppression drift velocity gate failed: velocity_breaches={breaches}"
+        )
+    if (
+        args.velocity_threshold <= 0
+        and report.get("suppression_drift_velocity_peak", 0.0) > args.max_velocity
+    ):
         _fail(
             "D98 suppression drift velocity gate failed: "
             f"report_peak={report.get('suppression_drift_velocity_peak', 0.0)}"

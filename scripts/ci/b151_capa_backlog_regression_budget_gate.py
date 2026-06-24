@@ -85,7 +85,9 @@ def main() -> int:
     parser.add_argument("--backlog-after-key", default="backlog_after")
     parser.add_argument("--backlog-regressions-key", default="backlog_regressions")
     parser.add_argument("--critical-regressions-key", default="critical_regressions")
-    parser.add_argument("--backlog-overflow-events-key", default="backlog_overflow_events")
+    parser.add_argument(
+        "--backlog-overflow-events-key", default="backlog_overflow_events"
+    )
     parser.add_argument("--capa-failures-key", default="capa_failures")
     parser.add_argument("--budget-used-key", default="budget_used")
     parser.add_argument("--budget-total-key", default="budget_total")
@@ -119,8 +121,12 @@ def main() -> int:
 
     for row in records:
         operations = parse_float(row.get(args.operations_key), args.operations_key)
-        backlog_before = parse_float(row.get(args.backlog_before_key), args.backlog_before_key)
-        backlog_after = parse_float(row.get(args.backlog_after_key), args.backlog_after_key)
+        backlog_before = parse_float(
+            row.get(args.backlog_before_key), args.backlog_before_key
+        )
+        backlog_after = parse_float(
+            row.get(args.backlog_after_key), args.backlog_after_key
+        )
         backlog_regressions = parse_int(
             row.get(args.backlog_regressions_key, 0),
             args.backlog_regressions_key,
@@ -133,17 +139,25 @@ def main() -> int:
             row.get(args.backlog_overflow_events_key, 0),
             args.backlog_overflow_events_key,
         )
-        capa_failures = parse_int(row.get(args.capa_failures_key, 0), args.capa_failures_key)
+        capa_failures = parse_int(
+            row.get(args.capa_failures_key, 0), args.capa_failures_key
+        )
         budget_used = parse_float(row.get(args.budget_used_key), args.budget_used_key)
-        budget_total = parse_float(row.get(args.budget_total_key), args.budget_total_key)
+        budget_total = parse_float(
+            row.get(args.budget_total_key), args.budget_total_key
+        )
 
         backlog_growth = backlog_after - backlog_before
         if operations < 0:
             fail(f"operations for {args.operations_key} must be >= 0; got {operations}")
         if backlog_before < 0:
-            fail(f"backlog_before for {args.backlog_before_key} must be >= 0; got {backlog_before}")
+            fail(
+                f"backlog_before for {args.backlog_before_key} must be >= 0; got {backlog_before}"
+            )
         if backlog_after < 0:
-            fail(f"backlog_after for {args.backlog_after_key} must be >= 0; got {backlog_after}")
+            fail(
+                f"backlog_after for {args.backlog_after_key} must be >= 0; got {backlog_after}"
+            )
         if backlog_regressions < 0:
             fail(
                 f"backlog_regressions for {args.backlog_regressions_key} must be >= 0; "
@@ -160,16 +174,24 @@ def main() -> int:
                 f"got {backlog_overflow_events}"
             )
         if capa_failures < 0:
-            fail(f"capa_failures for {args.capa_failures_key} must be >= 0; got {capa_failures}")
+            fail(
+                f"capa_failures for {args.capa_failures_key} must be >= 0; got {capa_failures}"
+            )
         if budget_used < 0:
-            fail(f"budget_used for {args.budget_used_key} must be >= 0; got {budget_used}")
+            fail(
+                f"budget_used for {args.budget_used_key} must be >= 0; got {budget_used}"
+            )
         if budget_total <= 0:
-            fail(f"budget_total for {args.budget_total_key} must be > 0; got {budget_total}")
+            fail(
+                f"budget_total for {args.budget_total_key} must be > 0; got {budget_total}"
+            )
         if budget_used > budget_total:
             fail(f"budget_used={budget_used} cannot exceed budget_total={budget_total}")
 
         if backlog_regressions > operations:
-            fail(f"backlog_regressions={backlog_regressions} cannot exceed operations={operations}")
+            fail(
+                f"backlog_regressions={backlog_regressions} cannot exceed operations={operations}"
+            )
         if critical_regressions > backlog_regressions:
             fail(
                 f"critical_regressions={critical_regressions} cannot exceed "
@@ -189,13 +211,21 @@ def main() -> int:
 
         window = str(row.get(args.window_key, "default"))
         window_operations[window] = window_operations.get(window, 0.0) + operations
-        window_regressions[window] = window_regressions.get(window, 0) + backlog_regressions
+        window_regressions[window] = (
+            window_regressions.get(window, 0) + backlog_regressions
+        )
         window_budget_used[window] = window_budget_used.get(window, 0.0) + budget_used
-        window_budget_total[window] = window_budget_total.get(window, 0.0) + budget_total
-        window_backlog_growth[window] = window_backlog_growth.get(window, 0.0) + backlog_growth
+        window_budget_total[window] = (
+            window_budget_total.get(window, 0.0) + budget_total
+        )
+        window_backlog_growth[window] = (
+            window_backlog_growth.get(window, 0.0) + backlog_growth
+        )
 
     if total_operations < args.min_total_operations:
-        fail(f"total_operations={total_operations} < min_total_operations={args.min_total_operations}")
+        fail(
+            f"total_operations={total_operations} < min_total_operations={args.min_total_operations}"
+        )
 
     if total_budget_total <= 0:
         fail(f"total_budget_total={total_budget_total} must be > 0")
@@ -253,8 +283,12 @@ def main() -> int:
 
         window_budget_total_value = window_budget_total[window]
         if window_budget_total_value <= 0:
-            fail(f"window={window} budget_total={window_budget_total_value} must be > 0")
-        window_budget_usage_ratio = window_budget_used[window] / window_budget_total_value
+            fail(
+                f"window={window} budget_total={window_budget_total_value} must be > 0"
+            )
+        window_budget_usage_ratio = (
+            window_budget_used[window] / window_budget_total_value
+        )
         if window_budget_usage_ratio > args.max_window_budget_usage_ratio:
             fail(
                 f"window={window} budget_usage_ratio={window_budget_usage_ratio} > "

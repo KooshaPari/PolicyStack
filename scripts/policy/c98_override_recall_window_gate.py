@@ -82,6 +82,7 @@ if not isinstance(overrides, list):
 
 rows = _read_csv(a.override_csv)
 
+
 def _window_days(item):
     start = _ts(item.get("recall_started_at", item.get("start", item.get("from"))))
     end = _ts(item.get("recall_ended_at", item.get("end", item.get("to"))))
@@ -114,7 +115,13 @@ for item in overrides:
             missing.append(oid)
         if window is not None and window > a.max_recall_days:
             risky += 1
-        if start and end and start <= as_of <= end and window and window > a.max_recall_days:
+        if (
+            start
+            and end
+            and start <= as_of <= end
+            and window
+            and window > a.max_recall_days
+        ):
             open_windows += 1
 
 for row in rows:
@@ -131,7 +138,12 @@ for row in rows:
         if window is not None and window > a.max_recall_days:
             risky += 1
         status = str(row.get("status", "")).strip().lower()
-        if start and end and start <= as_of <= end and status in {"open", "active", "pending", "running"}:
+        if (
+            start
+            and end
+            and start <= as_of <= end
+            and status in {"open", "active", "pending", "running"}
+        ):
             open_windows += 1
 
 issues = []

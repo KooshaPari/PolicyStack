@@ -67,8 +67,11 @@ def main() -> int:
     if not rows:
         fail("D107 recurrence drift gate failed: empty recurrence rows")
 
-    ordered = sorted(rows, key=lambda row: (row.get(args.time_field) or ""))
-    values = [_to_float(row.get(args.value_field, ""), csv_path, args.value_field) for row in ordered]
+    ordered = sorted(rows, key=lambda row: row.get(args.time_field) or "")
+    values = [
+        _to_float(row.get(args.value_field, ""), csv_path, args.value_field)
+        for row in ordered
+    ]
     if len(values) < 2:
         fail("D107 recurrence drift gate failed: insufficient recurrence rows")
 

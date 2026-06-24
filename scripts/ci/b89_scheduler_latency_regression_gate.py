@@ -26,7 +26,9 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--stats", required=True)
     parser.add_argument("--current-latency-key", default="scheduler_latency_ms")
-    parser.add_argument("--baseline-latency-key", default="scheduler_latency_baseline_ms")
+    parser.add_argument(
+        "--baseline-latency-key", default="scheduler_latency_baseline_ms"
+    )
     parser.add_argument("--max-regression-ratio", type=float, default=1.0)
     args = parser.parse_args()
 

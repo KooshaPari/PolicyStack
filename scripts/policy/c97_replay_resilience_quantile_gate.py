@@ -19,7 +19,11 @@ def _truthy(v):
 
 def _rid(r):
     return str(
-        r.get("run_id") or r.get("replay_id") or r.get("playbook_id") or r.get("id") or "?"
+        r.get("run_id")
+        or r.get("replay_id")
+        or r.get("playbook_id")
+        or r.get("id")
+        or "?"
     ).strip()
 
 
@@ -64,7 +68,11 @@ breaches = []
 baseline_p95 = _num(metrics.get("replay_resilience_p95", metrics.get("p95", 0.0)))
 baseline_p99 = _num(metrics.get("replay_resilience_p99", metrics.get("p99", 0.0)))
 baseline_breaches = int(
-    _num(metrics.get("resilience_quantile_breaches", metrics.get("quantile_breaches", 0.0)))
+    _num(
+        metrics.get(
+            "resilience_quantile_breaches", metrics.get("quantile_breaches", 0.0)
+        )
+    )
 )
 
 if baseline_p95 > a.max_p95:
@@ -84,7 +92,12 @@ for row in rows:
         breaches.append(f"run:p95:{rid}")
     if p99 > a.max_p99:
         breaches.append(f"run:p99:{rid}")
-    if _truthy(row.get("resilience_breach", row.get("breach", False))) or status in {"failed", "breach", "error", "timeout"}:
+    if _truthy(row.get("resilience_breach", row.get("breach", False))) or status in {
+        "failed",
+        "breach",
+        "error",
+        "timeout",
+    }:
         failed += 1
         breaches.append(f"run:failed:{rid}")
 

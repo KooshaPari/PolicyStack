@@ -19,7 +19,9 @@ def _parse_json_rows(path: pathlib.Path) -> list[dict]:
                 return rows
         fail("custody payload must include custody/items/records/entries")
     if not isinstance(data, list):
-        fail("custody payload must be list or object with custody/items/records/entries")
+        fail(
+            "custody payload must be list or object with custody/items/records/entries"
+        )
     return data
 
 

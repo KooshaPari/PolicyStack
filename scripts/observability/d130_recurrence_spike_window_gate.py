@@ -33,7 +33,9 @@ def _read_json(path: pathlib.Path, label: str) -> list[dict]:
     return _to_records(payload, path, label)
 
 
-def _read_csv(path: pathlib.Path, required: set[str], label: str) -> list[dict[str, str]]:
+def _read_csv(
+    path: pathlib.Path, required: set[str], label: str
+) -> list[dict[str, str]]:
     try:
         with path.open(newline="") as handle:
             reader = csv.DictReader(handle)
@@ -69,7 +71,9 @@ def _to_float(value: object, path: pathlib.Path, field: str) -> float:
         fail(f"E130 invalid {field} in {path}: {exc}")
 
 
-def _window_spike_metrics(values: list[float], window_size: int, spike_threshold: float) -> tuple[int, float]:
+def _window_spike_metrics(
+    values: list[float], window_size: int, spike_threshold: float
+) -> tuple[int, float]:
     if len(values) < 2:
         return 0, 0.0
 
@@ -114,12 +118,17 @@ def main() -> int:
     report_rows = _read_json(report_path, "report")
     report = report_rows[0] if report_rows else {}
 
-    rows = _load_records(recurrence_path, {args.time_field, args.rate_field}, "recurrence")
+    rows = _load_records(
+        recurrence_path, {args.time_field, args.rate_field}, "recurrence"
+    )
     if not rows:
         fail("E130 empty recurrence data")
 
     ordered = sorted(rows, key=lambda row: str(row.get(args.time_field, "")))
-    rates = [_to_float(row[args.rate_field], recurrence_path, args.rate_field) for row in ordered]
+    rates = [
+        _to_float(row[args.rate_field], recurrence_path, args.rate_field)
+        for row in ordered
+    ]
 
     window_spike_count, window_spike_rate = _window_spike_metrics(
         rates,

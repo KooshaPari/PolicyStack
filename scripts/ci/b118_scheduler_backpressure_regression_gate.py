@@ -7,7 +7,10 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E118 [lane B] scheduler backpressure regression gate failed: {message}", file=sys.stderr)
+    print(
+        f"E118 [lane B] scheduler backpressure regression gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 

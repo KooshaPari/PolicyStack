@@ -20,7 +20,10 @@ def _load_rows(path: pathlib.Path) -> tuple[list[dict], str | None]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows, None
-    return [], "E86 invalid input: expected list or dict with failovers/trust_failovers/items/events/records"
+    return (
+        [],
+        "E86 invalid input: expected list or dict with failovers/trust_failovers/items/events/records",
+    )
 
 
 def _pick(row: dict, keys: tuple[str, ...]) -> str:
@@ -35,7 +38,13 @@ def _pick(row: dict, keys: tuple[str, ...]) -> str:
 
 
 def _parse_entropy(row: dict) -> float | None:
-    for key in ("entropy", "entropy_score", "failover_entropy", "trust_entropy", "entropy_index"):
+    for key in (
+        "entropy",
+        "entropy_score",
+        "failover_entropy",
+        "trust_entropy",
+        "entropy_index",
+    ):
         value = row.get(key)
         if value is None or str(value).strip() == "":
             continue
@@ -47,9 +56,18 @@ def _parse_entropy(row: dict) -> float | None:
 
 
 def _is_entropy_breach(row: dict, min_entropy: float) -> bool:
-    if str(row.get("status", "")).strip().lower() in {"failed", "degraded", "breached", "insufficient"}:
+    if str(row.get("status", "")).strip().lower() in {
+        "failed",
+        "degraded",
+        "breached",
+        "insufficient",
+    }:
         return True
-    if str(row.get("entropy_state", "")).strip().lower() in {"low", "degraded", "insufficient"}:
+    if str(row.get("entropy_state", "")).strip().lower() in {
+        "low",
+        "degraded",
+        "insufficient",
+    }:
         return True
     if bool(row.get("entropy_breach") or row.get("entropy_alert") or row.get("drift")):
         return True

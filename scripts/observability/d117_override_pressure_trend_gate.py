@@ -33,7 +33,9 @@ def _read_json(path: pathlib.Path, label: str) -> list[dict]:
     return _to_records(payload, path, label)
 
 
-def _read_csv(path: pathlib.Path, required: set[str], label: str) -> list[dict[str, str]]:
+def _read_csv(
+    path: pathlib.Path, required: set[str], label: str
+) -> list[dict[str, str]]:
     try:
         with path.open(newline="") as handle:
             reader = csv.DictReader(handle)
@@ -98,20 +100,32 @@ def main() -> int:
         fail("E117 empty override data")
 
     ordered = sorted(rows, key=lambda row: str(row.get(args.time_field, "")))
-    open_counts = [_to_int(row[args.open_field], overrides_path, args.open_field) for row in ordered]
-    stalled_counts = [_to_int(row[args.stalled_field], overrides_path, args.stalled_field) for row in ordered]
-    pressures = [open_v + stalled_v for open_v, stalled_v in zip(open_counts, stalled_counts)]
+    open_counts = [
+        _to_int(row[args.open_field], overrides_path, args.open_field)
+        for row in ordered
+    ]
+    stalled_counts = [
+        _to_int(row[args.stalled_field], overrides_path, args.stalled_field)
+        for row in ordered
+    ]
+    pressures = [
+        open_v + stalled_v for open_v, stalled_v in zip(open_counts, stalled_counts)
+    ]
     rises = [max(0, curr - prev) for prev, curr in zip(pressures, pressures[1:])]
     max_rise = max(rises) if rises else 0
 
     max_open = max(open_counts)
     max_stalled = max(stalled_counts)
-    report_open = _to_int(report.get("override_open_count", 0), report_path, "override_open_count")
+    report_open = _to_int(
+        report.get("override_open_count", 0), report_path, "override_open_count"
+    )
     report_stalled = _to_int(
         report.get("override_stalled_count", 0), report_path, "override_stalled_count"
     )
     report_rise = _to_int(
-        report.get("override_pressure_trend_rise_max", 0), report_path, "override_pressure_trend_rise_max"
+        report.get("override_pressure_trend_rise_max", 0),
+        report_path,
+        "override_pressure_trend_rise_max",
     )
 
     if max_open < report_open:
@@ -122,14 +136,18 @@ def main() -> int:
         max_rise = report_rise
 
     if max_open > args.max_open_overrides:
-        fail(f"E117 max_open_overrides={max_open} > max_open_overrides={args.max_open_overrides}")
+        fail(
+            f"E117 max_open_overrides={max_open} > max_open_overrides={args.max_open_overrides}"
+        )
     if max_stalled > args.max_stalled_overrides:
         fail(
             f"E117 max_stalled_overrides={max_stalled} > "
             f"max_stalled_overrides={args.max_stalled_overrides}"
         )
     if max_rise > args.max_pressure_rise:
-        fail(f"E117 max_pressure_rise={max_rise} > max_pressure_rise={args.max_pressure_rise}")
+        fail(
+            f"E117 max_pressure_rise={max_rise} > max_pressure_rise={args.max_pressure_rise}"
+        )
 
     return 0
 

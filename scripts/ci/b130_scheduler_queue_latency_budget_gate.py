@@ -86,7 +86,9 @@ def main() -> int:
     parser.add_argument("--budget-breach-flag-key", default="budget_breached")
     parser.add_argument("--max-average-queue-latency-ms", type=float, default=0.0)
     parser.add_argument("--max-p95-queue-latency-ms", type=float, default=0.0)
-    parser.add_argument("--max-window-average-queue-latency-ms", type=float, default=0.0)
+    parser.add_argument(
+        "--max-window-average-queue-latency-ms", type=float, default=0.0
+    )
     parser.add_argument("--max-queue-depth", type=float, default=0.0)
     parser.add_argument("--max-budget-breach-count", type=int, default=0)
     args = parser.parse_args()
@@ -102,26 +104,34 @@ def main() -> int:
     window_counts: dict[str, int] = {}
 
     for row in records:
-        queue_latency = parse_float(row.get(args.queue_latency_ms_key), args.queue_latency_ms_key)
+        queue_latency = parse_float(
+            row.get(args.queue_latency_ms_key), args.queue_latency_ms_key
+        )
         p95_queue_latency = parse_float(
             row.get(args.p95_queue_latency_ms_key, queue_latency),
             args.p95_queue_latency_ms_key,
         )
-        queue_depth = parse_float(row.get(args.queue_depth_key, 0), args.queue_depth_key)
+        queue_depth = parse_float(
+            row.get(args.queue_depth_key, 0), args.queue_depth_key
+        )
         budget_breached = parse_int(
             row.get(args.budget_breach_flag_key, 0),
             args.budget_breach_flag_key,
         )
 
         if queue_latency < 0:
-            fail(f"queue latency for {args.queue_latency_ms_key} must be >= 0; got {queue_latency}")
+            fail(
+                f"queue latency for {args.queue_latency_ms_key} must be >= 0; got {queue_latency}"
+            )
         if p95_queue_latency < 0:
             fail(
                 f"p95 queue latency for {args.p95_queue_latency_ms_key} must be >= 0; got "
                 f"{p95_queue_latency}"
             )
         if queue_depth < 0:
-            fail(f"queue depth for {args.queue_depth_key} must be >= 0; got {queue_depth}")
+            fail(
+                f"queue depth for {args.queue_depth_key} must be >= 0; got {queue_depth}"
+            )
 
         latency_total += queue_latency
         max_p95_latency = max(max_p95_latency, p95_queue_latency)
@@ -129,7 +139,9 @@ def main() -> int:
         budget_breach_count += 1 if budget_breached else 0
 
         window = str(row.get(args.window_key, "default"))
-        window_latency_totals[window] = window_latency_totals.get(window, 0.0) + queue_latency
+        window_latency_totals[window] = (
+            window_latency_totals.get(window, 0.0) + queue_latency
+        )
         window_counts[window] = window_counts.get(window, 0) + 1
 
     average_queue_latency = latency_total / len(records)
@@ -146,7 +158,9 @@ def main() -> int:
         )
 
     if max_queue_depth > args.max_queue_depth:
-        fail(f"max_queue_depth={max_queue_depth} > max_queue_depth={args.max_queue_depth}")
+        fail(
+            f"max_queue_depth={max_queue_depth} > max_queue_depth={args.max_queue_depth}"
+        )
 
     if budget_breach_count > args.max_budget_breach_count:
         fail(

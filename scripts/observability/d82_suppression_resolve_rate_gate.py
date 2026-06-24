@@ -87,7 +87,9 @@ def main() -> int:
         row_rate = resolved / total
     else:
         row_rate = 1.0
-    effective_rate = min(row_rate, float(report.get("suppression_resolve_rate", row_rate)))
+    effective_rate = min(
+        row_rate, float(report.get("suppression_resolve_rate", row_rate))
+    )
     if max_resolve > args.max_resolve_time:
         _fail(f"D82 suppression resolve gate failed: max_resolve_time={max_resolve}")
     if unresolved > args.max_unresolved:

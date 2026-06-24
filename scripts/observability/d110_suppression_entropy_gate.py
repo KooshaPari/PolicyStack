@@ -68,7 +68,7 @@ def main() -> int:
     if not rows:
         fail("D110 suppression entropy gate failed: empty suppression data")
 
-    ordered = sorted(rows, key=lambda row: (row.get(args.time_field) or ""))
+    ordered = sorted(rows, key=lambda row: row.get(args.time_field) or "")
     entropies = [
         _to_float(row.get(args.entropy_field, ""), csv_path, args.entropy_field)
         for row in ordered
@@ -85,7 +85,9 @@ def main() -> int:
         low_windows = max(low_windows, report_low)
 
     if low_windows > args.max_low_entropy_windows:
-        fail(f"D110 low_entropy_windows={low_windows} > max_low_entropy_windows={args.max_low_entropy_windows}")
+        fail(
+            f"D110 low_entropy_windows={low_windows} > max_low_entropy_windows={args.max_low_entropy_windows}"
+        )
 
     if max_dip > args.max_entropy_dip:
         fail(f"D110 max_entropy_dip={max_dip} > max_entropy_dip={args.max_entropy_dip}")

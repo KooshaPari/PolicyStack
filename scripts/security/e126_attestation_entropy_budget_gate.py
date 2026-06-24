@@ -33,7 +33,9 @@ def load_rows(path: pathlib.Path) -> list[dict]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows
-    fail("attestations payload must be list or object with attestations/records/items/entries/transitions")
+    fail(
+        "attestations payload must be list or object with attestations/records/items/entries/transitions"
+    )
 
 
 def main() -> int:
@@ -56,7 +58,9 @@ def main() -> int:
     entropy_values = []
     for row in rows:
         if isinstance(row, dict):
-            entropy_values.append(parse_float(row.get(args.entropy_col), args.entropy_col))
+            entropy_values.append(
+                parse_float(row.get(args.entropy_col), args.entropy_col)
+            )
 
     if not entropy_values:
         fail("attestations payload must contain dict rows with entropy values")
@@ -77,4 +81,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

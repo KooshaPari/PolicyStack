@@ -95,7 +95,8 @@ def analyze_audit(
     suggestions: list[RuleSuggestion] = []
     idx = 0
     for (prefix, cwd_pat), cluster_events in sorted(
-        clusters.items(), key=lambda x: -len(x[1]),
+        clusters.items(),
+        key=lambda x: -len(x[1]),
     ):
         if len(cluster_events) < min_cluster_size:
             continue

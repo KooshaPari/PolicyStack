@@ -92,7 +92,9 @@ def resolve(
         .replace("+00:00", "Z"),
         "source_files": source_files,
         "extensions": _resolve_extensions(
-            repo_root=repo_root, scope_chain=scope_chain, contract_ids=contract_ids,
+            repo_root=repo_root,
+            scope_chain=scope_chain,
+            contract_ids=contract_ids,
         ),
     }
 

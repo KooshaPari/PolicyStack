@@ -31,7 +31,9 @@ def _extension_scope_matches(selector: str, scope_chain: list[str]) -> bool:
 
 
 def _resolve_extensions(
-    repo_root: Path, scope_chain: list[str], contract_ids: list[str],
+    repo_root: Path,
+    scope_chain: list[str],
+    contract_ids: list[str],
 ) -> dict:
     manifests = _load_extensions(repo_root)
     enabled = []
@@ -70,7 +72,11 @@ def _resolve_extensions(
                 {
                     "name": name,
                     "reason": "requirements_not_met",
-                    "missing": sorted(required_ids.difference(contract_ids)),
+                    "missing": sorted(
+                        x
+                        for x in required_ids.difference(contract_ids)
+                        if x is not None
+                    ),
                 },
             )
             continue

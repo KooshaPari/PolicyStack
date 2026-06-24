@@ -33,4 +33,3 @@ for row in rows:
 if breaches > a.max_breaches:
     print("B79 attestation window gap gate failed", file=sys.stderr)
     raise SystemExit(2)
-

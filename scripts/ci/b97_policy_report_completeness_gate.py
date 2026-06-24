@@ -33,7 +33,9 @@ def main() -> int:
     if not isinstance(report, dict):
         fail("report must be a JSON object")
 
-    required_sections = [item.strip() for item in args.required_sections.split(",") if item.strip()]
+    required_sections = [
+        item.strip() for item in args.required_sections.split(",") if item.strip()
+    ]
     for section in sorted(required_sections):
         if section not in report:
             fail(f"missing required section: {section}")

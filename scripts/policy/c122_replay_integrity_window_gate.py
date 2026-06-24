@@ -63,10 +63,15 @@ def main() -> int:
         if not isinstance(row, dict):
             continue
         age = to_int(
-            row.get("age_hours", row.get("replay_age_hours", row.get("created_in_hours", 999999))),
+            row.get(
+                "age_hours",
+                row.get("replay_age_hours", row.get("created_in_hours", 999999)),
+            ),
             "age_hours",
         )
-        in_window = to_bool(row.get("in_integrity_window", age <= args.integrity_window_hours))
+        in_window = to_bool(
+            row.get("in_integrity_window", age <= args.integrity_window_hours)
+        )
         if not in_window:
             continue
         total += 1

@@ -99,8 +99,12 @@ def main() -> None:
         "root": str(ROOT),
         "entries": manifest_entries,
         "summary": {
-            "tracked_modifications": len([e for e in manifest_entries if e["change_type"] == "modify"]),
-            "new_files": len([e for e in manifest_entries if e["change_type"] == "add"]),
+            "tracked_modifications": len(
+                [e for e in manifest_entries if e["change_type"] == "modify"]
+            ),
+            "new_files": len(
+                [e for e in manifest_entries if e["change_type"] == "add"]
+            ),
         },
     }
 

@@ -88,7 +88,9 @@ def main() -> int:
     parser.add_argument("--deadline-budget-total-key", default="deadline_budget_total")
     parser.add_argument("--min-total-samples", type=float, default=1.0)
     parser.add_argument("--max-total-deadline-regression-rate", type=float, default=0.0)
-    parser.add_argument("--max-window-deadline-regression-rate", type=float, default=0.0)
+    parser.add_argument(
+        "--max-window-deadline-regression-rate", type=float, default=0.0
+    )
     parser.add_argument("--max-total-budget-usage-ratio", type=float, default=0.0)
     parser.add_argument("--max-window-budget-usage-ratio", type=float, default=0.0)
     parser.add_argument("--max-total-deadline-breach-count", type=int, default=0)
@@ -155,7 +157,9 @@ def main() -> int:
                 f"samples={samples}"
             )
         if budget_used < 0:
-            fail(f"deadline_budget_used for {args.deadline_budget_used_key} must be >= 0; got {budget_used}")
+            fail(
+                f"deadline_budget_used for {args.deadline_budget_used_key} must be >= 0; got {budget_used}"
+            )
         if budget_total <= 0:
             fail(
                 f"deadline_budget_total for {args.deadline_budget_total_key} must be > 0; "
@@ -176,12 +180,18 @@ def main() -> int:
 
         window = str(row.get(args.window_key, "default"))
         window_samples[window] = window_samples.get(window, 0.0) + samples
-        window_regressions[window] = window_regressions.get(window, 0) + deadline_regressions
+        window_regressions[window] = (
+            window_regressions.get(window, 0) + deadline_regressions
+        )
         window_budget_used[window] = window_budget_used.get(window, 0.0) + budget_used
-        window_budget_total[window] = window_budget_total.get(window, 0.0) + budget_total
+        window_budget_total[window] = (
+            window_budget_total.get(window, 0.0) + budget_total
+        )
 
     if total_samples < args.min_total_samples:
-        fail(f"total_samples={total_samples} < min_total_samples={args.min_total_samples}")
+        fail(
+            f"total_samples={total_samples} < min_total_samples={args.min_total_samples}"
+        )
 
     if total_budget_total <= 0:
         fail(f"total_deadline_budget_total={total_budget_total} must be > 0")
@@ -226,8 +236,12 @@ def main() -> int:
 
         window_budget_total_value = window_budget_total[window]
         if window_budget_total_value <= 0:
-            fail(f"window={window} deadline_budget_total={window_budget_total_value} must be > 0")
-        window_budget_usage_ratio = window_budget_used[window] / window_budget_total_value
+            fail(
+                f"window={window} deadline_budget_total={window_budget_total_value} must be > 0"
+            )
+        window_budget_usage_ratio = (
+            window_budget_used[window] / window_budget_total_value
+        )
         if window_budget_usage_ratio > args.max_window_budget_usage_ratio:
             fail(
                 f"window={window} budget_usage_ratio={window_budget_usage_ratio} > "
@@ -239,4 +253,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

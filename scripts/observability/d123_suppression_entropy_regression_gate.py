@@ -7,7 +7,9 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E123 suppression entropy regression gate failed: {message}", file=sys.stderr)
+    print(
+        f"E123 suppression entropy regression gate failed: {message}", file=sys.stderr
+    )
     raise SystemExit(2)
 
 
@@ -33,7 +35,9 @@ def _read_json(path: pathlib.Path, label: str) -> list[dict]:
     return _to_records(payload, path, label)
 
 
-def _read_csv(path: pathlib.Path, required: set[str], label: str) -> list[dict[str, str]]:
+def _read_csv(
+    path: pathlib.Path, required: set[str], label: str
+) -> list[dict[str, str]]:
     try:
         with path.open(newline="") as handle:
             reader = csv.DictReader(handle)
@@ -72,7 +76,9 @@ def _to_float(value: object, path: pathlib.Path, field: str) -> float:
 def _max_positive_step(values: list[float]) -> float:
     if len(values) < 2:
         return 0.0
-    return max((max(0.0, curr - prev) for prev, curr in zip(values, values[1:])), default=0.0)
+    return max(
+        (max(0.0, curr - prev) for prev, curr in zip(values, values[1:])), default=0.0
+    )
 
 
 def main() -> int:
@@ -105,7 +111,10 @@ def main() -> int:
         fail("E123 empty suppression data")
 
     ordered = sorted(rows, key=lambda row: str(row.get(args.time_field, "")))
-    entropies = [_to_float(row[args.entropy_field], suppression_path, args.entropy_field) for row in ordered]
+    entropies = [
+        _to_float(row[args.entropy_field], suppression_path, args.entropy_field)
+        for row in ordered
+    ]
     regressions = [
         _to_float(row[args.regression_field], suppression_path, args.regression_field)
         for row in ordered
@@ -149,9 +158,13 @@ def main() -> int:
     if max_entropy > args.max_entropy:
         fail(f"E123 max_entropy={max_entropy} > max_entropy={args.max_entropy}")
     if max_regression > args.max_regression:
-        fail(f"E123 max_regression={max_regression} > max_regression={args.max_regression}")
+        fail(
+            f"E123 max_regression={max_regression} > max_regression={args.max_regression}"
+        )
     if max_entropy_rise > args.max_entropy_rise:
-        fail(f"E123 max_entropy_rise={max_entropy_rise} > max_entropy_rise={args.max_entropy_rise}")
+        fail(
+            f"E123 max_entropy_rise={max_entropy_rise} > max_entropy_rise={args.max_entropy_rise}"
+        )
     if max_regression_rise > args.max_regression_rise:
         fail(
             f"E123 max_regression_rise={max_regression_rise} > "

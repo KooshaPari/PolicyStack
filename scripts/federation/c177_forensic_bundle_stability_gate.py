@@ -99,7 +99,9 @@ def main() -> int:
         budget = to_float(
             row.get(
                 "forensic_window_budget",
-                row.get("window_budget", row.get("forensic_budget", row.get("budget", 0.0))),
+                row.get(
+                    "window_budget", row.get("forensic_budget", row.get("budget", 0.0))
+                ),
             ),
             "forensic_window_budget",
         )
@@ -126,7 +128,10 @@ def main() -> int:
                     "forensic_window_budget_breach",
                     row.get(
                         "window_budget_breach",
-                        row.get("forensic_budget_breach", row.get("budget_breach_count", False)),
+                        row.get(
+                            "forensic_budget_breach",
+                            row.get("budget_breach_count", False),
+                        ),
                     ),
                 ),
             )
@@ -139,7 +144,9 @@ def main() -> int:
     breach_rate = breaches / total
     if args.max_breaches and breaches > args.max_breaches:
         fail(f"breaches={breaches}")
-    if args.max_breach_rate and breach_rate > to_float(args.max_breach_rate, "max_breach_rate"):
+    if args.max_breach_rate and breach_rate > to_float(
+        args.max_breach_rate, "max_breach_rate"
+    ):
         fail(f"breach_rate={breach_rate:.6f}")
     return 0
 

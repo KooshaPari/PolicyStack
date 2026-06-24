@@ -21,7 +21,10 @@ def _load_rows(path: pathlib.Path) -> tuple[list[dict], str | None]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows, None
-    return [], "E81 invalid input: expected list or dict with attestations/items/reports/rows"
+    return (
+        [],
+        "E81 invalid input: expected list or dict with attestations/items/reports/rows",
+    )
 
 
 def _parse_datetime(v: object) -> datetime | None:
@@ -31,7 +34,9 @@ def _parse_datetime(v: object) -> datetime | None:
     if not text:
         return None
     try:
-        return datetime.fromisoformat(text.replace("Z", "+00:00")).astimezone(timezone.utc)
+        return datetime.fromisoformat(text.replace("Z", "+00:00")).astimezone(
+            timezone.utc
+        )
     except ValueError:
         return None
 

@@ -33,7 +33,9 @@ def _read_json(path: pathlib.Path, label: str) -> list[dict]:
     return _to_records(payload, path, label)
 
 
-def _read_csv(path: pathlib.Path, required: set[str], label: str) -> list[dict[str, str]]:
+def _read_csv(
+    path: pathlib.Path, required: set[str], label: str
+) -> list[dict[str, str]]:
     try:
         with path.open(newline="") as handle:
             reader = csv.DictReader(handle)
@@ -100,7 +102,9 @@ def main() -> int:
     ordered = sorted(rows, key=lambda row: str(row.get(args.time_field, "")))
     gaps: list[float] = []
     for row in ordered:
-        regression = _to_float(row[args.regression_field], recurrence_path, args.regression_field)
+        regression = _to_float(
+            row[args.regression_field], recurrence_path, args.regression_field
+        )
         budget = _to_float(row[args.budget_field], recurrence_path, args.budget_field)
         gaps.append(max(0.0, regression - budget))
 

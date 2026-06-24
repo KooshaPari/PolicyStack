@@ -64,13 +64,21 @@ def main() -> int:
     _require_file(csv_path, "escalations")
 
     report = _read_json(report_path)
-    rows = _read_csv(csv_path, {args.time_field, args.rate_field, args.regression_field})
+    rows = _read_csv(
+        csv_path, {args.time_field, args.rate_field, args.regression_field}
+    )
     if not rows:
         fail("D116 escalation regression gate failed: empty escalation data")
 
-    ordered = sorted(rows, key=lambda row: (row.get(args.time_field) or ""))
-    rates = [_to_float(row.get(args.rate_field, ""), csv_path, args.rate_field) for row in ordered]
-    regressions = [_to_float(row.get(args.regression_field, ""), csv_path, args.regression_field) for row in ordered]
+    ordered = sorted(rows, key=lambda row: row.get(args.time_field) or "")
+    rates = [
+        _to_float(row.get(args.rate_field, ""), csv_path, args.rate_field)
+        for row in ordered
+    ]
+    regressions = [
+        _to_float(row.get(args.regression_field, ""), csv_path, args.regression_field)
+        for row in ordered
+    ]
 
     max_rate = max(rates)
     max_regression = max(regressions)
@@ -87,7 +95,9 @@ def main() -> int:
             f"max_regression_score={args.max_regression_score}"
         )
     if max_rate > args.max_escalation_rate:
-        fail(f"D116 max_escalation_rate={max_rate} > max_escalation_rate={args.max_escalation_rate}")
+        fail(
+            f"D116 max_escalation_rate={max_rate} > max_escalation_rate={args.max_escalation_rate}"
+        )
 
     return 0
 

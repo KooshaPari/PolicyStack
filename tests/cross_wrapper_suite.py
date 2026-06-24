@@ -38,7 +38,9 @@ class TestCrossWrapperConsistency(unittest.TestCase):
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
             pass
-        assert result.returncode == 0, f"{name} failed for command '{command}': {result.stderr}"
+        assert result.returncode == 0, (
+            f"{name} failed for command '{command}': {result.stderr}"
+        )
         return json.loads(result.stdout)
 
     def assert_consistency(self, command, expected_decision):
@@ -46,11 +48,15 @@ class TestCrossWrapperConsistency(unittest.TestCase):
         for name in self.wrappers:
             verdict = self.run_wrapper(name, command)
             results[name] = verdict["decision"]
-            assert verdict["decision"] == expected_decision, f"Mismatch in {name} for '{command}': expected {expected_decision}, got {verdict['decision']}"
+            assert verdict["decision"] == expected_decision, (
+                f"Mismatch in {name} for '{command}': expected {expected_decision}, got {verdict['decision']}"
+            )
 
         # Cross-verify all wrappers returned same decision
         decisions = list(results.values())
-        assert all(d == decisions[0] for d in decisions), f"Inconsistent decisions across wrappers: {results}"
+        assert all(d == decisions[0] for d in decisions), (
+            f"Inconsistent decisions across wrappers: {results}"
+        )
 
     def test_allow_exact(self):
         self.assert_consistency("ls", "allow")
