@@ -23,5 +23,10 @@ node_modules
 # Setuptools / pip metadata (build artifacts)
 *.egg-info/
 
+# Go wrapper binary -- built from source (wrappers/go/main.go) per-CI runner
+# because a committed prebuilt binary is wrong-arch on other platforms.
+wrappers/go/policy-wrapper
+wrappers/go/policy-wrapper.exe
+
 # Runtime/utility scripts (not source)
 ps_run.json
