@@ -48,6 +48,26 @@ jobs:
           # automatically by pip.
           python -m pip install -e cli
 
+      # Build the Go wrapper from source so the linux-amd64 CI runner has an
+      # executable at wrappers/go/policy-wrapper. The committed binary may
+      # have been built on a different OS/arch (e.g. macOS arm64) and would
+      # raise `OSError: [Errno 8] Exec format error` when the Python tests
+      # try to invoke it. Rebuilding from source via Go's cross-compilation
+      # is the simplest, most reliable fix.
+      - name: Set up Go
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5
+        with:
+          go-version: "1.22"
+          cache: true
+          cache-dependency-path: wrappers/go/go.mod
+
+      - name: Build Go wrapper for the CI runner
+        run: |
+          set -euo pipefail
+          ( cd wrappers/go && go build -o policy-wrapper ./... )
+          chmod +x wrappers/go/policy-wrapper
+          file wrappers/go/policy-wrapper
+
       - name: Lint with ruff
         run: ruff check .
 
