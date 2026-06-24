@@ -1,0 +1,46 @@
+name: cargo-deny
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Concurrency hardening: cancel in-progress runs on the same ref.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deny:
+    name: cargo-deny
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@6b39aa1b5bca5a1b25d44ccc8061e69000de789e # stable
+
+      - name: Cache cargo registry & index
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-deny-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-deny-
+
+      - name: Install cargo-deny
+        uses: taiki-e/install-action@4e5b6e278a4a0e54a33e8e0e1c61ae1e92c38ad6 # v2
+        with:
+          tool: cargo-deny@0.16.4
+
+      - name: Run cargo-deny
+        run: cargo deny check
