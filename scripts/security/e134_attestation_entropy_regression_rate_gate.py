@@ -7,7 +7,10 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E134 attestation entropy regression rate gate failed: {message}", file=sys.stderr)
+    print(
+        f"E134 attestation entropy regression rate gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -33,7 +36,9 @@ def load_rows(path: pathlib.Path) -> list[dict]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows
-    fail("attestations payload must be list or object with attestations/records/items/entries/transitions")
+    fail(
+        "attestations payload must be list or object with attestations/records/items/entries/transitions"
+    )
 
 
 def main() -> int:
@@ -69,7 +74,9 @@ def main() -> int:
         if previous_entropy is None:
             regression_flags.append(False)
         else:
-            regression_flags.append((entropy_value - previous_entropy) <= -args.drop_threshold)
+            regression_flags.append(
+                (entropy_value - previous_entropy) <= -args.drop_threshold
+            )
         previous_entropy = entropy_value
 
     if not regression_flags:

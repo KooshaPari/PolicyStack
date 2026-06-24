@@ -7,7 +7,10 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E141 C141 forensic bundle window budget gate failed: {message}", file=sys.stderr)
+    print(
+        f"E141 C141 forensic bundle window budget gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -64,7 +67,10 @@ def main() -> int:
         if not isinstance(row, dict):
             continue
         age = to_int(
-            row.get("age_hours", row.get("forensic_age_hours", row.get("window_age_hours", 0))),
+            row.get(
+                "age_hours",
+                row.get("forensic_age_hours", row.get("window_age_hours", 0)),
+            ),
             "age_hours",
         )
         if age > args.window_hours:
@@ -87,7 +93,10 @@ def main() -> int:
         explicit_breach = to_bool(
             row.get(
                 "budget_breach",
-                row.get("forensic_bundle_budget_breach", row.get("bundle_budget_breach", False)),
+                row.get(
+                    "forensic_bundle_budget_breach",
+                    row.get("bundle_budget_breach", False),
+                ),
             )
         )
         if explicit_breach or (actual - budget > args.allowed_budget_overrun):

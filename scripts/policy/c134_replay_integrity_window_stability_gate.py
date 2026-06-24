@@ -7,7 +7,10 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E134 C134 replay integrity window stability gate failed: {message}", file=sys.stderr)
+    print(
+        f"E134 C134 replay integrity window stability gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -83,7 +86,9 @@ def main() -> int:
     unstable_rate = unstable / total
     if args.max_unstable and unstable > args.max_unstable:
         fail(f"window_unstable={unstable}")
-    if args.max_unstable_rate and unstable_rate > to_float(args.max_unstable_rate, "max_unstable_rate"):
+    if args.max_unstable_rate and unstable_rate > to_float(
+        args.max_unstable_rate, "max_unstable_rate"
+    ):
         fail(f"window_unstable_rate={unstable_rate:.6f}")
     return 0
 

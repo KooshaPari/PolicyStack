@@ -47,7 +47,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("succession payload must be a JSON object or non-empty list of objects")
 
@@ -59,7 +63,9 @@ def main() -> int:
         "--transition-window-stability-score-field",
         default="transition_window_stability_score",
     )
-    parser.add_argument("--min-transition-window-stability-score", type=float, default=1.0)
+    parser.add_argument(
+        "--min-transition-window-stability-score", type=float, default=1.0
+    )
     parser.add_argument(
         "--unstable-transition-window-count-field",
         default="unstable_transition_window_count",
@@ -74,7 +80,10 @@ def main() -> int:
             args.transition_window_stability_score_field,
             index,
         )
-        if transition_window_stability_score < args.min_transition_window_stability_score:
+        if (
+            transition_window_stability_score
+            < args.min_transition_window_stability_score
+        ):
             fail(
                 f"{args.transition_window_stability_score_field}="
                 f"{transition_window_stability_score} < "

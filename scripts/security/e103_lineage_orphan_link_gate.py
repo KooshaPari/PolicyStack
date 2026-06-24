@@ -19,7 +19,9 @@ def _load_rows(path: pathlib.Path) -> list[dict]:
                 return rows
         fail("lineage payload must include lineage/items/records/entries")
     if not isinstance(data, list):
-        fail("lineage payload must be list or object with lineage/items/records/entries")
+        fail(
+            "lineage payload must be list or object with lineage/items/records/entries"
+        )
     return data
 
 

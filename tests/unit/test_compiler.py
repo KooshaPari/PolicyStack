@@ -16,8 +16,13 @@ class CompilerTest(unittest.TestCase):
             task_domain="devops",
         )
         compiled = compile_target("codex", resolved)
-        assert "git commit --no-verify*" in compiled["native_config"]["permissions"]["deny_prefixes"]
-        assert "git commit*" in compiled["native_config"]["permissions"]["deny_prefixes"]
+        assert (
+            "git commit --no-verify*"
+            in compiled["native_config"]["permissions"]["deny_prefixes"]
+        )
+        assert (
+            "git commit*" in compiled["native_config"]["permissions"]["deny_prefixes"]
+        )
         shim_ids = {rule["id"] for rule in compiled["shim_rules"]}
         assert "thegent-allow-git-write-in-worktrees" in shim_ids
         assert "thegent-deny-write-outside-worktrees" in shim_ids
@@ -33,15 +38,27 @@ class CompilerTest(unittest.TestCase):
         compiled = compile_target("codex", resolved)
         permissions = compiled["native_config"]["permissions"]
         assert "ps*" in permissions["allow_prefixes"]
-        assert "mkdir -p /Users/kooshapari/CodeProjects/Phenotype/repos/*" in permissions["allow_prefixes"]
+        assert (
+            "mkdir -p /Users/kooshapari/CodeProjects/Phenotype/repos/*"
+            in permissions["allow_prefixes"]
+        )
         assert "go clean -cache*" in permissions["allow_prefixes"]
-        assert "rm -rf ~/Library/Caches/Homebrew/downloads/*" in permissions["allow_prefixes"]
+        assert (
+            "rm -rf ~/Library/Caches/Homebrew/downloads/*"
+            in permissions["allow_prefixes"]
+        )
         assert "timeout * bun test*" in permissions["allow_prefixes"]
         assert "timeout * pytest*" in permissions["allow_prefixes"]
         assert "timeout * python -m pytest*" in permissions["allow_prefixes"]
         assert "timeout * python3 -m pytest*" in permissions["allow_prefixes"]
-        assert "mv /Users/kooshapari/CodeProjects/Phenotype/repos/* /Users/kooshapari/CodeProjects/Phenotype/repos/.archive/*" in permissions["allow_prefixes"]
-        assert "rm -rf /Users/kooshapari/CodeProjects/Phenotype/repos/*" in permissions["deny_prefixes"]
+        assert (
+            "mv /Users/kooshapari/CodeProjects/Phenotype/repos/* /Users/kooshapari/CodeProjects/Phenotype/repos/.archive/*"
+            in permissions["allow_prefixes"]
+        )
+        assert (
+            "rm -rf /Users/kooshapari/CodeProjects/Phenotype/repos/*"
+            in permissions["deny_prefixes"]
+        )
         assert "git symbolic-ref*" in permissions["allow_prefixes"]
         assert "git worktree add*" in permissions["allow_prefixes"]
         assert "diff*" in permissions["allow_prefixes"]
@@ -88,7 +105,10 @@ class CompilerTest(unittest.TestCase):
         assert wrapper["exec"] == "./scripts/runtime/claude_exec_guard.sh"
         assert wrapper["pretool_hook"] == "./scripts/runtime/claude_pretool_hook.py"
         pretool = compiled["native_config"]["hooks"]["PreToolUse"][0]
-        assert pretool["matcher"] == "Bash|Write|Edit|MultiEdit|WebFetch|WebSearch|NotebookEdit"
+        assert (
+            pretool["matcher"]
+            == "Bash|Write|Edit|MultiEdit|WebFetch|WebSearch|NotebookEdit"
+        )
 
     def test_all_targets_share_parity_for_native_and_runtime_actions(self) -> None:
         resolved_payload = {
@@ -193,7 +213,9 @@ class CompilerTest(unittest.TestCase):
                 rule = shim_index[rule_id]
                 assert "actions" in rule
                 assert rule["actions"] == actions
-                assert rule["requires_runtime_check"], f"Expected runtime-check marker for {rule_id}"
+                assert rule["requires_runtime_check"], (
+                    f"Expected runtime-check marker for {rule_id}"
+                )
             if target == "factory-droid":
                 factory_ask_shim = shim_index["ask::npm publish*"]
                 assert "requires_runtime_check" in factory_ask_shim

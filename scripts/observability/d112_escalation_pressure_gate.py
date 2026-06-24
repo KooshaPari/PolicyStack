@@ -71,13 +71,11 @@ def main() -> int:
     _require_file(csv_path, "escalations")
 
     report = _read_json(report_path)
-    rows = _read_csv(
-        csv_path, {args.time_field, args.severity_field, args.count_field}
-    )
+    rows = _read_csv(csv_path, {args.time_field, args.severity_field, args.count_field})
     if not rows:
         fail("D112 escalation pressure gate failed: empty escalation data")
 
-    ordered = sorted(rows, key=lambda row: (row.get(args.time_field) or ""))
+    ordered = sorted(rows, key=lambda row: row.get(args.time_field) or "")
     severe_counts: list[int] = []
     for row in ordered:
         severity = (row.get(args.severity_field) or "").strip().lower()
@@ -104,9 +102,13 @@ def main() -> int:
         max_spike = report_spike
 
     if max_open > args.max_open_escalations:
-        fail(f"D112 max_open_escalations={max_open} > max_open_escalations={args.max_open_escalations}")
+        fail(
+            f"D112 max_open_escalations={max_open} > max_open_escalations={args.max_open_escalations}"
+        )
     if max_spike > args.max_severe_spike:
-        fail(f"D112 max_severe_spike={max_spike} > max_severe_spike={args.max_severe_spike}")
+        fail(
+            f"D112 max_severe_spike={max_spike} > max_severe_spike={args.max_severe_spike}"
+        )
 
     return 0
 

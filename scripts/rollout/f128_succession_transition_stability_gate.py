@@ -7,7 +7,9 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E128 succession transition stability gate failed: {message}", file=sys.stderr)
+    print(
+        f"E128 succession transition stability gate failed: {message}", file=sys.stderr
+    )
     raise SystemExit(2)
 
 
@@ -44,7 +46,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("succession payload must be a JSON object or non-empty list of objects")
 
@@ -52,16 +58,22 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--succession", required=True)
-    parser.add_argument("--transition-stability-score-field", default="transition_stability_score")
+    parser.add_argument(
+        "--transition-stability-score-field", default="transition_stability_score"
+    )
     parser.add_argument("--min-transition-stability-score", type=float, default=0.9)
-    parser.add_argument("--instability-count-field", default="transition_instability_count")
+    parser.add_argument(
+        "--instability-count-field", default="transition_instability_count"
+    )
     parser.add_argument("--max-instability-count", type=int, default=0)
     args = parser.parse_args()
 
     records = load_records(pathlib.Path(args.succession))
     for index, record in enumerate(records):
         transition_stability_score = to_float(
-            record.get(args.transition_stability_score_field), args.transition_stability_score_field, index
+            record.get(args.transition_stability_score_field),
+            args.transition_stability_score_field,
+            index,
         )
         if transition_stability_score < args.min_transition_stability_score:
             fail(
@@ -70,7 +82,9 @@ def main() -> int:
             )
 
         instability_count = to_int(
-            record.get(args.instability_count_field), args.instability_count_field, index
+            record.get(args.instability_count_field),
+            args.instability_count_field,
+            index,
         )
         if instability_count > args.max_instability_count:
             fail(

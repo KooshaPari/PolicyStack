@@ -86,7 +86,9 @@ def main() -> int:
 
     total_count = resolved_count + unresolved_count
     reported_unresolved = int(report.get("unresolved_suppressions", 0))
-    reported_rate = float(report.get("suppression_resolve_rate", 1.0 if total_count else 0.0))
+    reported_rate = float(
+        report.get("suppression_resolve_rate", 1.0 if total_count else 0.0)
+    )
     reported_avg = float(report.get("avg_resolve_time", 0.0))
 
     row_avg = total_resolve / resolve_samples if resolve_samples else 0.0
@@ -97,11 +99,15 @@ def main() -> int:
     effective_avg = max(row_avg, reported_avg)
 
     if effective_unresolved > args.max_open_suppressions:
-        _fail(f"D90 suppression resolution gate failed: open_suppressions={effective_unresolved}")
+        _fail(
+            f"D90 suppression resolution gate failed: open_suppressions={effective_unresolved}"
+        )
     if effective_rate < args.min_resolve_rate:
         _fail(f"D90 suppression resolution gate failed: resolve_rate={effective_rate}")
     if effective_avg > args.max_avg_resolve_time:
-        _fail(f"D90 suppression resolution gate failed: avg_resolve_time={effective_avg}")
+        _fail(
+            f"D90 suppression resolution gate failed: avg_resolve_time={effective_avg}"
+        )
     return 0
 
 

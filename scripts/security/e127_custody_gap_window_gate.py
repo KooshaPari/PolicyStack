@@ -33,7 +33,9 @@ def load_rows(path: pathlib.Path) -> list[dict]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows
-    fail("custody payload must be list or object with records/items/entries/transitions/attestations")
+    fail(
+        "custody payload must be list or object with records/items/entries/transitions/attestations"
+    )
 
 
 def is_gap_violation(row: dict, gap_col: str, gap_threshold: float) -> bool:
@@ -59,7 +61,9 @@ def main() -> int:
             f"{args.max_gap_violations_per_window}"
         )
     if args.max_window_violations < 0:
-        fail(f"max-window-violations must be non-negative: {args.max_window_violations}")
+        fail(
+            f"max-window-violations must be non-negative: {args.max_window_violations}"
+        )
 
     rows = load_rows(pathlib.Path(args.records))
     if not rows:
@@ -80,7 +84,9 @@ def main() -> int:
             violations += 1
 
     if violations > args.max_window_violations:
-        fail(f"window_violations={violations} exceeds max_window_violations={args.max_window_violations}")
+        fail(
+            f"window_violations={violations} exceeds max_window_violations={args.max_window_violations}"
+        )
 
     return 0
 

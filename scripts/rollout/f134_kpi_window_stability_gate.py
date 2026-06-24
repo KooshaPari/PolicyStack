@@ -44,7 +44,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("kpi payload must be a JSON object or non-empty list of objects")
 
@@ -52,9 +56,13 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--kpi", required=True)
-    parser.add_argument("--window-instability-score-field", default="window_instability_score")
+    parser.add_argument(
+        "--window-instability-score-field", default="window_instability_score"
+    )
     parser.add_argument("--max-window-instability-score", type=float, default=0.0)
-    parser.add_argument("--window-instability-count-field", default="window_instability_count")
+    parser.add_argument(
+        "--window-instability-count-field", default="window_instability_count"
+    )
     parser.add_argument("--max-window-instability-count", type=int, default=0)
     args = parser.parse_args()
 

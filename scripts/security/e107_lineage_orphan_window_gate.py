@@ -19,7 +19,9 @@ def _load_rows(path: pathlib.Path) -> list[dict]:
                 return rows
         fail("lineage payload must include lineage/items/records/entries/windows")
     if not isinstance(data, list):
-        fail("lineage payload must be list or object with lineage/items/records/entries/windows")
+        fail(
+            "lineage payload must be list or object with lineage/items/records/entries/windows"
+        )
     return data
 
 
@@ -35,7 +37,12 @@ def main() -> int:
     for row in rows:
         if not isinstance(row, dict):
             continue
-        if str(row.get("orphan", "")).strip().lower() in {"1", "true", "yes", "orphaned"}:
+        if str(row.get("orphan", "")).strip().lower() in {
+            "1",
+            "true",
+            "yes",
+            "orphaned",
+        }:
             orphans += 1
         elif str(row.get(args.window_col, "")).strip() == "":
             orphans += 1

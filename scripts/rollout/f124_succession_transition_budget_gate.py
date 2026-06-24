@@ -44,7 +44,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("succession payload must be a JSON object or non-empty list of objects")
 
@@ -52,16 +56,22 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--succession", required=True)
-    parser.add_argument("--transition-budget-spent-field", default="transition_budget_spent")
+    parser.add_argument(
+        "--transition-budget-spent-field", default="transition_budget_spent"
+    )
     parser.add_argument("--max-transition-budget-spent", type=float, default=1.0)
-    parser.add_argument("--over-budget-transitions-field", default="over_budget_transition_count")
+    parser.add_argument(
+        "--over-budget-transitions-field", default="over_budget_transition_count"
+    )
     parser.add_argument("--max-over-budget-transitions", type=int, default=0)
     args = parser.parse_args()
 
     records = load_records(pathlib.Path(args.succession))
     for index, record in enumerate(records):
         budget_spent = to_float(
-            record.get(args.transition_budget_spent_field), args.transition_budget_spent_field, index
+            record.get(args.transition_budget_spent_field),
+            args.transition_budget_spent_field,
+            index,
         )
         if budget_spent > args.max_transition_budget_spent:
             fail(
@@ -70,7 +80,9 @@ def main() -> int:
             )
 
         over_budget_transitions = to_int(
-            record.get(args.over_budget_transitions_field), args.over_budget_transitions_field, index
+            record.get(args.over_budget_transitions_field),
+            args.over_budget_transitions_field,
+            index,
         )
         if over_budget_transitions > args.max_over_budget_transitions:
             fail(

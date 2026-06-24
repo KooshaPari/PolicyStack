@@ -22,7 +22,10 @@ def _load_rows(path: pathlib.Path) -> tuple[list[dict], str | None]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows, None
-    return [], "E80 invalid input: expected list or dict with custody/chains/items/records/cases"
+    return (
+        [],
+        "E80 invalid input: expected list or dict with custody/chains/items/records/cases",
+    )
 
 
 def _pick(row: dict, keys: tuple[str, ...]) -> str:
@@ -41,7 +44,9 @@ def _time(value: object) -> datetime | None:
     if not text:
         return None
     try:
-        return datetime.fromisoformat(text.replace("Z", "+00:00")).astimezone(timezone.utc)
+        return datetime.fromisoformat(text.replace("Z", "+00:00")).astimezone(
+            timezone.utc
+        )
     except ValueError:
         return None
 
@@ -51,10 +56,17 @@ def _is_expired(row: dict) -> bool:
         return False
     if str(row.get("chain_expired", "")).strip().lower() in {"1", "true", "yes", "on"}:
         return True
-    if str(row.get("status", "")).strip().lower() in {"expired", "expired_chain", "stale", "invalid"}:
+    if str(row.get("status", "")).strip().lower() in {
+        "expired",
+        "expired_chain",
+        "stale",
+        "invalid",
+    }:
         return True
 
-    expiry = _time(_pick(row, ("chain_expires_at", "expires_at", "expiry_at", "valid_until")))
+    expiry = _time(
+        _pick(row, ("chain_expires_at", "expires_at", "expiry_at", "valid_until"))
+    )
     if expiry is None:
         return False
     return datetime.now(timezone.utc) > expiry

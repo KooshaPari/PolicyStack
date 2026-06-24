@@ -7,7 +7,10 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E152 succession transition window regression budget gate failed: {message}", file=sys.stderr)
+    print(
+        f"E152 succession transition window regression budget gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -44,7 +47,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("succession payload must be a JSON object or non-empty list of objects")
 
@@ -56,12 +63,16 @@ def main() -> int:
         "--transition-window-regression-budget-spent-field",
         default="transition_window_regression_budget_spent",
     )
-    parser.add_argument("--max-transition-window-regression-budget-spent", type=float, default=1.0)
+    parser.add_argument(
+        "--max-transition-window-regression-budget-spent", type=float, default=1.0
+    )
     parser.add_argument(
         "--over-transition-window-regression-budget-count-field",
         default="over_transition_window_regression_budget_count",
     )
-    parser.add_argument("--max-over-transition-window-regression-budget-count", type=int, default=0)
+    parser.add_argument(
+        "--max-over-transition-window-regression-budget-count", type=int, default=0
+    )
     args = parser.parse_args()
 
     records = load_records(pathlib.Path(args.succession))

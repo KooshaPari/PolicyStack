@@ -16,3 +16,12 @@ node_modules
 
 # grade reports (build artifacts)
 .grade-reports/
+
+# VitePress build artifacts (build output)
+.vitepress-dist/
+
+# Setuptools / pip metadata (build artifacts)
+*.egg-info/
+
+# Runtime/utility scripts (not source)
+ps_run.json

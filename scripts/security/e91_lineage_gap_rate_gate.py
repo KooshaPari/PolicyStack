@@ -40,7 +40,10 @@ def _pick(row: dict, keys: tuple[str, ...]) -> str:
 
 def _is_gap(row: dict) -> bool:
     if str(row.get("status", "")).strip().lower() in {
-        "missing", "gap", "incomplete", "broken"
+        "missing",
+        "gap",
+        "incomplete",
+        "broken",
     }:
         return True
     if bool(
@@ -80,7 +83,11 @@ def main() -> int:
         )
         return 2
 
-    bad_ids = { _pick(r, ("id", "lineage_id", "artifact_id", "name")) for r in rows if _is_gap(r) }
+    bad_ids = {
+        _pick(r, ("id", "lineage_id", "artifact_id", "name"))
+        for r in rows
+        if _is_gap(r)
+    }
     bad_count = len(bad_ids)
     gap_rate = bad_count / total if total else 0.0
 

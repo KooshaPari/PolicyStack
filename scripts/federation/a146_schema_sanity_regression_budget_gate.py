@@ -11,15 +11,22 @@ from typing import Any
 
 def load_report(path: pathlib.Path) -> list[dict[str, Any]] | dict[str, Any]:
     raw = path.read_text()
-    if path.suffix.lower() == '.csv':
+    if path.suffix.lower() == ".csv":
         return list(csv.DictReader(raw.splitlines()))
     return json.loads(raw)
 
 
-def extract_rows(payload: list[dict[str, Any]] | dict[str, Any], lane_key: str) -> list[dict[str, Any]]:
+def extract_rows(
+    payload: list[dict[str, Any]] | dict[str, Any], lane_key: str
+) -> list[dict[str, Any]]:
     if isinstance(payload, list):
         return [row for row in payload if isinstance(row, dict)]
-    rows = payload.get('items') or payload.get('records') or payload.get('entries') or payload.get(lane_key)
+    rows = (
+        payload.get("items")
+        or payload.get("records")
+        or payload.get("entries")
+        or payload.get(lane_key)
+    )
     if isinstance(rows, list):
         return [row for row in rows if isinstance(row, dict)]
     if isinstance(payload, dict):
@@ -44,14 +51,16 @@ def parse_int(value: object, label: str) -> int:
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--schema-sanity-regression-budget-report', required=True)
-parser.add_argument('--max-schema-sanity-regression-rate', type=float, default=0.02)
-parser.add_argument('--min-schema-sanity-regression-stability-rate', type=float, default=0.98)
-parser.add_argument('--max-schema-sanity-regression-breach-count', type=int, default=0)
+parser.add_argument("--schema-sanity-regression-budget-report", required=True)
+parser.add_argument("--max-schema-sanity-regression-rate", type=float, default=0.02)
+parser.add_argument(
+    "--min-schema-sanity-regression-stability-rate", type=float, default=0.98
+)
+parser.add_argument("--max-schema-sanity-regression-breach-count", type=int, default=0)
 args = parser.parse_args()
 
 payload = load_report(pathlib.Path(args.schema_sanity_regression_budget_report))
-rows = extract_rows(payload, 'schema_sanity_regression_budget')
+rows = extract_rows(payload, "schema_sanity_regression_budget")
 
 max_schema_sanity_regression_rate = 0.0
 schema_sanity_regression_stability_rate = 1.0
@@ -62,39 +71,47 @@ for row in rows:
         max_schema_sanity_regression_rate,
         parse_float(
             row.get(
-                'schema_sanity_regression_rate',
+                "schema_sanity_regression_rate",
                 row.get(
-                    'schema_sanity_regression_regression_rate',
-                    row.get('regression_rate', 0.0),
+                    "schema_sanity_regression_regression_rate",
+                    row.get("regression_rate", 0.0),
                 ),
             ),
-            'schema_sanity_regression_rate',
+            "schema_sanity_regression_rate",
         ),
     )
     schema_sanity_regression_stability_rate = min(
         schema_sanity_regression_stability_rate,
         parse_float(
             row.get(
-                'schema_sanity_regression_stability_rate',
-                row.get('schema_sanity_regression_success_rate', row.get('stability_rate', 1.0)),
+                "schema_sanity_regression_stability_rate",
+                row.get(
+                    "schema_sanity_regression_success_rate",
+                    row.get("stability_rate", 1.0),
+                ),
             ),
-            'schema_sanity_regression_stability_rate',
+            "schema_sanity_regression_stability_rate",
         ),
     )
     schema_sanity_regression_breach_count += parse_int(
         row.get(
-            'schema_sanity_regression_breach_count',
-            row.get('schema_sanity_regression_violation_count', row.get('regression_breach_count', 0)),
+            "schema_sanity_regression_breach_count",
+            row.get(
+                "schema_sanity_regression_violation_count",
+                row.get("regression_breach_count", 0),
+            ),
         ),
-        'schema_sanity_regression_breach_count',
+        "schema_sanity_regression_breach_count",
     )
 
 if (
     max_schema_sanity_regression_rate > args.max_schema_sanity_regression_rate
-    or schema_sanity_regression_stability_rate < args.min_schema_sanity_regression_stability_rate
-    or schema_sanity_regression_breach_count > args.max_schema_sanity_regression_breach_count
+    or schema_sanity_regression_stability_rate
+    < args.min_schema_sanity_regression_stability_rate
+    or schema_sanity_regression_breach_count
+    > args.max_schema_sanity_regression_breach_count
 ):
-    print('E146 schema sanity regression budget gate failed', file=sys.stderr)
+    print("E146 schema sanity regression budget gate failed", file=sys.stderr)
     raise SystemExit(2)
 
 raise SystemExit(0)

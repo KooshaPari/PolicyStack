@@ -4,6 +4,7 @@ import json
 import pathlib
 import sys
 
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--metrics", required=True)
@@ -15,6 +16,7 @@ def main() -> int:
         print(f"C49 oscillation too high: {osc}", file=sys.stderr)
         return 2
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

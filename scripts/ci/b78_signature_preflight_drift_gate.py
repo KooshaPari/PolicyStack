@@ -19,4 +19,3 @@ drift_rate = (drift / total) if total > 0 else 0.0
 if drift_rate > a.max_drift_rate:
     print("B78 signature preflight drift gate failed", file=sys.stderr)
     raise SystemExit(2)
-

@@ -165,7 +165,9 @@ def main() -> int:
         )
 
     if total_samples < args.min_total_samples:
-        fail(f"total_samples={total_samples} < min_total_samples={args.min_total_samples}")
+        fail(
+            f"total_samples={total_samples} < min_total_samples={args.min_total_samples}"
+        )
 
     if total_queue_budget_total <= 0:
         fail(f"total_queue_budget_total={total_queue_budget_total} must be > 0")

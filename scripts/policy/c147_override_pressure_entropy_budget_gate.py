@@ -62,7 +62,10 @@ def main() -> int:
         budget = to_float(
             row.get(
                 "override_pressure_entropy_budget",
-                row.get("pressure_entropy_budget", row.get("entropy_budget", row.get("budget", 0.0))),
+                row.get(
+                    "pressure_entropy_budget",
+                    row.get("entropy_budget", row.get("budget", 0.0)),
+                ),
             ),
             "override_pressure_entropy_budget",
         )
@@ -71,7 +74,12 @@ def main() -> int:
                 "override_pressure_entropy_spend",
                 row.get(
                     "pressure_entropy_spend",
-                    row.get("entropy_spend", row.get("override_pressure_entropy_cost", row.get("cost", budget))),
+                    row.get(
+                        "entropy_spend",
+                        row.get(
+                            "override_pressure_entropy_cost", row.get("cost", budget)
+                        ),
+                    ),
                 ),
             ),
             "override_pressure_entropy_spend",
@@ -81,7 +89,10 @@ def main() -> int:
                 "budget_breach",
                 row.get(
                     "override_pressure_entropy_budget_breach",
-                    row.get("pressure_entropy_budget_breach", row.get("entropy_budget_breach", False)),
+                    row.get(
+                        "pressure_entropy_budget_breach",
+                        row.get("entropy_budget_breach", False),
+                    ),
                 ),
             )
         )

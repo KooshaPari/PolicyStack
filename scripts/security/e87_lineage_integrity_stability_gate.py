@@ -20,7 +20,10 @@ def _load_rows(path: pathlib.Path) -> tuple[list[dict], str | None]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows, None
-    return [], "E87 invalid input: expected list or dict with lineage/records/items/entries/events"
+    return (
+        [],
+        "E87 invalid input: expected list or dict with lineage/records/items/entries/events",
+    )
 
 
 def _pick(row: dict, keys: tuple[str, ...]) -> str:
@@ -44,11 +47,19 @@ def _parse_float(v: object) -> float | None:
 
 
 def _is_unstable(row: dict, min_stability: float) -> bool:
-    if str(row.get("integrity_status", "")).strip().lower() in {"broken", "mismatch", "tampered", "invalid", "unstable"}:
+    if str(row.get("integrity_status", "")).strip().lower() in {
+        "broken",
+        "mismatch",
+        "tampered",
+        "invalid",
+        "unstable",
+    }:
         return True
     if str(row.get("stability", "")).strip().lower() in {"false", "broken", "degraded"}:
         return True
-    stability = _parse_float(row.get("stability_score") or row.get("integrity_score") or row.get("stability"))
+    stability = _parse_float(
+        row.get("stability_score") or row.get("integrity_score") or row.get("stability")
+    )
     if stability is None:
         return True
     return stability < min_stability
@@ -74,7 +85,9 @@ def main() -> int:
         }
     )
     if len(unstable) > args.max_unstable:
-        print(f"E87 lineage integrity stability breach: {len(unstable)}", file=sys.stderr)
+        print(
+            f"E87 lineage integrity stability breach: {len(unstable)}", file=sys.stderr
+        )
         return 2
     return 0
 

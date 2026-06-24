@@ -93,7 +93,9 @@ def main() -> int:
 
     for row in records:
         latency = parse_float(row.get(args.latency_key), args.latency_key)
-        p95_latency = parse_float(row.get(args.p95_latency_key, latency), args.p95_latency_key)
+        p95_latency = parse_float(
+            row.get(args.p95_latency_key, latency), args.p95_latency_key
+        )
         latency_total += latency
         max_p95_latency = max(max_p95_latency, p95_latency)
         if latency > args.latency_threshold_ms:
@@ -111,7 +113,9 @@ def main() -> int:
         )
 
     if max_p95_latency > args.max_p95_latency_ms:
-        fail(f"max_p95_latency_ms={max_p95_latency} > max_p95_latency_ms={args.max_p95_latency_ms}")
+        fail(
+            f"max_p95_latency_ms={max_p95_latency} > max_p95_latency_ms={args.max_p95_latency_ms}"
+        )
 
     if threshold_breach_count > args.max_threshold_breach_count:
         fail(

@@ -7,7 +7,10 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E138 C138 replay integrity budget window gate failed: {message}", file=sys.stderr)
+    print(
+        f"E138 C138 replay integrity budget window gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -82,7 +85,12 @@ def main() -> int:
             "integrity_cost",
         )
         explicit_breach = to_bool(
-            row.get("budget_breach", row.get("integrity_budget_breach", row.get("replay_budget_breach", False)))
+            row.get(
+                "budget_breach",
+                row.get(
+                    "integrity_budget_breach", row.get("replay_budget_breach", False)
+                ),
+            )
         )
         if explicit_breach or (actual - budget > args.allowed_budget_overrun):
             breaches += 1

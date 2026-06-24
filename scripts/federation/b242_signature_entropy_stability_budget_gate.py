@@ -83,7 +83,9 @@ def main() -> int:
     parser.add_argument("--samples-key", default="samples")
     parser.add_argument("--entropy-score-key", default="entropy_score")
     parser.add_argument("--entropy-regressions-key", default="entropy_regressions")
-    parser.add_argument("--invalid-signature-events-key", default="invalid_signature_events")
+    parser.add_argument(
+        "--invalid-signature-events-key", default="invalid_signature_events"
+    )
     parser.add_argument("--budget-used-key", default="budget_used")
     parser.add_argument("--budget-total-key", default="budget_total")
     parser.add_argument("--min-total-samples", type=float, default=1.0)
@@ -115,7 +117,9 @@ def main() -> int:
 
     for row in records:
         samples = parse_float(row.get(args.samples_key), args.samples_key)
-        entropy_score = parse_float(row.get(args.entropy_score_key), args.entropy_score_key)
+        entropy_score = parse_float(
+            row.get(args.entropy_score_key), args.entropy_score_key
+        )
         entropy_regressions = parse_int(
             row.get(args.entropy_regressions_key, 0),
             args.entropy_regressions_key,
@@ -125,7 +129,9 @@ def main() -> int:
             args.invalid_signature_events_key,
         )
         budget_used = parse_float(row.get(args.budget_used_key), args.budget_used_key)
-        budget_total = parse_float(row.get(args.budget_total_key), args.budget_total_key)
+        budget_total = parse_float(
+            row.get(args.budget_total_key), args.budget_total_key
+        )
 
         if samples < 0:
             fail(f"samples for {args.samples_key} must be >= 0; got {samples}")
@@ -145,11 +151,17 @@ def main() -> int:
                 f"got {invalid_signature_events}"
             )
         if entropy_regressions > samples:
-            fail(f"entropy_regressions={entropy_regressions} cannot exceed samples={samples}")
+            fail(
+                f"entropy_regressions={entropy_regressions} cannot exceed samples={samples}"
+            )
         if budget_used < 0:
-            fail(f"budget_used for {args.budget_used_key} must be >= 0; got {budget_used}")
+            fail(
+                f"budget_used for {args.budget_used_key} must be >= 0; got {budget_used}"
+            )
         if budget_total <= 0:
-            fail(f"budget_total for {args.budget_total_key} must be > 0; got {budget_total}")
+            fail(
+                f"budget_total for {args.budget_total_key} must be > 0; got {budget_total}"
+            )
         if budget_used > budget_total:
             fail(f"budget_used={budget_used} cannot exceed budget_total={budget_total}")
 
@@ -169,10 +181,14 @@ def main() -> int:
             window_entropy_regressions.get(window, 0) + entropy_regressions
         )
         window_budget_used[window] = window_budget_used.get(window, 0.0) + budget_used
-        window_budget_total[window] = window_budget_total.get(window, 0.0) + budget_total
+        window_budget_total[window] = (
+            window_budget_total.get(window, 0.0) + budget_total
+        )
 
     if total_samples < args.min_total_samples:
-        fail(f"total_samples={total_samples} < min_total_samples={args.min_total_samples}")
+        fail(
+            f"total_samples={total_samples} < min_total_samples={args.min_total_samples}"
+        )
 
     if total_budget_total <= 0:
         fail(f"total_budget_total={total_budget_total} must be > 0")
@@ -211,7 +227,9 @@ def main() -> int:
         )
 
     if total_variance > args.max_total_variance:
-        fail(f"total_variance={total_variance} > max_total_variance={args.max_total_variance}")
+        fail(
+            f"total_variance={total_variance} > max_total_variance={args.max_total_variance}"
+        )
 
     for window in sorted(window_samples):
         samples = window_samples[window]
@@ -234,8 +252,12 @@ def main() -> int:
 
         window_budget_total_value = window_budget_total[window]
         if window_budget_total_value <= 0:
-            fail(f"window={window} budget_total={window_budget_total_value} must be > 0")
-        window_budget_usage_ratio = window_budget_used[window] / window_budget_total_value
+            fail(
+                f"window={window} budget_total={window_budget_total_value} must be > 0"
+            )
+        window_budget_usage_ratio = (
+            window_budget_used[window] / window_budget_total_value
+        )
         if window_budget_usage_ratio > args.max_window_budget_usage_ratio:
             fail(
                 f"window={window} budget_usage_ratio={window_budget_usage_ratio} > "

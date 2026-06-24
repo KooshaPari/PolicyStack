@@ -697,5 +697,7 @@ def clear_cache() -> bool:
 # Backward compatibility - keep old function names
 def _invoke_forge(prompt):
     return _invoke_harness("forge", prompt)
+
+
 def _invoke_cursor(prompt):
     return _invoke_harness("cursor", prompt)

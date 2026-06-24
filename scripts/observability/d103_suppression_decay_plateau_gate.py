@@ -25,7 +25,9 @@ def main() -> int:
     parser.add_argument("--max-plateau", type=int, default=0)
     args = parser.parse_args()
 
-    rows = list(csv.DictReader(pathlib.Path(args.suppression_csv).read_text().splitlines()))
+    rows = list(
+        csv.DictReader(pathlib.Path(args.suppression_csv).read_text().splitlines())
+    )
     values = [to_float(r.get(args.value_field), args.value_field) for r in rows]
     if len(values) < 2:
         fail("insufficient suppression rows")
@@ -37,5 +39,5 @@ def main() -> int:
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     raise SystemExit(main())

@@ -5,6 +5,7 @@ import json
 import pathlib
 import sys
 
+
 def _rows(path: pathlib.Path) -> list[dict]:
     if path.suffix.lower() == ".csv":
         return list(csv.DictReader(path.open()))
@@ -18,22 +19,29 @@ def _rows(path: pathlib.Path) -> list[dict]:
             return data["items"]
     return []
 
+
 def _missing_trace(r: dict) -> bool:
     vuln = r.get("vuln_id") or r.get("cve") or r.get("id")
     lineage = r.get("lineage_id") or r.get("lineage_ref")
     source = r.get("source_commit") or r.get("artifact_digest") or r.get("sbom_ref")
     return not (vuln and lineage and source)
 
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--lineage", required=True)
     a = p.parse_args()
-    missing = [str(r.get("vuln_id") or r.get("cve") or r.get("id") or "") for r in _rows(pathlib.Path(a.lineage)) if _missing_trace(r)]
+    missing = [
+        str(r.get("vuln_id") or r.get("cve") or r.get("id") or "")
+        for r in _rows(pathlib.Path(a.lineage))
+        if _missing_trace(r)
+    ]
     if missing:
         missing.sort()
         print(f"E67 vuln lineage traceability breach: {len(missing)}", file=sys.stderr)
         return 2
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

@@ -102,7 +102,9 @@ def main() -> int:
 
     for row in records:
         budget_used = parse_float(row.get(args.budget_used_key), args.budget_used_key)
-        budget_total = parse_float(row.get(args.budget_total_key), args.budget_total_key)
+        budget_total = parse_float(
+            row.get(args.budget_total_key), args.budget_total_key
+        )
         budget_breached = parse_int(
             row.get(args.budget_breach_flag_key, 0),
             args.budget_breach_flag_key,
@@ -110,13 +112,19 @@ def main() -> int:
         retry_count = parse_int(row.get(args.retry_count_key, 0), args.retry_count_key)
 
         if budget_used < 0:
-            fail(f"budget_used for {args.budget_used_key} must be >= 0; got {budget_used}")
+            fail(
+                f"budget_used for {args.budget_used_key} must be >= 0; got {budget_used}"
+            )
         if budget_total <= 0:
-            fail(f"budget_total for {args.budget_total_key} must be > 0; got {budget_total}")
+            fail(
+                f"budget_total for {args.budget_total_key} must be > 0; got {budget_total}"
+            )
         if budget_used > budget_total:
             fail(f"budget_used={budget_used} cannot exceed budget_total={budget_total}")
         if retry_count < 0:
-            fail(f"retry_count for {args.retry_count_key} must be >= 0; got {retry_count}")
+            fail(
+                f"retry_count for {args.retry_count_key} must be >= 0; got {retry_count}"
+            )
 
         total_budget_used += budget_used
         total_budget_total += budget_total
@@ -125,7 +133,9 @@ def main() -> int:
 
         window = str(row.get(args.window_key, "default"))
         window_budget_used[window] = window_budget_used.get(window, 0.0) + budget_used
-        window_budget_total[window] = window_budget_total.get(window, 0.0) + budget_total
+        window_budget_total[window] = (
+            window_budget_total.get(window, 0.0) + budget_total
+        )
 
     total_usage_ratio = total_budget_used / total_budget_total
     if total_usage_ratio > args.max_total_budget_usage_ratio:

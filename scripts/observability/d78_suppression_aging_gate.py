@@ -64,7 +64,9 @@ def main() -> int:
     _require_file(csv_path, "suppressions")
 
     report = _load_json(report_path)
-    rows = _load_csv(csv_path, {"suppression_id", "status", "aging_score", "days_since_review"})
+    rows = _load_csv(
+        csv_path, {"suppression_id", "status", "aging_score", "days_since_review"}
+    )
 
     report_aging = float(report.get("suppression_aging_score", 0.0))
     report_aging_count = int(report.get("aging_suppressions", 0))
@@ -90,7 +92,9 @@ def main() -> int:
     effective_aging_score = max(max_aging_score, report_aging)
 
     if effective_aging_score > args.max_aging_score:
-        _fail(f"D78 suppression aging gate failed: max_aging_score={effective_aging_score}")
+        _fail(
+            f"D78 suppression aging gate failed: max_aging_score={effective_aging_score}"
+        )
     if aging_count > args.max_aging_suppressions:
         _fail(f"D78 suppression aging gate failed: aging_suppressions={aging_count}")
     return 0

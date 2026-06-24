@@ -85,7 +85,10 @@ def main() -> int:
         budget_breach = to_bool(
             row.get(
                 "budget_breach",
-                row.get("override_activity_budget_breach", row.get("activity_budget_breach", False)),
+                row.get(
+                    "override_activity_budget_breach",
+                    row.get("activity_budget_breach", False),
+                ),
             )
         )
         if (not stable) or stability < args.min_stability:
@@ -99,7 +102,9 @@ def main() -> int:
     breach_rate = breaches / total
     if args.max_breaches and breaches > args.max_breaches:
         fail(f"breaches={breaches}")
-    if args.max_breach_rate and breach_rate > to_float(args.max_breach_rate, "max_breach_rate"):
+    if args.max_breach_rate and breach_rate > to_float(
+        args.max_breach_rate, "max_breach_rate"
+    ):
         fail(f"breach_rate={breach_rate:.6f}")
     return 0
 

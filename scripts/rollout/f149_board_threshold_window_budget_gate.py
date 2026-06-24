@@ -44,7 +44,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("board payload must be a JSON object or non-empty list of objects")
 
@@ -83,7 +87,10 @@ def main() -> int:
             args.over_threshold_window_budget_count_field,
             index,
         )
-        if over_threshold_window_budget_count > args.max_over_threshold_window_budget_count:
+        if (
+            over_threshold_window_budget_count
+            > args.max_over_threshold_window_budget_count
+        ):
             fail(
                 f"{args.over_threshold_window_budget_count_field}="
                 f"{over_threshold_window_budget_count} > "

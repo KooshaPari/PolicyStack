@@ -44,7 +44,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("board payload must be a JSON object or non-empty list of objects")
 
@@ -52,16 +56,22 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--board", required=True)
-    parser.add_argument("--threshold-budget-spent-field", default="threshold_budget_spent")
+    parser.add_argument(
+        "--threshold-budget-spent-field", default="threshold_budget_spent"
+    )
     parser.add_argument("--max-threshold-budget-spent", type=float, default=1.0)
-    parser.add_argument("--over-threshold-budget-count-field", default="over_threshold_budget_count")
+    parser.add_argument(
+        "--over-threshold-budget-count-field", default="over_threshold_budget_count"
+    )
     parser.add_argument("--max-over-threshold-budget-count", type=int, default=0)
     args = parser.parse_args()
 
     records = load_records(pathlib.Path(args.board))
     for index, record in enumerate(records):
         threshold_budget_spent = to_float(
-            record.get(args.threshold_budget_spent_field), args.threshold_budget_spent_field, index
+            record.get(args.threshold_budget_spent_field),
+            args.threshold_budget_spent_field,
+            index,
         )
         if threshold_budget_spent > args.max_threshold_budget_spent:
             fail(

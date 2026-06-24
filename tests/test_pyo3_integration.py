@@ -5,7 +5,6 @@ Tests that the Rust policy engine bindings correctly evaluate rules
 when consumed from PolicyStack.
 """
 
-
 import pytest
 
 # Skip if maturin wheel not available (no Python headers, etc.)

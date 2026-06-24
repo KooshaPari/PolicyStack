@@ -7,7 +7,9 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E137 override pressure window budget gate failed: {message}", file=sys.stderr)
+    print(
+        f"E137 override pressure window budget gate failed: {message}", file=sys.stderr
+    )
     raise SystemExit(2)
 
 
@@ -33,7 +35,9 @@ def _read_json(path: pathlib.Path, label: str) -> list[dict]:
     return _to_records(payload, path, label)
 
 
-def _read_csv(path: pathlib.Path, required: set[str], label: str) -> list[dict[str, str]]:
+def _read_csv(
+    path: pathlib.Path, required: set[str], label: str
+) -> list[dict[str, str]]:
     try:
         with path.open(newline="") as handle:
             reader = csv.DictReader(handle)
@@ -74,7 +78,10 @@ def _window_pairs(values: list[float], window_size: int) -> list[list[float]]:
         return []
     if window_size <= 0 or window_size > len(values):
         return [values]
-    return [values[start : start + window_size] for start in range(0, len(values) - window_size + 1)]
+    return [
+        values[start : start + window_size]
+        for start in range(0, len(values) - window_size + 1)
+    ]
 
 
 def main() -> int:
@@ -109,16 +116,25 @@ def main() -> int:
     ordered = sorted(rows, key=lambda row: str(row.get(args.time_field, "")))
     gaps: list[float] = []
     for row in ordered:
-        pressure = _to_float(row[args.pressure_field], overrides_path, args.pressure_field)
+        pressure = _to_float(
+            row[args.pressure_field], overrides_path, args.pressure_field
+        )
         budget = _to_float(row[args.budget_field], overrides_path, args.budget_field)
         gaps.append(max(0.0, pressure - budget))
 
-    window_gap_values = [max(window) for window in _window_pairs(gaps, args.window_size)]
-    window_count_values = [sum(1 for value in window if value > 0.0) for window in _window_pairs(gaps, args.window_size)]
+    window_gap_values = [
+        max(window) for window in _window_pairs(gaps, args.window_size)
+    ]
+    window_count_values = [
+        sum(1 for value in window if value > 0.0)
+        for window in _window_pairs(gaps, args.window_size)
+    ]
 
     window_gap = max(window_gap_values) if window_gap_values else 0.0
     window_gap_mean = (
-        (sum(window_gap_values) / float(len(window_gap_values))) if window_gap_values else 0.0
+        (sum(window_gap_values) / float(len(window_gap_values)))
+        if window_gap_values
+        else 0.0
     )
     window_over_budget_count = max(window_count_values) if window_count_values else 0
 

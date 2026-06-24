@@ -57,7 +57,10 @@ def main() -> int:
         if not isinstance(row, dict):
             continue
         total += 1
-        age = to_int(row.get("created_in_hours", row.get("age_hours", 999999)), "created_in_hours")
+        age = to_int(
+            row.get("created_in_hours", row.get("age_hours", 999999)),
+            "created_in_hours",
+        )
         state = str(row.get("state", "")).strip().lower()
         if state == "active" and age <= args.burst_window_hours:
             burst += 1
@@ -67,7 +70,9 @@ def main() -> int:
     burst_rate = burst / total
     if args.max_burst_activity and burst > args.max_burst_activity:
         fail(f"burst_activity={burst}")
-    if args.max_burst_rate and burst_rate > to_float(args.max_burst_rate, "max_burst_rate"):
+    if args.max_burst_rate and burst_rate > to_float(
+        args.max_burst_rate, "max_burst_rate"
+    ):
         fail(f"burst_rate={burst_rate:.6f}")
     return 0
 

@@ -27,7 +27,12 @@ def main() -> int:
     args = parser.parse_args()
 
     rows = list(csv.DictReader(pathlib.Path(args.watchdog).read_text().splitlines()))
-    active = [r for r in rows if str(r.get(args.status_col, "")).strip().lower() not in {"ok", "nominal", "idle"}]
+    active = [
+        r
+        for r in rows
+        if str(r.get(args.status_col, "")).strip().lower()
+        not in {"ok", "nominal", "idle"}
+    ]
     unsupervised = len(active)
     total_time = sum(parse_int(r.get(args.time_col, 0), args.time_col) for r in active)
     avg_time = (total_time / unsupervised) if unsupervised else 0
@@ -38,5 +43,5 @@ def main() -> int:
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     raise SystemExit(main())

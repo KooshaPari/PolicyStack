@@ -167,7 +167,9 @@ class ConditionGroup:
                     elif ok:
                         pass_optional = True
                 else:
-                    inner_ok, _inner_partial, inner_reasons = condition.evaluate_with_quality(cwd)
+                    inner_ok, _inner_partial, inner_reasons = (
+                        condition.evaluate_with_quality(cwd)
+                    )
                     self._append_reason(reasons, inner_reasons)
                     # Nested ConditionGroup items are treated as required in
                     # the parent group.
@@ -194,7 +196,9 @@ class ConditionGroup:
                 if self._is_required(condition) and not ok:
                     failed_required = True
             else:
-                inner_ok, inner_partial, inner_reasons = condition.evaluate_with_quality(cwd)
+                inner_ok, inner_partial, inner_reasons = (
+                    condition.evaluate_with_quality(cwd)
+                )
                 self._append_reason(reasons, inner_reasons)
                 if not inner_ok:
                     failed_required = True
@@ -207,14 +211,7 @@ class ConditionGroup:
     def export(self) -> dict[str, Any]:
         return {
             "mode": self.mode,
-            "conditions": [
-                (
-                    condition.export()
-                    if isinstance(condition, Condition)
-                    else condition.export()
-                )
-                for condition in self.items
-            ],
+            "conditions": [condition.export() for condition in self.items],
         }
 
 
@@ -292,14 +289,18 @@ def _parse_condition_group(value: Any) -> ConditionGroup | None:
         if not isinstance(conditions, list):
             msg = "'all' must be a list"
             raise ValueError(msg)
-        return ConditionGroup(mode="all", items=tuple(_parse_condition(v) for v in conditions))
+        return ConditionGroup(
+            mode="all", items=tuple(_parse_condition(v) for v in conditions)
+        )
 
     if "any" in value:
         conditions = value["any"]
         if not isinstance(conditions, list):
             msg = "'any' must be a list"
             raise ValueError(msg)
-        return ConditionGroup(mode="any", items=tuple(_parse_condition(v) for v in conditions))
+        return ConditionGroup(
+            mode="any", items=tuple(_parse_condition(v) for v in conditions)
+        )
 
     if "mode" in value and "conditions" in value:
         mode = value["mode"]
@@ -310,7 +311,9 @@ def _parse_condition_group(value: Any) -> ConditionGroup | None:
         if not isinstance(conditions, list):
             msg = "'conditions' must be a list when 'mode' is set"
             raise ValueError(msg)
-        return ConditionGroup(mode=mode, items=tuple(_parse_condition(v) for v in conditions))
+        return ConditionGroup(
+            mode=mode, items=tuple(_parse_condition(v) for v in conditions)
+        )
 
     return ConditionGroup(items=(_parse_condition(value),))
 
@@ -321,7 +324,8 @@ def _parse_condition(value: Any) -> Condition | ConditionGroup:
     if isinstance(value, str):
         name = value
     elif isinstance(value, list) or (
-        isinstance(value, dict) and ("all" in value or "any" in value or "mode" in value)
+        isinstance(value, dict)
+        and ("all" in value or "any" in value or "mode" in value)
     ):
         return _parse_condition_group(value)
     elif isinstance(value, dict) and "name" not in value:
@@ -374,7 +378,9 @@ def _parse_match(match: Any) -> tuple[str, str]:
     return matcher, pattern
 
 
-def normalize_payload(payload: dict[str, Any], cwd: Path | None = None) -> list[CommandRule]:
+def normalize_payload(
+    payload: dict[str, Any], cwd: Path | None = None
+) -> list[CommandRule]:
     if not isinstance(payload, dict):
         msg = "policy payload must be a mapping"
         raise ValueError(msg)
@@ -492,7 +498,9 @@ def normalize_payload(payload: dict[str, Any], cwd: Path | None = None) -> list[
 
 
 def evaluate_policy(
-    payload: dict[str, Any], command: str, cwd: Path | None = None,
+    payload: dict[str, Any],
+    command: str,
+    cwd: Path | None = None,
 ) -> tuple[Decision, str, CommandRule | None]:
     cwd = cwd or Path.cwd()
     rules = normalize_payload(payload, cwd)

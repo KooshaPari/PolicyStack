@@ -39,7 +39,11 @@ def main() -> int:
         fail(f"coverage_ratio={coverage} < min={args.min_coverage}")
 
     gap_value = payload.get(args.gap_key, 0)
-    gaps = int(gap_value) if isinstance(gap_value, bool) or isinstance(gap_value, int) else parse_float(gap_value, args.gap_key)
+    gaps = (
+        int(gap_value)
+        if isinstance(gap_value, bool) or isinstance(gap_value, int)
+        else parse_float(gap_value, args.gap_key)
+    )
     if gaps > args.max_gaps:
         fail(f"gap_events={gaps} > max={args.max_gaps}")
     return 0

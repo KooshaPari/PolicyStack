@@ -7,7 +7,9 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E118 C118 replay integrity regression gate failed: {message}", file=sys.stderr)
+    print(
+        f"E118 C118 replay integrity regression gate failed: {message}", file=sys.stderr
+    )
     raise SystemExit(2)
 
 
@@ -65,7 +67,9 @@ def main() -> int:
     regression_rate = regressions / total
     if args.max_regressions and regressions > args.max_regressions:
         fail(f"regressions={regressions}")
-    if args.max_regression_rate and regression_rate > to_float(args.max_regression_rate, "max_rate"):
+    if args.max_regression_rate and regression_rate > to_float(
+        args.max_regression_rate, "max_rate"
+    ):
         fail(f"regression_rate={regression_rate:.6f}")
     return 0
 

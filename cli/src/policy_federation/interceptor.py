@@ -108,10 +108,10 @@ def intercept_command(
         from .risk import RiskTier, assess_risk_tiered, get_tiered_decision_path
 
         # Detect worktree vs canonical for risk assessment
-        is_worktree = cwd and (
+        is_worktree = bool(cwd) and bool(
             ".worktrees" in cwd or "worktrees" in cwd or "-wtrees/" in cwd
         )
-        is_canonical = cwd and not is_worktree
+        is_canonical = bool(cwd) and not is_worktree
 
         # Use tiered risk assessment (4-tier system)
         risk_assessment = assess_risk_tiered(
@@ -156,7 +156,9 @@ def intercept_command(
         elif tier == RiskTier.TIER_2_LOW:
             # Check cache first via delegate_ask with cache only
             delegate_result = delegate_ask(
-                ctx, use_local_fast=False, use_cache=True,
+                ctx,
+                use_local_fast=False,
+                use_cache=True,
             )
 
             if (
@@ -169,7 +171,9 @@ def intercept_command(
             else:
                 # Cache miss - use local-fast evaluator
                 delegate_result = delegate_ask(
-                    ctx, use_local_fast=True, use_cache=False,
+                    ctx,
+                    use_local_fast=True,
+                    use_cache=False,
                 )
                 if delegate_result.decision == "allow":
                     exit_code = ALLOW_EXIT_CODE
@@ -206,7 +210,9 @@ def intercept_command(
             else:
                 # Need full delegation
                 delegate_result = delegate_ask(
-                    ctx, use_local_fast=False, use_cache=True,
+                    ctx,
+                    use_local_fast=False,
+                    use_cache=True,
                 )
                 if delegate_result.decision == "allow":
                     exit_code = ALLOW_EXIT_CODE
@@ -235,7 +241,9 @@ def intercept_command(
         # Tier 4: Full delegation (high risk) - ~15% of commands
         else:  # RiskTier.TIER_4_HIGH
             delegate_result = delegate_ask(
-                ctx, use_local_fast=False, use_cache=True,
+                ctx,
+                use_local_fast=False,
+                use_cache=True,
             )
 
             if delegate_result.decision == "allow":

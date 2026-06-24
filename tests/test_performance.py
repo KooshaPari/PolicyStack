@@ -80,7 +80,10 @@ class PerformanceMetrics:
 
 
 def benchmark_function(
-    func: Callable[..., Any], iterations: int = 100, *args, **kwargs,
+    func: Callable[..., Any],
+    iterations: int = 100,
+    *args,
+    **kwargs,
 ) -> PerformanceMetrics:
     """Benchmark a function over multiple iterations."""
     metrics = PerformanceMetrics()
@@ -210,7 +213,9 @@ class TestCachePerformance:
 
             # Benchmark reads
             metrics = benchmark_function(
-                _get_cached_decision, iterations=1000, command="test command",
+                _get_cached_decision,
+                iterations=1000,
+                command="test command",
             )
 
             assert metrics.median < _CACHE_READ_MEDIAN_MS, (
@@ -320,7 +325,6 @@ class TestAutoApprovalRate:
         # Calculate percentage
         auto_approval_rate = (auto_approvals / total) * 100
 
-
         assert auto_approval_rate >= 70.0, (
             f"Auto-approval rate {auto_approval_rate:.1f}% below target"
         )
@@ -395,24 +399,32 @@ class TestOverallSystemPerformance:
         # Check against baselines
         regressions = []
 
-        if risk_metrics.median > baselines["risk_assessment"]["median_ms"] * 2 * baseline_scale:
+        if (
+            risk_metrics.median
+            > baselines["risk_assessment"]["median_ms"] * 2 * baseline_scale
+        ):
             regressions.append(
                 f"Risk assessment median {risk_metrics.median:.2f}ms > baseline {baselines['risk_assessment']['median_ms']:.2f}ms",
             )
 
-        if local_fast_metrics.median > baselines["local_fast"]["median_ms"] * 2 * baseline_scale:
+        if (
+            local_fast_metrics.median
+            > baselines["local_fast"]["median_ms"] * 2 * baseline_scale
+        ):
             regressions.append(
                 f"Local-fast median {local_fast_metrics.median:.2f}ms > baseline {baselines['local_fast']['median_ms']:.2f}ms",
             )
 
-        if risk_metrics.max > baselines["risk_assessment"]["max_ms"] * 3 * baseline_scale:
+        if (
+            risk_metrics.max
+            > baselines["risk_assessment"]["max_ms"] * 3 * baseline_scale
+        ):
             regressions.append(
                 f"Risk assessment max {risk_metrics.max:.2f}ms > baseline {baselines['risk_assessment']['max_ms']:.2f}ms",
             )
 
         if regressions:
             pytest.fail("Performance regressions detected:\n" + "\n".join(regressions))
-
 
 
 if __name__ == "__main__":

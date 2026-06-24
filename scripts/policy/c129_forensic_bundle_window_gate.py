@@ -61,7 +61,9 @@ def main() -> int:
             continue
         total += 1
         bundle_count = to_float(
-            row.get("bundle_count", row.get("forensic_bundle_count", row.get("count", 0.0))),
+            row.get(
+                "bundle_count", row.get("forensic_bundle_count", row.get("count", 0.0))
+            ),
             "bundle_count",
         )
         if bundle_count <= 0.0:

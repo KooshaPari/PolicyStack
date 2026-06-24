@@ -7,7 +7,10 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E130 C130 replay integrity regression rate gate failed: {message}", file=sys.stderr)
+    print(
+        f"E130 C130 replay integrity regression rate gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -65,9 +68,14 @@ def main() -> int:
             "integrity_rate",
         )
         explicit_regression = to_bool(
-            row.get("regression", row.get("integrity_regression", row.get("rate_regression", False)))
+            row.get(
+                "regression",
+                row.get("integrity_regression", row.get("rate_regression", False)),
+            )
         )
-        if explicit_regression or (baseline_rate - current_rate > args.allowed_regression_delta):
+        if explicit_regression or (
+            baseline_rate - current_rate > args.allowed_regression_delta
+        ):
             regressions += 1
 
     if total == 0:

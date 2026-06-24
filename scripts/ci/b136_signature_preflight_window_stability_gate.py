@@ -97,21 +97,31 @@ def main() -> int:
 
     for row in records:
         samples = parse_float(row.get(args.samples_key), args.samples_key)
-        success_rate = parse_float(row.get(args.success_rate_key), args.success_rate_key)
+        success_rate = parse_float(
+            row.get(args.success_rate_key), args.success_rate_key
+        )
         p95_latency_ms = parse_float(
             row.get(args.p95_latency_ms_key, 0),
             args.p95_latency_ms_key,
         )
-        drift_score = parse_float(row.get(args.drift_score_key, 0), args.drift_score_key)
+        drift_score = parse_float(
+            row.get(args.drift_score_key, 0), args.drift_score_key
+        )
 
         if samples < 0:
             fail(f"samples for {args.samples_key} must be >= 0; got {samples}")
         if success_rate < 0 or success_rate > 1:
-            fail(f"success_rate for {args.success_rate_key} must be within [0, 1]; got {success_rate}")
+            fail(
+                f"success_rate for {args.success_rate_key} must be within [0, 1]; got {success_rate}"
+            )
         if p95_latency_ms < 0:
-            fail(f"p95_latency_ms for {args.p95_latency_ms_key} must be >= 0; got {p95_latency_ms}")
+            fail(
+                f"p95_latency_ms for {args.p95_latency_ms_key} must be >= 0; got {p95_latency_ms}"
+            )
         if drift_score < 0:
-            fail(f"drift_score for {args.drift_score_key} must be >= 0; got {drift_score}")
+            fail(
+                f"drift_score for {args.drift_score_key} must be >= 0; got {drift_score}"
+            )
 
         total_samples += samples
         weighted_success_sum += success_rate * samples
@@ -126,7 +136,9 @@ def main() -> int:
         window_counts[window] = window_counts.get(window, 0) + 1
 
     if total_samples < args.min_total_samples:
-        fail(f"total_samples={total_samples} < min_total_samples={args.min_total_samples}")
+        fail(
+            f"total_samples={total_samples} < min_total_samples={args.min_total_samples}"
+        )
 
     average_success_rate = weighted_success_sum / total_samples
     if average_success_rate < args.min_average_success_rate:
@@ -136,7 +148,9 @@ def main() -> int:
         )
 
     if max_p95_latency > args.max_p95_latency_ms:
-        fail(f"max_p95_latency_ms={max_p95_latency} > max_p95_latency_ms={args.max_p95_latency_ms}")
+        fail(
+            f"max_p95_latency_ms={max_p95_latency} > max_p95_latency_ms={args.max_p95_latency_ms}"
+        )
 
     for window in sorted(window_samples):
         samples = window_samples[window]

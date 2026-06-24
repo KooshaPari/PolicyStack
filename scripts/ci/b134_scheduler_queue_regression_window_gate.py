@@ -116,7 +116,9 @@ def main() -> int:
         if samples < 0:
             fail(f"samples for {args.samples_key} must be >= 0; got {samples}")
         if regressions < 0:
-            fail(f"regressions for {args.regressions_key} must be >= 0; got {regressions}")
+            fail(
+                f"regressions for {args.regressions_key} must be >= 0; got {regressions}"
+            )
         if critical_regressions < 0:
             fail(
                 f"critical regressions for {args.critical_regressions_key} must be >= 0; got "
@@ -142,7 +144,9 @@ def main() -> int:
         window_regressions[window] = window_regressions.get(window, 0) + regressions
 
     if total_samples < args.min_total_samples:
-        fail(f"total_samples={total_samples} < min_total_samples={args.min_total_samples}")
+        fail(
+            f"total_samples={total_samples} < min_total_samples={args.min_total_samples}"
+        )
 
     total_regression_rate = total_regressions / total_samples
     if total_regression_rate > args.max_total_regression_rate:
@@ -179,4 +183,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

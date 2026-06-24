@@ -21,7 +21,10 @@ def _load_rows(path: pathlib.Path) -> tuple[list[dict], str | None]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows, None
-    return [], "E77 invalid input: expected list or dict with attestations/events/rows/items"
+    return (
+        [],
+        "E77 invalid input: expected list or dict with attestations/events/rows/items",
+    )
 
 
 def _pick(row: dict, keys: tuple[str, ...]) -> str:
@@ -48,7 +51,9 @@ def _is_inconsistent(row: dict) -> bool:
         return True
 
     replayed = _bool(row.get("replay") or row.get("is_replay") or row.get("replayed"))
-    if replayed and not _pick(row, ("replay_reference", "replay_reference_id", "replayed_from")):
+    if replayed and not _pick(
+        row, ("replay_reference", "replay_reference_id", "replayed_from")
+    ):
         return True
 
     return False
@@ -102,7 +107,10 @@ def main() -> int:
 
     if len(bad) > args.max_inconsistencies:
         offenders = sorted(bad)
-        print(f"E77 attestation replay consistency breach: {len(offenders)}", file=sys.stderr)
+        print(
+            f"E77 attestation replay consistency breach: {len(offenders)}",
+            file=sys.stderr,
+        )
         return 2
     return 0
 

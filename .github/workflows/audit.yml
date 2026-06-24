@@ -20,7 +20,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   analyze:
-    name: Analyze Rust
+    name: Analyze Python
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -34,7 +34,7 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v3
         with:
-          languages: rust
+          languages: python
 
       - name: Autobuild
         uses: github/codeql-action/autobuild@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v3
@@ -42,4 +42,4 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v3
         with:
-          category: "/language:rust"
+          category: "/language:python"

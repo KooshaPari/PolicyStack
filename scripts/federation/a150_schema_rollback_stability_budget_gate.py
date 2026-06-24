@@ -10,7 +10,9 @@ from typing import Any
 
 
 def fail(message: str) -> None:
-    print(f"E150 schema rollback stability budget gate failed: {message}", file=sys.stderr)
+    print(
+        f"E150 schema rollback stability budget gate failed: {message}", file=sys.stderr
+    )
     raise SystemExit(2)
 
 
@@ -26,8 +28,11 @@ def extract_rows(
 ) -> list[dict[str, Any]]:
     if isinstance(payload, list):
         return [row for row in payload if isinstance(row, dict)]
-    rows = payload.get("items") or payload.get("records") or payload.get("entries") or payload.get(
-        lane_key
+    rows = (
+        payload.get("items")
+        or payload.get("records")
+        or payload.get("entries")
+        or payload.get(lane_key)
     )
     if isinstance(rows, list):
         return [row for row in rows if isinstance(row, dict)]
@@ -54,8 +59,12 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--schema-rollback-stability-budget-report", required=True)
     parser.add_argument("--max-schema-rollback-seconds", type=float, default=300.0)
-    parser.add_argument("--min-schema-rollback-stability-rate", type=float, default=0.97)
-    parser.add_argument("--max-schema-rollback-stability-breach-count", type=int, default=0)
+    parser.add_argument(
+        "--min-schema-rollback-stability-rate", type=float, default=0.97
+    )
+    parser.add_argument(
+        "--max-schema-rollback-stability-breach-count", type=int, default=0
+    )
     args = parser.parse_args()
 
     payload = load_report(pathlib.Path(args.schema_rollback_stability_budget_report))

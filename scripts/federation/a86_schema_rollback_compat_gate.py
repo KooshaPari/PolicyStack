@@ -31,9 +31,10 @@ args = p.parse_args()
 c = load(args.compat)
 score = to_float(c.get("rollback_compat_score", c.get("compatibility_score", 0.0)))
 missing = to_int(c.get("missing_fields", c.get("missing_rollback_fields", 0)))
-compatible = bool(c.get("rollback_compatible", c.get("schema_rollback_compatible", True)))
+compatible = bool(
+    c.get("rollback_compatible", c.get("schema_rollback_compatible", True))
+)
 
 if not compatible or missing > args.max_missing_fields or score < args.min_compat_score:
     print("A86 schema rollback compat gate failed", file=sys.stderr)
     raise SystemExit(2)
-

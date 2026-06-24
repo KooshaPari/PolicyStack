@@ -26,7 +26,9 @@ def load_rows(path: pathlib.Path) -> list[dict]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows
-    fail("transitions payload must be list or dict with transitions|records|items|entries")
+    fail(
+        "transitions payload must be list or dict with transitions|records|items|entries"
+    )
 
 
 def parse_float(value: object, field: str) -> float:
@@ -49,7 +51,14 @@ def main() -> int:
     if not rows:
         fail("transitions payload must contain rows")
 
-    regression_statuses = {"regression", "degradation", "drop", "fail", "error", "rollback"}
+    regression_statuses = {
+        "regression",
+        "degradation",
+        "drop",
+        "fail",
+        "error",
+        "rollback",
+    }
 
     regressions = 0
     previous_score: float | None = None
@@ -69,7 +78,9 @@ def main() -> int:
         previous_score = score
 
     if regressions > args.max_regressions:
-        fail(f"regressions={regressions} exceeds max_regressions={args.max_regressions}")
+        fail(
+            f"regressions={regressions} exceeds max_regressions={args.max_regressions}"
+        )
 
     return 0
 

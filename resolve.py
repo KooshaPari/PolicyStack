@@ -77,7 +77,9 @@ class _ResolverArgumentParser(argparse.ArgumentParser):
         raise _ArgumentParseError(text, status=status)
 
 
-def load_yaml(path: Path, *, required: bool = False, scope: str | None = None) -> dict[str, Any]:
+def load_yaml(
+    path: Path, *, required: bool = False, scope: str | None = None
+) -> dict[str, Any]:
     if not path.exists():
         if required:
             scope_label = f" for scope '{scope}'" if scope else ""
@@ -93,7 +95,10 @@ def load_yaml(path: Path, *, required: bool = False, scope: str | None = None) -
 
 
 def validate_policy(
-    data: dict[str, Any], path: Path, *, expected_scope: str | None = None,
+    data: dict[str, Any],
+    path: Path,
+    *,
+    expected_scope: str | None = None,
 ) -> None:
     if "policy_version" not in data or not isinstance(data["policy_version"], str):
         msg = f"{path}: policy_version missing or invalid"
@@ -242,7 +247,9 @@ def _build_resolved_payload(
     }
 
 
-def _merge_dict(base: dict[str, Any], override: dict[str, Any], base_path: str = "") -> dict[str, Any]:
+def _merge_dict(
+    base: dict[str, Any], override: dict[str, Any], base_path: str = ""
+) -> dict[str, Any]:
     out = dict(base)
     for key, value in override.items():
         key_path = f"{base_path}.{key}" if base_path else key
@@ -271,14 +278,18 @@ def _merge_dict(base: dict[str, Any], override: dict[str, Any], base_path: str =
         out[key] = value
     if base_path == "":
         out["scope"] = override.get("scope", out.get("scope"))
-        out["policy_version"] = override.get("policy_version", out.get("policy_version"))
+        out["policy_version"] = override.get(
+            "policy_version", out.get("policy_version")
+        )
     return out
 
 
 def _load_host_rules_emitter():
     """Load the host-rule emitter without importing package-level path state."""
     script_path = Path(__file__).resolve().parent / "scripts" / "sync_host_rules.py"
-    spec = importlib.util.spec_from_file_location("policy_contract_host_sync", script_path)
+    spec = importlib.util.spec_from_file_location(
+        "policy_contract_host_sync", script_path
+    )
     if spec is None or spec.loader is None:
         msg = f"unable to load host sync script: {script_path}"
         raise RuntimeError(msg)
@@ -302,7 +313,9 @@ def _validate_host_artifacts(out_dir: Path, rendered: dict[str, Any]) -> None:
         msg = f"missing host artifacts: {', '.join(missing)}"
         raise FileNotFoundError(msg)
 
-    with (out_dir / "policy-wrapper-dispatch.manifest.json").open("r", encoding="utf-8") as fp:
+    with (out_dir / "policy-wrapper-dispatch.manifest.json").open(
+        "r", encoding="utf-8"
+    ) as fp:
         manifest = json.load(fp)
     if manifest.get("bundle_path") != str(out_dir / "policy-wrapper-rules.json"):
         msg = "dispatch manifest bundle_path does not match output directory"
@@ -360,7 +373,9 @@ def _validate_host_artifacts(out_dir: Path, rendered: dict[str, Any]) -> None:
         raise ValueError(msg)
 
 
-def resolve(policies: list[tuple[str, Path]], output: Path | None = None) -> dict[str, Any]:
+def resolve(
+    policies: list[tuple[str, Path]], output: Path | None = None
+) -> dict[str, Any]:
     chain = []
     merged: dict[str, Any] = {}
     required_scopes = set(REQUIRED_SCOPES)
@@ -369,7 +384,9 @@ def resolve(policies: list[tuple[str, Path]], output: Path | None = None) -> dic
         policy = load_yaml(path, required=scope in required_scopes, scope=scope)
         if not policy:
             if scope in required_scopes:
-                msg = f"{path}: required scope '{scope}' file is empty or missing payload"
+                msg = (
+                    f"{path}: required scope '{scope}' file is empty or missing payload"
+                )
                 raise ValueError(
                     msg,
                 )
@@ -381,10 +398,7 @@ def resolve(policies: list[tuple[str, Path]], output: Path | None = None) -> dic
             msg = f"duplicate scope in chain: {scope_name}"
             raise ValueError(msg)
         if scope_name != scope:
-            msg = (
-                f"{path}: scope mismatch in chain: expected "
-                f"{scope}, got {scope_name}"
-            )
+            msg = f"{path}: scope mismatch in chain: expected {scope}, got {scope_name}"
             raise ValueError(
                 msg,
             )
@@ -442,7 +456,9 @@ def _build_chain(args: argparse.Namespace) -> list[tuple[str, Path]]:
 
     chain.append(("repo", config_root / "repo.yaml"))
     chain.append(("harness", config_root / "harness" / f"{args.harness}.yaml"))
-    chain.append(("task_domain", config_root / "task-domain" / f"{args.task_domain}.yaml"))
+    chain.append(
+        ("task_domain", config_root / "task-domain" / f"{args.task_domain}.yaml")
+    )
 
     if args.task_instance:
         chain.append(("task_instance", Path(args.task_instance).expanduser().resolve()))
@@ -453,7 +469,9 @@ def _count_existing_scopes(chain: list[tuple[str, Path]]) -> int:
     return sum(1 for _, path in chain if path.exists())
 
 
-def _print_failure_json(code: str, message: str, details: dict[str, Any] | None = None) -> None:
+def _print_failure_json(
+    code: str, message: str, details: dict[str, Any] | None = None
+) -> None:
     payload: dict[str, Any] = {"code": code, "message": message}
     if details:
         payload["details"] = details
@@ -488,11 +506,15 @@ def _print_success_json(
 
 def _build_parser() -> _ResolverArgumentParser:
     parser = _ResolverArgumentParser(description="Resolve scoped agent policy files.")
-    parser.add_argument("--root", default=".", help="Repo root containing policy-contract.")
+    parser.add_argument(
+        "--root", default=".", help="Repo root containing policy-contract."
+    )
     parser.add_argument("--harness", required=True, help="harness identifier")
     parser.add_argument("--task-domain", required=True, help="task domain identifier")
     parser.add_argument("--task-instance", help="optional task-instance policy file")
-    parser.add_argument("--system", help="optional absolute or relative system policy path")
+    parser.add_argument(
+        "--system", help="optional absolute or relative system policy path"
+    )
     parser.add_argument("--user", help="optional absolute or relative user policy path")
     parser.add_argument(
         "--json",
@@ -543,7 +565,11 @@ def main(argv: list[str] | None = None) -> int:
             if args.emit
             else _build_resolved_payload(
                 payload,
-                [(scope_name, str(scope_path)) for scope_name, scope_path in chain if scope_path.exists()],
+                [
+                    (scope_name, str(scope_path))
+                    for scope_name, scope_path in chain
+                    if scope_path.exists()
+                ],
             )
         )
         if args.emit_host_rules:
@@ -585,7 +611,9 @@ def main(argv: list[str] | None = None) -> int:
                     else None
                 ),
                 "applied": applied,
-                "host_artifacts_written_to": str(host_out_dir) if host_out_dir else None,
+                "host_artifacts_written_to": str(host_out_dir)
+                if host_out_dir
+                else None,
             }
             if json_mode:
                 _print_success_json(

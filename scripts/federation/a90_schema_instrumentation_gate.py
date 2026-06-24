@@ -31,11 +31,16 @@ args = parser.parse_args()
 
 data = load(args.schema)
 missing = to_int(
-    data.get("missing_instrumented_fields", data.get("missing_fields", data.get("missing", 0)))
+    data.get(
+        "missing_instrumented_fields",
+        data.get("missing_fields", data.get("missing", 0)),
+    )
 )
 gaps = to_int(data.get("instrumentation_gaps", data.get("schema_gaps", 0)))
 rate = to_float(
-    data.get("instrumentation_rate", data.get("instrumented_rate", data.get("coverage", 1.0)))
+    data.get(
+        "instrumentation_rate", data.get("instrumented_rate", data.get("coverage", 1.0))
+    )
 )
 
 if (

@@ -126,7 +126,9 @@ def main() -> int:
             args.unstable_events_key,
         )
         budget_used = parse_float(row.get(args.budget_used_key), args.budget_used_key)
-        budget_total = parse_float(row.get(args.budget_total_key), args.budget_total_key)
+        budget_total = parse_float(
+            row.get(args.budget_total_key), args.budget_total_key
+        )
         budget_breached = parse_int(
             row.get(args.budget_breach_flag_key, 0),
             args.budget_breach_flag_key,
@@ -147,9 +149,13 @@ def main() -> int:
                 f"got {unstable_events}"
             )
         if budget_used < 0:
-            fail(f"budget_used for {args.budget_used_key} must be >= 0; got {budget_used}")
+            fail(
+                f"budget_used for {args.budget_used_key} must be >= 0; got {budget_used}"
+            )
         if budget_total <= 0:
-            fail(f"budget_total for {args.budget_total_key} must be > 0; got {budget_total}")
+            fail(
+                f"budget_total for {args.budget_total_key} must be > 0; got {budget_total}"
+            )
         if budget_used > budget_total:
             fail(f"budget_used={budget_used} cannot exceed budget_total={budget_total}")
         if budget_breached < 0:
@@ -168,20 +174,26 @@ def main() -> int:
 
         window = str(row.get(args.window_key, "default"))
         window_samples[window] = window_samples.get(window, 0.0) + samples
-        window_weighted_stability[window] = (
-            window_weighted_stability.get(window, 0.0) + (stability_score * samples)
-        )
+        window_weighted_stability[window] = window_weighted_stability.get(
+            window, 0.0
+        ) + (stability_score * samples)
         window_unstable_events[window] = (
             window_unstable_events.get(window, 0.0) + unstable_events
         )
         window_budget_used[window] = window_budget_used.get(window, 0.0) + budget_used
-        window_budget_total[window] = window_budget_total.get(window, 0.0) + budget_total
+        window_budget_total[window] = (
+            window_budget_total.get(window, 0.0) + budget_total
+        )
 
     if total_samples < args.min_total_samples:
-        fail(f"total_samples={total_samples} < min_total_samples={args.min_total_samples}")
+        fail(
+            f"total_samples={total_samples} < min_total_samples={args.min_total_samples}"
+        )
 
     if variance_total > args.max_total_variance:
-        fail(f"total_variance={variance_total} > max_total_variance={args.max_total_variance}")
+        fail(
+            f"total_variance={variance_total} > max_total_variance={args.max_total_variance}"
+        )
 
     if total_budget_total <= 0:
         fail(f"total_budget_total={total_budget_total} must be > 0")
@@ -234,8 +246,12 @@ def main() -> int:
 
         window_budget_total_value = window_budget_total[window]
         if window_budget_total_value <= 0:
-            fail(f"window={window} budget_total={window_budget_total_value} must be > 0")
-        window_budget_usage_ratio = window_budget_used[window] / window_budget_total_value
+            fail(
+                f"window={window} budget_total={window_budget_total_value} must be > 0"
+            )
+        window_budget_usage_ratio = (
+            window_budget_used[window] / window_budget_total_value
+        )
         if window_budget_usage_ratio > args.max_window_budget_usage_ratio:
             fail(
                 f"window={window} budget_usage_ratio={window_budget_usage_ratio} > "

@@ -30,7 +30,9 @@ def load_rows(path: pathlib.Path) -> list[dict]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows
-    fail("transitions payload must be list or object with transitions/records/items/entries")
+    fail(
+        "transitions payload must be list or object with transitions/records/items/entries"
+    )
 
 
 def main() -> int:

@@ -25,4 +25,3 @@ for row in rows:
 if breaches > a.max_breaches:
     print("B80 CAPA resolution velocity gate failed", file=sys.stderr)
     raise SystemExit(2)
-

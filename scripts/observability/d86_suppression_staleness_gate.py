@@ -83,17 +83,28 @@ def main() -> int:
         if (row.get("status") or "").strip().lower() not in {"active", "approved"}:
             continue
         max_staleness = max(
-            max_staleness, _to_float(row.get("staleness_score", ""), csv_path, "staleness_score")
+            max_staleness,
+            _to_float(row.get("staleness_score", ""), csv_path, "staleness_score"),
         )
-        if _to_int(row.get("days_since_review", ""), csv_path, "days_since_review") > args.max_stale_days:
+        if (
+            _to_int(row.get("days_since_review", ""), csv_path, "days_since_review")
+            > args.max_stale_days
+        ):
             stale_count += 1
-        if _to_float(row.get("staleness_score", ""), csv_path, "staleness_score") > args.max_staleness_score:
+        if (
+            _to_float(row.get("staleness_score", ""), csv_path, "staleness_score")
+            > args.max_staleness_score
+        ):
             stale_count += 1
 
     if max_staleness > args.max_staleness_score:
-        _fail(f"D86 suppression staleness gate failed: max_staleness_score={max_staleness}")
+        _fail(
+            f"D86 suppression staleness gate failed: max_staleness_score={max_staleness}"
+        )
     if stale_count > args.max_stale_suppressions:
-        _fail(f"D86 suppression staleness gate failed: stale_suppressions={stale_count}")
+        _fail(
+            f"D86 suppression staleness gate failed: stale_suppressions={stale_count}"
+        )
     return 0
 
 

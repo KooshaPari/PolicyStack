@@ -35,7 +35,8 @@ class RuntimeIntegrationsTest(unittest.TestCase):
                 encoding="utf-8",
             )
             (home / ".codex" / "config.json").write_text(
-                json.dumps({}), encoding="utf-8",
+                json.dumps({}),
+                encoding="utf-8",
             )
             (home / ".codex" / "config.toml").write_text(
                 f'model = "{DEFAULT_REVIEW_MODEL}"\n',
@@ -123,7 +124,10 @@ class RuntimeIntegrationsTest(unittest.TestCase):
                 assert "infer_repo_name_from_pwd" in launcher
                 assert f'command -v "{launcher_name}"' in launcher
                 assert 'export POLICY_ASK_MODE="${POLICY_ASK_MODE:-review}"' in launcher
-                assert 'export POLICY_AUDIT_LOG_PATH="${POLICY_AUDIT_LOG_PATH:-$HOME/.policy-federation/audit.jsonl}"' in launcher
+                assert (
+                    'export POLICY_AUDIT_LOG_PATH="${POLICY_AUDIT_LOG_PATH:-$HOME/.policy-federation/audit.jsonl}"'
+                    in launcher
+                )
 
             for manifest_name in (
                 "codex_runtime_manifest.json",
@@ -161,8 +165,12 @@ class RuntimeIntegrationsTest(unittest.TestCase):
             assert "policyRuntime" not in claude_payload
             assert "policy-federation runtime start" not in codex_toml
             assert not (home / ".claude" / "bin" / "claude_pretool_guard.sh").exists()
-            assert not (home / ".local" / "bin" / "codex.policy-federation.real").exists()
-            assert (home / ".local" / "bin" / "cursor").read_text(encoding="utf-8") == "#!/bin/sh\nexit 0\n"
+            assert not (
+                home / ".local" / "bin" / "codex.policy-federation.real"
+            ).exists()
+            assert (home / ".local" / "bin" / "cursor").read_text(
+                encoding="utf-8"
+            ) == "#!/bin/sh\nexit 0\n"
 
     def test_install_runtime_integrations_merges_claude_hook_entry(self) -> None:
         existing_pretool_command = '"$HOME/.claude/bin/hook-dispatcher" pretool'
@@ -212,7 +220,9 @@ class RuntimeIntegrationsTest(unittest.TestCase):
             bash_entries = [
                 entry for entry in pre_tool_use if entry.get("matcher") == matcher
             ]
-            assert len(bash_entries) == 1, f"expected managed matcher entry for {matcher}"
+            assert len(bash_entries) == 1, (
+                f"expected managed matcher entry for {matcher}"
+            )
             bash_entry = bash_entries[0]
             hook_commands = {
                 hook["command"] for hook in bash_entry["hooks"] if "command" in hook
@@ -230,14 +240,18 @@ class RuntimeIntegrationsTest(unittest.TestCase):
             bash_entries = [
                 entry for entry in pre_tool_use if entry.get("matcher") == matcher
             ]
-            assert len(bash_entries) == 1, f"expected matcher entry for {matcher} to remain"
+            assert len(bash_entries) == 1, (
+                f"expected matcher entry for {matcher} to remain"
+            )
             bash_entry = bash_entries[0]
             remaining_commands = [
                 hook.get("command")
                 for hook in bash_entry.get("hooks", [])
                 if hook.get("command") is not None
             ]
-            assert '"$HOME/.claude/bin/claude_pretool_guard.sh"' not in remaining_commands
+            assert (
+                '"$HOME/.claude/bin/claude_pretool_guard.sh"' not in remaining_commands
+            )
             assert '"$HOME/.claude/bin/hook-dispatcher" pretool' in remaining_commands
 
 

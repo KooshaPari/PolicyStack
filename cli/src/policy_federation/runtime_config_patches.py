@@ -95,7 +95,9 @@ def _remove_values(items: list[str], remove_items: list[str]) -> list[str]:
 
 
 def patch_cursor_config(
-    cursor_config_path: Path, wrapper_root: Path, manifest_path: Path,
+    cursor_config_path: Path,
+    wrapper_root: Path,
+    manifest_path: Path,
 ) -> None:
     payload = _load_json(
         cursor_config_path,
@@ -169,7 +171,9 @@ def patch_codex_config_json(
 
 
 def patch_codex_toml(
-    codex_toml_path: Path, wrapper_root: Path, manifest_path: Path,
+    codex_toml_path: Path,
+    wrapper_root: Path,
+    manifest_path: Path,
 ) -> None:
     codex_toml_path.parent.mkdir(parents=True, exist_ok=True)
     current = (

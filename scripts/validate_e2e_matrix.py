@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Run a compact end-to-end matrix across harness/runtime check surfaces."""
+
 from __future__ import annotations
 
 import json
@@ -170,7 +171,9 @@ def main() -> int:
 
     json_path = ARTIFACT_DIR / "e2e_matrix.json"
     md_path = ARTIFACT_DIR / "e2e_matrix.md"
-    json_path.write_text(json.dumps(result_payload, indent=2, sort_keys=True), encoding="utf-8")
+    json_path.write_text(
+        json.dumps(result_payload, indent=2, sort_keys=True), encoding="utf-8"
+    )
 
     md_rows = []
     for row in matrix_rows:

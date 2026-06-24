@@ -37,7 +37,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("recert payload must be a JSON object or non-empty list of objects")
 
@@ -53,11 +57,17 @@ def main() -> int:
 
     records = load_records(pathlib.Path(args.recert))
     for index, record in enumerate(records):
-        burst_count = to_int(record.get(args.burst_count_field), args.burst_count_field, index)
+        burst_count = to_int(
+            record.get(args.burst_count_field), args.burst_count_field, index
+        )
         if burst_count > args.max_burst_count:
-            fail(f"{args.burst_count_field}={burst_count} > {args.max_burst_count} at index {index}")
+            fail(
+                f"{args.burst_count_field}={burst_count} > {args.max_burst_count} at index {index}"
+            )
 
-        open_exceptions = to_int(record.get(args.open_exception_field), args.open_exception_field, index)
+        open_exceptions = to_int(
+            record.get(args.open_exception_field), args.open_exception_field, index
+        )
         if open_exceptions > args.max_open_exceptions:
             fail(
                 f"{args.open_exception_field}={open_exceptions} > "

@@ -33,7 +33,9 @@ def main() -> int:
     if len(rows) < 2:
         fail("not enough revocation windows")
 
-    latencies = [to_float(r.get(args.latency_field, "0"), args.latency_field) for r in rows]
+    latencies = [
+        to_float(r.get(args.latency_field, "0"), args.latency_field) for r in rows
+    ]
     regressions = 0
     max_drop = 0.0
     for prev, curr in zip(latencies, latencies[1:]):

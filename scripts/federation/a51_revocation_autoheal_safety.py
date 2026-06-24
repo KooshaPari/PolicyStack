@@ -4,6 +4,7 @@ import json
 import pathlib
 import time
 
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--max-attempts", type=int, default=3)
@@ -21,6 +22,7 @@ def main() -> int:
     pth.parent.mkdir(parents=True, exist_ok=True)
     pth.write_text(json.dumps(out, indent=2) + "\n")
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

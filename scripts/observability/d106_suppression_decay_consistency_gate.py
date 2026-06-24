@@ -68,8 +68,11 @@ def main() -> int:
     if not rows:
         fail("D106 suppression decay consistency gate failed: empty suppression data")
 
-    ordered = sorted(rows, key=lambda row: (row.get(args.time_field) or ""))
-    values = [_to_float(row.get(args.value_field, ""), csv_path, args.value_field) for row in ordered]
+    ordered = sorted(rows, key=lambda row: row.get(args.time_field) or "")
+    values = [
+        _to_float(row.get(args.value_field, ""), csv_path, args.value_field)
+        for row in ordered
+    ]
     if len(values) < 3:
         fail("D106 suppression decay consistency gate failed: insufficient samples")
 
@@ -80,7 +83,9 @@ def main() -> int:
     plateau_count = max(plateau_count, reported_plateau)
 
     if plateau_count > args.max_plateau_count:
-        fail(f"D106 plateau_count={plateau_count} > max_plateau_count={args.max_plateau_count}")
+        fail(
+            f"D106 plateau_count={plateau_count} > max_plateau_count={args.max_plateau_count}"
+        )
 
     if args.plateau_window > 1:
         stale_windows = 0
@@ -90,7 +95,9 @@ def main() -> int:
             if spread <= args.min_decay_rate:
                 stale_windows += 1
         if stale_windows > args.max_plateau_count:
-            fail(f"D106 stale_windows={stale_windows} > max_plateau_count={args.max_plateau_count}")
+            fail(
+                f"D106 stale_windows={stale_windows} > max_plateau_count={args.max_plateau_count}"
+            )
 
     return 0
 

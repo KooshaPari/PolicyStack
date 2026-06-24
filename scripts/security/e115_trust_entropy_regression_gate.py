@@ -29,7 +29,9 @@ def load_rows(path: pathlib.Path) -> list[dict]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows
-    fail("attestations payload must be list or object with attestations/records/items/entries")
+    fail(
+        "attestations payload must be list or object with attestations/records/items/entries"
+    )
 
 
 def main() -> int:
@@ -45,7 +47,9 @@ def main() -> int:
     if not rows:
         fail("attestations payload must contain rows")
 
-    entropies = [parse_float(row.get(args.entropy_col), args.entropy_col) for row in rows]
+    entropies = [
+        parse_float(row.get(args.entropy_col), args.entropy_col) for row in rows
+    ]
     avg_entropy = sum(entropies) / len(entropies)
     spike_count = sum(1 for entropy in entropies if entropy > args.spike_threshold)
 

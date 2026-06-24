@@ -108,7 +108,10 @@ def main() -> int:
         regression = to_bool(
             row.get(
                 "regression",
-                row.get("replay_integrity_regression", row.get("integrity_regression", False)),
+                row.get(
+                    "replay_integrity_regression",
+                    row.get("integrity_regression", False),
+                ),
             )
         ) or (baseline - current > args.allowed_regression_delta)
         budget_breach = to_bool(
@@ -120,7 +123,11 @@ def main() -> int:
                 ),
             )
         )
-        if regression or budget_breach or (actual - budget > args.allowed_budget_overrun):
+        if (
+            regression
+            or budget_breach
+            or (actual - budget > args.allowed_budget_overrun)
+        ):
             breaches += 1
 
     if total == 0:
@@ -128,7 +135,9 @@ def main() -> int:
     breach_rate = breaches / total
     if args.max_breaches and breaches > args.max_breaches:
         fail(f"breaches={breaches}")
-    if args.max_breach_rate and breach_rate > to_float(args.max_breach_rate, "max_breach_rate"):
+    if args.max_breach_rate and breach_rate > to_float(
+        args.max_breach_rate, "max_breach_rate"
+    ):
         fail(f"breach_rate={breach_rate:.6f}")
     return 0
 

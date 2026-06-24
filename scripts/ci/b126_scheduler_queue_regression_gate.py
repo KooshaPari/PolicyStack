@@ -86,7 +86,9 @@ def main() -> int:
     parser.add_argument("--regression-threshold", type=float, default=0.0)
     parser.add_argument("--max-regression-count", type=int, default=0)
     parser.add_argument("--max-average-regression-score", type=float, default=0.0)
-    parser.add_argument("--max-window-average-regression-score", type=float, default=0.0)
+    parser.add_argument(
+        "--max-window-average-regression-score", type=float, default=0.0
+    )
     parser.add_argument("--max-queue-depth", type=float, default=0.0)
     parser.add_argument("--max-regressed-count", type=int, default=0)
     args = parser.parse_args()
@@ -102,9 +104,15 @@ def main() -> int:
     window_counts: dict[str, int] = {}
 
     for row in records:
-        regression_score = parse_float(row.get(args.regression_score_key), args.regression_score_key)
-        queue_depth = parse_float(row.get(args.queue_depth_key, 0), args.queue_depth_key)
-        regressed = parse_int(row.get(args.regressed_flag_key, 0), args.regressed_flag_key)
+        regression_score = parse_float(
+            row.get(args.regression_score_key), args.regression_score_key
+        )
+        queue_depth = parse_float(
+            row.get(args.queue_depth_key, 0), args.queue_depth_key
+        )
+        regressed = parse_int(
+            row.get(args.regressed_flag_key, 0), args.regressed_flag_key
+        )
 
         regression_total += regression_score
         max_queue_depth = max(max_queue_depth, queue_depth)
@@ -124,13 +132,19 @@ def main() -> int:
         )
 
     if regression_count > args.max_regression_count:
-        fail(f"regression_count={regression_count} > max_regression_count={args.max_regression_count}")
+        fail(
+            f"regression_count={regression_count} > max_regression_count={args.max_regression_count}"
+        )
 
     if regressed_count > args.max_regressed_count:
-        fail(f"regressed_count={regressed_count} > max_regressed_count={args.max_regressed_count}")
+        fail(
+            f"regressed_count={regressed_count} > max_regressed_count={args.max_regressed_count}"
+        )
 
     if max_queue_depth > args.max_queue_depth:
-        fail(f"max_queue_depth={max_queue_depth} > max_queue_depth={args.max_queue_depth}")
+        fail(
+            f"max_queue_depth={max_queue_depth} > max_queue_depth={args.max_queue_depth}"
+        )
 
     for window, count in sorted(window_counts.items()):
         average = window_totals[window] / count

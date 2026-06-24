@@ -111,7 +111,9 @@ def main() -> int:
 
     for row in records:
         samples = parse_float(row.get(args.samples_key), args.samples_key)
-        queue_regressions = parse_int(row.get(args.queue_regressions_key, 0), args.queue_regressions_key)
+        queue_regressions = parse_int(
+            row.get(args.queue_regressions_key, 0), args.queue_regressions_key
+        )
         queue_budget_used = parse_float(
             row.get(args.queue_budget_used_key),
             args.queue_budget_used_key,
@@ -132,7 +134,9 @@ def main() -> int:
         if samples < 0:
             fail(f"samples for {args.samples_key} must be >= 0; got {samples}")
         if queue_regressions < 0:
-            fail(f"queue_regressions for {args.queue_regressions_key} must be >= 0; got {queue_regressions}")
+            fail(
+                f"queue_regressions for {args.queue_regressions_key} must be >= 0; got {queue_regressions}"
+            )
         if queue_regressions > samples:
             fail(
                 f"queue_regressions={queue_regressions} cannot exceed samples={samples}"
@@ -172,7 +176,9 @@ def main() -> int:
 
         window = str(row.get(args.window_key, "default"))
         window_samples[window] = window_samples.get(window, 0.0) + samples
-        window_regressions[window] = window_regressions.get(window, 0) + queue_regressions
+        window_regressions[window] = (
+            window_regressions.get(window, 0) + queue_regressions
+        )
         window_queue_budget_used[window] = (
             window_queue_budget_used.get(window, 0.0) + queue_budget_used
         )
@@ -181,7 +187,9 @@ def main() -> int:
         )
 
     if total_samples < args.min_total_samples:
-        fail(f"total_samples={total_samples} < min_total_samples={args.min_total_samples}")
+        fail(
+            f"total_samples={total_samples} < min_total_samples={args.min_total_samples}"
+        )
 
     if total_queue_budget_total <= 0:
         fail(f"total_queue_budget_total={total_queue_budget_total} must be > 0")

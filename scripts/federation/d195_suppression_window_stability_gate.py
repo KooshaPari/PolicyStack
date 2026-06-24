@@ -7,7 +7,10 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E195 suppression entropy window budget gate failed: {message}", file=sys.stderr)
+    print(
+        f"E195 suppression entropy window budget gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -33,7 +36,9 @@ def _read_json(path: pathlib.Path, label: str) -> list[dict]:
     return _to_records(payload, path, label)
 
 
-def _read_csv(path: pathlib.Path, required: set[str], label: str) -> list[dict[str, str]]:
+def _read_csv(
+    path: pathlib.Path, required: set[str], label: str
+) -> list[dict[str, str]]:
     try:
         with path.open(newline="") as handle:
             reader = csv.DictReader(handle)
@@ -74,7 +79,10 @@ def _window_pairs(values: list[float], window_size: int) -> list[list[float]]:
         return []
     if window_size <= 0 or window_size > len(values):
         return [values]
-    return [values[start : start + window_size] for start in range(0, len(values) - window_size + 1)]
+    return [
+        values[start : start + window_size]
+        for start in range(0, len(values) - window_size + 1)
+    ]
 
 
 def main() -> int:
@@ -109,7 +117,9 @@ def main() -> int:
     ordered = sorted(rows, key=lambda row: str(row.get(args.time_field, "")))
     gaps: list[float] = []
     for row in ordered:
-        entropy = _to_float(row[args.entropy_field], suppression_path, args.entropy_field)
+        entropy = _to_float(
+            row[args.entropy_field], suppression_path, args.entropy_field
+        )
         budget = _to_float(row[args.budget_field], suppression_path, args.budget_field)
         gaps.append(max(0.0, entropy - budget))
 
@@ -137,7 +147,9 @@ def main() -> int:
     report_window_over_budget_count = int(
         round(
             _to_float(
-                report.get("suppression_entropy_window_budget_over_budget_count_max", 0),
+                report.get(
+                    "suppression_entropy_window_budget_over_budget_count_max", 0
+                ),
                 report_path,
                 "suppression_entropy_window_budget_over_budget_count_max",
             )

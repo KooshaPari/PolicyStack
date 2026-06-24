@@ -28,11 +28,13 @@ def main() -> int:
     if not rows:
         fail("checks-csv empty")
 
-    failures = sum(parse_int(r.get(args.failures_col, 0), args.failures_col) for r in rows)
+    failures = sum(
+        parse_int(r.get(args.failures_col, 0), args.failures_col) for r in rows
+    )
     if failures > args.max_failures:
         fail(f"total_failures={failures}")
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     raise SystemExit(main())

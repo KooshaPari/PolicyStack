@@ -7,7 +7,9 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E239 C239 playbook guardrail budget gate failed: {message}", file=sys.stderr)
+    print(
+        f"E239 C239 playbook guardrail budget gate failed: {message}", file=sys.stderr
+    )
     raise SystemExit(2)
 
 
@@ -87,9 +89,8 @@ def main() -> int:
     breach_rate = breaches / total
     if args.max_budget_breaches and breaches > args.max_budget_breaches:
         fail(f"budget_breaches={breaches}")
-    if (
-        args.max_budget_breach_rate
-        and breach_rate > to_float(args.max_budget_breach_rate, "max_budget_breach_rate")
+    if args.max_budget_breach_rate and breach_rate > to_float(
+        args.max_budget_breach_rate, "max_budget_breach_rate"
     ):
         fail(f"budget_breach_rate={breach_rate:.6f}")
     return 0

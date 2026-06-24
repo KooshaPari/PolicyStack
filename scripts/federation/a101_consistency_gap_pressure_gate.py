@@ -54,9 +54,17 @@ def main() -> int:
         ratio_sum += to_float(row.get("gap_ratio", "0.0"), "gap_ratio")
 
     avg_gap_ratio = ratio_sum / len(rows)
-    pressure = float(report.get("consistency_pressure", 0.0)) if isinstance(report, dict) else 0.0
+    pressure = (
+        float(report.get("consistency_pressure", 0.0))
+        if isinstance(report, dict)
+        else 0.0
+    )
 
-    if open_gaps > args.max_open_gaps or pressure > args.max_pressure or avg_gap_ratio > args.max_avg_gap_ratio:
+    if (
+        open_gaps > args.max_open_gaps
+        or pressure > args.max_pressure
+        or avg_gap_ratio > args.max_avg_gap_ratio
+    ):
         fail(f"open_gaps={open_gaps} pressure={pressure} avg_gap_ratio={avg_gap_ratio}")
     return 0
 

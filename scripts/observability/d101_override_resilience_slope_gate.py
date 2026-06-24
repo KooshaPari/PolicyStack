@@ -26,7 +26,9 @@ def main() -> int:
     parser.add_argument("--max-consecutive-drops", type=int, default=0)
     args = parser.parse_args()
 
-    rows = list(csv.DictReader(pathlib.Path(args.resilience_csv).read_text().splitlines()))
+    rows = list(
+        csv.DictReader(pathlib.Path(args.resilience_csv).read_text().splitlines())
+    )
     ordered = sorted(rows, key=lambda r: str(r.get(args.time_field, "")))
     values = [to_float(r.get(args.value_field), args.value_field) for r in ordered]
     if len(values) < 2:
@@ -45,10 +47,13 @@ def main() -> int:
         else:
             consecutive = 0
 
-    if max_slope > args.max_downward_slope or max_consecutive > args.max_consecutive_drops:
+    if (
+        max_slope > args.max_downward_slope
+        or max_consecutive > args.max_consecutive_drops
+    ):
         fail(f"max_slope={max_slope} max_consecutive_drops={max_consecutive}")
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     raise SystemExit(main())

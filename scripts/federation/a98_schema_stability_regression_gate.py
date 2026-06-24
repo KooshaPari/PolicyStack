@@ -77,7 +77,10 @@ elif isinstance(data, list):
             scores.append(_to_float(row.get("score"), "score"))
     stability_score = min(scores) if scores else 1.0
 else:
-    print("A98 schema stability payload must be a JSON object or CSV rows", file=sys.stderr)
+    print(
+        "A98 schema stability payload must be a JSON object or CSV rows",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 if (

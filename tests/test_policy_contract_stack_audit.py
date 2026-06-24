@@ -11,7 +11,8 @@ SCRIPT_PATH = REPO_ROOT / "scripts" / "lane4_policy_contract_pr_stack_audit.py"
 
 def _load_audit_module():
     spec = importlib.util.spec_from_file_location(
-        "lane4_policy_contract_pr_stack_audit", SCRIPT_PATH,
+        "lane4_policy_contract_pr_stack_audit",
+        SCRIPT_PATH,
     )
     module = importlib.util.module_from_spec(spec)
     assert spec

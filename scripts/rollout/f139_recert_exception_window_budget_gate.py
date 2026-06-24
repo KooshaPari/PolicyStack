@@ -7,7 +7,9 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E139 recert exception window budget gate failed: {message}", file=sys.stderr)
+    print(
+        f"E139 recert exception window budget gate failed: {message}", file=sys.stderr
+    )
     raise SystemExit(2)
 
 
@@ -44,7 +46,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("recert payload must be a JSON object or non-empty list of objects")
 
@@ -52,10 +58,13 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--recert", required=True)
-    parser.add_argument("--exception-window-budget-spent-field", default="exception_window_budget_spent")
+    parser.add_argument(
+        "--exception-window-budget-spent-field", default="exception_window_budget_spent"
+    )
     parser.add_argument("--max-exception-window-budget-spent", type=float, default=1.0)
     parser.add_argument(
-        "--over-exception-window-budget-count-field", default="over_exception_window_budget_count"
+        "--over-exception-window-budget-count-field",
+        default="over_exception_window_budget_count",
     )
     parser.add_argument("--max-over-exception-window-budget-count", type=int, default=0)
     args = parser.parse_args()
@@ -78,7 +87,10 @@ def main() -> int:
             args.over_exception_window_budget_count_field,
             index,
         )
-        if over_exception_window_budget_count > args.max_over_exception_window_budget_count:
+        if (
+            over_exception_window_budget_count
+            > args.max_over_exception_window_budget_count
+        ):
             fail(
                 f"{args.over_exception_window_budget_count_field}={over_exception_window_budget_count} > "
                 f"{args.max_over_exception_window_budget_count} at index {index}"

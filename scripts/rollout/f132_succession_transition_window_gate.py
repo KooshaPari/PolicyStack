@@ -37,7 +37,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("succession payload must be a JSON object or non-empty list of objects")
 
@@ -45,16 +49,23 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--succession", required=True)
-    parser.add_argument("--transition-window-days-field", default="transition_window_days")
+    parser.add_argument(
+        "--transition-window-days-field", default="transition_window_days"
+    )
     parser.add_argument("--max-transition-window-days", type=int, default=30)
-    parser.add_argument("--transition-window-breach-count-field", default="transition_window_breach_count")
+    parser.add_argument(
+        "--transition-window-breach-count-field",
+        default="transition_window_breach_count",
+    )
     parser.add_argument("--max-transition-window-breach-count", type=int, default=0)
     args = parser.parse_args()
 
     records = load_records(pathlib.Path(args.succession))
     for index, record in enumerate(records):
         transition_window_days = to_int(
-            record.get(args.transition_window_days_field), args.transition_window_days_field, index
+            record.get(args.transition_window_days_field),
+            args.transition_window_days_field,
+            index,
         )
         if transition_window_days > args.max_transition_window_days:
             fail(

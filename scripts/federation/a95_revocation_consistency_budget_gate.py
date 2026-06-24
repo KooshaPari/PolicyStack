@@ -28,6 +28,7 @@ def _to_float(value: object, label: str) -> float:
         print(f"A95 invalid float for {label}: {value!r}", file=sys.stderr)
         raise SystemExit(2)
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--revocations", required=True)
 parser.add_argument("--max-consistency-gaps", type=int, default=0)
@@ -38,11 +39,17 @@ args = parser.parse_args()
 data = _load(pathlib.Path(args.revocations))
 
 if not isinstance(data, dict):
-    print("A95 revocation consistency budget gate requires dict payload", file=sys.stderr)
+    print(
+        "A95 revocation consistency budget gate requires dict payload", file=sys.stderr
+    )
     raise SystemExit(2)
 
-consistency_gaps = _to_int(data.get("consistency_gaps", data.get("gaps", 0)), "consistency_gaps")
-replay_failures = _to_int(data.get("replay_failures", data.get("failures", 0)), "replay_failures")
+consistency_gaps = _to_int(
+    data.get("consistency_gaps", data.get("gaps", 0)), "consistency_gaps"
+)
+replay_failures = _to_int(
+    data.get("replay_failures", data.get("failures", 0)), "replay_failures"
+)
 budget_variance = _to_float(
     data.get("budget_variance", data.get("variance", 0.0)),
     "budget_variance",

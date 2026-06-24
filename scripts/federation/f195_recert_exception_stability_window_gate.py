@@ -44,7 +44,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("recert payload must be a JSON object or non-empty list of objects")
 
@@ -52,9 +56,13 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--recert", required=True)
-    parser.add_argument("--exception-budget-spent-field", default="exception_budget_spent")
+    parser.add_argument(
+        "--exception-budget-spent-field", default="exception_budget_spent"
+    )
     parser.add_argument("--max-exception-budget-spent", type=float, default=1.0)
-    parser.add_argument("--over-exception-budget-count-field", default="over_exception_budget_count")
+    parser.add_argument(
+        "--over-exception-budget-count-field", default="over_exception_budget_count"
+    )
     parser.add_argument("--max-over-exception-budget-count", type=int, default=0)
     args = parser.parse_args()
 

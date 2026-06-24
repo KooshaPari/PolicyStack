@@ -5,10 +5,12 @@ import json
 import pathlib
 import sys
 
+
 def sha256_file(path: pathlib.Path) -> str:
     h = hashlib.sha256()
     h.update(path.read_bytes())
     return h.hexdigest()
+
 
 def main() -> int:
     p = argparse.ArgumentParser()
@@ -34,6 +36,7 @@ def main() -> int:
         print("A49 drift detected", file=sys.stderr)
         return 2
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

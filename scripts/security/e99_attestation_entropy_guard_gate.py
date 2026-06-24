@@ -33,11 +33,15 @@ def main() -> int:
     if not isinstance(rows, list):
         fail("attestations payload must be list or object with items")
 
-    low = sum(1 for r in rows if to_float(r.get(args.entropy_key), args.entropy_key) < args.min_entropy)
+    low = sum(
+        1
+        for r in rows
+        if to_float(r.get(args.entropy_key), args.entropy_key) < args.min_entropy
+    )
     if low:
         fail(f"low_entropy_count={low}")
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     raise SystemExit(main())

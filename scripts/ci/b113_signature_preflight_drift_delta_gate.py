@@ -6,7 +6,9 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"B113 signature preflight drift delta gate failed: {message}", file=sys.stderr)
+    print(
+        f"B113 signature preflight drift delta gate failed: {message}", file=sys.stderr
+    )
     raise SystemExit(2)
 
 

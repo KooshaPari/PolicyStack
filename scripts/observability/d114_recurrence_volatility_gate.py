@@ -67,8 +67,11 @@ def main() -> int:
     if not rows:
         fail("D114 recurrence volatility gate failed: empty recurrence data")
 
-    ordered = sorted(rows, key=lambda row: (row.get(args.time_field) or ""))
-    values = [_to_float(row.get(args.value_field, ""), csv_path, args.value_field) for row in ordered]
+    ordered = sorted(rows, key=lambda row: row.get(args.time_field) or "")
+    values = [
+        _to_float(row.get(args.value_field, ""), csv_path, args.value_field)
+        for row in ordered
+    ]
     if len(values) < 2:
         fail("D114 recurrence volatility gate failed: insufficient recurrence points")
 
@@ -84,9 +87,13 @@ def main() -> int:
         mean_recurrence = report_margin
 
     if max_volatility > args.max_volatility:
-        fail(f"D114 max_volatility={max_volatility} > max_volatility={args.max_volatility}")
+        fail(
+            f"D114 max_volatility={max_volatility} > max_volatility={args.max_volatility}"
+        )
     if mean_recurrence < args.min_mean_margin:
-        fail(f"D114 mean_recurrence={mean_recurrence} < min_mean_margin={args.min_mean_margin}")
+        fail(
+            f"D114 mean_recurrence={mean_recurrence} < min_mean_margin={args.min_mean_margin}"
+        )
 
     return 0
 

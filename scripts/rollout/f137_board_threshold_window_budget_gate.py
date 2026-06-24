@@ -44,7 +44,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("board payload must be a JSON object or non-empty list of objects")
 
@@ -52,10 +56,13 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--board", required=True)
-    parser.add_argument("--threshold-window-budget-spent-field", default="threshold_window_budget_spent")
+    parser.add_argument(
+        "--threshold-window-budget-spent-field", default="threshold_window_budget_spent"
+    )
     parser.add_argument("--max-threshold-window-budget-spent", type=float, default=1.0)
     parser.add_argument(
-        "--over-threshold-window-budget-count-field", default="over_threshold_window_budget_count"
+        "--over-threshold-window-budget-count-field",
+        default="over_threshold_window_budget_count",
     )
     parser.add_argument("--max-over-threshold-window-budget-count", type=int, default=0)
     args = parser.parse_args()
@@ -78,7 +85,10 @@ def main() -> int:
             args.over_threshold_window_budget_count_field,
             index,
         )
-        if over_threshold_window_budget_count > args.max_over_threshold_window_budget_count:
+        if (
+            over_threshold_window_budget_count
+            > args.max_over_threshold_window_budget_count
+        ):
             fail(
                 f"{args.over_threshold_window_budget_count_field}="
                 f"{over_threshold_window_budget_count} > "

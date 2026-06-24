@@ -53,7 +53,9 @@ def main() -> int:
     if args.window_size <= 0:
         fail(f"window-size must be positive: {args.window_size}")
     if args.max_total_gap_per_window < 0:
-        fail(f"max-total-gap-per-window must be non-negative: {args.max_total_gap_per_window}")
+        fail(
+            f"max-total-gap-per-window must be non-negative: {args.max_total_gap_per_window}"
+        )
     if args.max_average_gap_per_window < 0:
         fail(
             "max-average-gap-per-window must be non-negative: "
@@ -62,7 +64,9 @@ def main() -> int:
     if args.max_gap_per_window < 0:
         fail(f"max-gap-per-window must be non-negative: {args.max_gap_per_window}")
     if args.max_window_violations < 0:
-        fail(f"max-window-violations must be non-negative: {args.max_window_violations}")
+        fail(
+            f"max-window-violations must be non-negative: {args.max_window_violations}"
+        )
 
     rows = load_rows(pathlib.Path(args.records))
     if not rows:

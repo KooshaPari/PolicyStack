@@ -247,7 +247,10 @@ class AuthorizationDecisionTest(unittest.TestCase):
             cwd="/Users/kooshapari/CodeProjects/Phenotype/repos/thegent-wtrees/demo",
         )
         assert result["decision"] == "allow"
-        assert result["winning_rule"]["id"] in {"thegent-allow-git-write-in-worktrees", "phenotype-allow-worktree-git-ops"}
+        assert result["winning_rule"]["id"] in {
+            "thegent-allow-git-write-in-worktrees",
+            "phenotype-allow-worktree-git-ops",
+        }
 
     def test_git_commit_is_denied_outside_thegent_worktree(self) -> None:
         resolved = resolve(
@@ -263,7 +266,9 @@ class AuthorizationDecisionTest(unittest.TestCase):
             cwd="/tmp",
         )
         assert result["decision"] == "deny"
-        assert result["winning_rule"]["id"] == "thegent-deny-git-write-outside-worktrees"
+        assert (
+            result["winning_rule"]["id"] == "thegent-deny-git-write-outside-worktrees"
+        )
 
     def test_no_verify_bypass_is_denied_even_inside_worktree(self) -> None:
         resolved = resolve(

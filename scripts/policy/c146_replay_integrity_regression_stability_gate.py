@@ -82,10 +82,19 @@ def main() -> int:
             "replay_integrity_stability",
         )
         stable = to_bool(
-            row.get("stable", row.get("replay_integrity_stable", row.get("integrity_stable", True)))
+            row.get(
+                "stable",
+                row.get("replay_integrity_stable", row.get("integrity_stable", True)),
+            )
         )
         regression = to_bool(
-            row.get("regression", row.get("replay_integrity_regression", row.get("integrity_regression", False)))
+            row.get(
+                "regression",
+                row.get(
+                    "replay_integrity_regression",
+                    row.get("integrity_regression", False),
+                ),
+            )
         ) or (baseline - current > args.allowed_regression_delta)
         if regression or (not stable) or stability < args.min_stability:
             breaches += 1
@@ -95,7 +104,9 @@ def main() -> int:
     breach_rate = breaches / total
     if args.max_breaches and breaches > args.max_breaches:
         fail(f"breaches={breaches}")
-    if args.max_breach_rate and breach_rate > to_float(args.max_breach_rate, "max_breach_rate"):
+    if args.max_breach_rate and breach_rate > to_float(
+        args.max_breach_rate, "max_breach_rate"
+    ):
         fail(f"breach_rate={breach_rate:.6f}")
     return 0
 

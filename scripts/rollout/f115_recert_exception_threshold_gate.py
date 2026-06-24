@@ -38,9 +38,13 @@ def main() -> int:
     if total > args.max_exceptions:
         fail(f"{args.exception_count_field}={total} > {args.max_exceptions}")
 
-    open_exceptions = to_int(payload.get(args.open_exception_field), args.open_exception_field)
+    open_exceptions = to_int(
+        payload.get(args.open_exception_field), args.open_exception_field
+    )
     if open_exceptions > args.max_open_exceptions:
-        fail(f"{args.open_exception_field}={open_exceptions} > {args.max_open_exceptions}")
+        fail(
+            f"{args.open_exception_field}={open_exceptions} > {args.max_open_exceptions}"
+        )
 
     return 0
 

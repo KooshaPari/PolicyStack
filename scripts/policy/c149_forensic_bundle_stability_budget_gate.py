@@ -68,7 +68,10 @@ def main() -> int:
         if not isinstance(row, dict):
             continue
         age = to_int(
-            row.get("age_hours", row.get("forensic_age_hours", row.get("window_age_hours", 0))),
+            row.get(
+                "age_hours",
+                row.get("forensic_age_hours", row.get("window_age_hours", 0)),
+            ),
             "age_hours",
         )
         if age > args.window_hours:
@@ -107,7 +110,9 @@ def main() -> int:
                 "budget_breach",
                 row.get(
                     "forensic_bundle_budget_breach",
-                    row.get("bundle_budget_breach", row.get("budget_breach_count", False)),
+                    row.get(
+                        "bundle_budget_breach", row.get("budget_breach_count", False)
+                    ),
                 ),
             )
         )
@@ -119,7 +124,9 @@ def main() -> int:
     breach_rate = breaches / total
     if args.max_breaches and breaches > args.max_breaches:
         fail(f"breaches={breaches}")
-    if args.max_breach_rate and breach_rate > to_float(args.max_breach_rate, "max_breach_rate"):
+    if args.max_breach_rate and breach_rate > to_float(
+        args.max_breach_rate, "max_breach_rate"
+    ):
         fail(f"breach_rate={breach_rate:.6f}")
     return 0
 

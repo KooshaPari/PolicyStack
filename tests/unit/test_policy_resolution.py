@@ -34,7 +34,11 @@ class PolicyResolutionTest(unittest.TestCase):
                 {"id": "c", "action": "ask"},
             ],
         )
-        assert merged == [{"id": "a", "action": "deny"}, {"id": "b", "action": "deny"}, {"id": "c", "action": "ask"}]
+        assert merged == [
+            {"id": "a", "action": "deny"},
+            {"id": "b", "action": "deny"},
+            {"id": "c", "action": "ask"},
+        ]
 
     def test_merge_maps_append_unique_replaces_matching_id_items(self) -> None:
         base = {
@@ -56,7 +60,11 @@ class PolicyResolutionTest(unittest.TestCase):
 
         conflicts: list[dict] = []
         merged = _merge_maps(base, overrides, "append_unique", conflicts)
-        assert merged["authorization"]["rules"] == [{"id": "r1", "action": "ask"}, {"id": "r2", "action": "deny"}, {"id": "r3", "action": "allow"}]
+        assert merged["authorization"]["rules"] == [
+            {"id": "r1", "action": "ask"},
+            {"id": "r2", "action": "deny"},
+            {"id": "r3", "action": "allow"},
+        ]
         assert conflicts == []
 
     def test_resolve_extends_overrides_authorization_rules_by_id(self) -> None:
@@ -83,7 +91,8 @@ class PolicyResolutionTest(unittest.TestCase):
                             - "npm *"
                 """
             (repo_root / "policies" / "task-domain" / "shared.yaml").write_text(
-                shared_policy, encoding="utf-8",
+                shared_policy,
+                encoding="utf-8",
             )
 
             child_policy = """
@@ -115,7 +124,8 @@ class PolicyResolutionTest(unittest.TestCase):
                             - "yarn *"
                 """
             (repo_root / "policies" / "task-domain" / "task-domain.yaml").write_text(
-                child_policy, encoding="utf-8",
+                child_policy,
+                encoding="utf-8",
             )
 
             resolved = resolve(

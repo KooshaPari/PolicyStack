@@ -7,7 +7,10 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E148 escalation timing stability budget gate failed: {message}", file=sys.stderr)
+    print(
+        f"E148 escalation timing stability budget gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -33,7 +36,9 @@ def _read_json(path: pathlib.Path, label: str) -> list[dict]:
     return _to_records(payload, path, label)
 
 
-def _read_csv(path: pathlib.Path, required: set[str], label: str) -> list[dict[str, str]]:
+def _read_csv(
+    path: pathlib.Path, required: set[str], label: str
+) -> list[dict[str, str]]:
     try:
         with path.open(newline="") as handle:
             reader = csv.DictReader(handle)
@@ -81,7 +86,10 @@ def _window_pairs(values: list[float], window_size: int) -> list[list[float]]:
         return []
     if window_size <= 0 or window_size > len(values):
         return [values]
-    return [values[start : start + window_size] for start in range(0, len(values) - window_size + 1)]
+    return [
+        values[start : start + window_size]
+        for start in range(0, len(values) - window_size + 1)
+    ]
 
 
 def main() -> int:
@@ -124,30 +132,40 @@ def main() -> int:
     ordered = sorted(rows, key=lambda row: str(row.get(args.time_field, "")))
 
     open_counts = [
-        _to_int(row[args.open_field], escalations_path, args.open_field) for row in ordered
+        _to_int(row[args.open_field], escalations_path, args.open_field)
+        for row in ordered
     ]
     recovered_counts = [
         _to_int(row[args.recovered_field], escalations_path, args.recovered_field)
         for row in ordered
     ]
     timings = [
-        _to_float(row[args.timing_field], escalations_path, args.timing_field) for row in ordered
+        _to_float(row[args.timing_field], escalations_path, args.timing_field)
+        for row in ordered
     ]
     budgets = [
-        _to_float(row[args.timing_budget_field], escalations_path, args.timing_budget_field)
+        _to_float(
+            row[args.timing_budget_field], escalations_path, args.timing_budget_field
+        )
         for row in ordered
     ]
 
     timing_stability = []
-    for open_count, recovered_count, timing in zip(open_counts, recovered_counts, timings):
+    for open_count, recovered_count, timing in zip(
+        open_counts, recovered_counts, timings
+    ):
         if open_count <= 0:
             unrecovered_ratio = 0.0
         else:
-            recovered_ratio = min(1.0, max(0.0, float(recovered_count) / float(open_count)))
+            recovered_ratio = min(
+                1.0, max(0.0, float(recovered_count) / float(open_count))
+            )
             unrecovered_ratio = 1.0 - recovered_ratio
         timing_stability.append(max(0.0, unrecovered_ratio) * max(0.0, timing))
 
-    timing_gaps = [max(0.0, value - budget) for value, budget in zip(timing_stability, budgets)]
+    timing_gaps = [
+        max(0.0, value - budget) for value, budget in zip(timing_stability, budgets)
+    ]
 
     window_values = _window_pairs(timing_gaps, args.window_size)
     window_budget_gap = max((max(window) for window in window_values), default=0.0)
@@ -173,7 +191,9 @@ def main() -> int:
     report_window_over_budget_count = int(
         round(
             _to_float(
-                report.get("escalation_timing_stability_budget_over_budget_count_max", 0),
+                report.get(
+                    "escalation_timing_stability_budget_over_budget_count_max", 0
+                ),
                 report_path,
                 "escalation_timing_stability_budget_over_budget_count_max",
             )

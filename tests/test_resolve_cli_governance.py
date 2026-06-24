@@ -29,13 +29,16 @@ def _write_policy(path: Path, scope: str, **extra: object) -> None:
 
 def _create_valid_layout(root: Path) -> None:
     _write_policy(
-        root / "policy-config" / "system.yaml", "system", commands={"allow": ["python"]},
+        root / "policy-config" / "system.yaml",
+        "system",
+        commands={"allow": ["python"]},
     )
     _write_policy(root / "policy-config" / "user.yaml", "user")
     _write_policy(root / "policy-config" / "repo.yaml", "repo")
     _write_policy(root / "policy-config" / "harness" / "local.yaml", "harness")
     _write_policy(
-        root / "policy-config" / "task-domain" / "governance.yaml", "task_domain",
+        root / "policy-config" / "task-domain" / "governance.yaml",
+        "task_domain",
     )
 
 
@@ -155,7 +158,8 @@ def test_json_failure_envelope_for_invalid_policy_uses_stable_contract(
 ) -> None:
     _create_valid_layout(tmp_path)
     _write_yaml(
-        tmp_path / "policy-config" / "repo.yaml", {"policy_version": 1, "scope": "repo"},
+        tmp_path / "policy-config" / "repo.yaml",
+        {"policy_version": 1, "scope": "repo"},
     )
 
     result = _run_resolver(tmp_path, "--json")
@@ -206,7 +210,8 @@ def test_json_rejects_mismatched_scope_for_harness_and_task_domain(
 def test_json_rejects_duplicate_scopes_in_chain(tmp_path: Path) -> None:
     _create_valid_layout(tmp_path)
     _write_policy(
-        tmp_path / "policy-config" / "task-domain" / "governance.yaml", "harness",
+        tmp_path / "policy-config" / "task-domain" / "governance.yaml",
+        "harness",
     )
 
     result = _run_resolver(tmp_path, "--json")

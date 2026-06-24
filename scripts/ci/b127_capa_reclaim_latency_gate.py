@@ -81,11 +81,15 @@ def main() -> int:
     parser.add_argument("--records-key", default="records")
     parser.add_argument("--window-key", default="window")
     parser.add_argument("--reclaim-latency-ms-key", default="reclaim_latency_ms")
-    parser.add_argument("--p95-reclaim-latency-ms-key", default="p95_reclaim_latency_ms")
+    parser.add_argument(
+        "--p95-reclaim-latency-ms-key", default="p95_reclaim_latency_ms"
+    )
     parser.add_argument("--timeout-flag-key", default="timed_out")
     parser.add_argument("--max-average-reclaim-latency-ms", type=float, default=0.0)
     parser.add_argument("--max-p95-reclaim-latency-ms", type=float, default=0.0)
-    parser.add_argument("--max-window-average-reclaim-latency-ms", type=float, default=0.0)
+    parser.add_argument(
+        "--max-window-average-reclaim-latency-ms", type=float, default=0.0
+    )
     parser.add_argument("--latency-threshold-ms", type=float, default=0.0)
     parser.add_argument("--max-threshold-breach-count", type=int, default=0)
     parser.add_argument("--max-timeout-count", type=int, default=0)
@@ -142,7 +146,9 @@ def main() -> int:
         )
 
     if timeout_count > args.max_timeout_count:
-        fail(f"timeout_count={timeout_count} > max_timeout_count={args.max_timeout_count}")
+        fail(
+            f"timeout_count={timeout_count} > max_timeout_count={args.max_timeout_count}"
+        )
 
     for window, count in sorted(window_counts.items()):
         average = window_totals[window] / count

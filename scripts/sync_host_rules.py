@@ -38,7 +38,13 @@ except ModuleNotFoundError:
         find_managed_segment,
         replace_managed_entries,
     )
-from policy_lib import Condition, ConditionGroup, CommandRule, _normalized_command, normalize_payload  # noqa: E402 -- sys.path must be extended before local import
+from policy_lib import (
+    Condition,
+    ConditionGroup,
+    CommandRule,
+    _normalized_command,
+    normalize_payload,
+)  # noqa: E402 -- sys.path must be extended before local import
 
 
 COD_EX_DECISION = {"allow": "allow", "request": "prompt", "deny": "forbidden"}
@@ -120,7 +126,11 @@ def _summarize_rule(rule: CommandRule) -> dict[str, Any]:
 
 
 def _normalize_for_wrapper(rule: CommandRule, command: str) -> dict[str, Any]:
-    conditions = rule.conditions.export() if rule.conditions is not None else {"mode": "all", "conditions": []}
+    conditions = (
+        rule.conditions.export()
+        if rule.conditions is not None
+        else {"mode": "all", "conditions": []}
+    )
     return {
         "id": rule.rule_id,
         "source": rule.source,
@@ -166,9 +176,7 @@ def render_platform_payload(
         if rule.conditions is not None:
             conditional_rules.append(_summarize_rule(rule))
             wrapper_rules.append(_normalize_for_wrapper(rule, _cursor_pattern(rule)))
-            wrapper_conditions.update(
-                _collect_required_conditions(rule.conditions)
-            )
+            wrapper_conditions.update(_collect_required_conditions(rule.conditions))
             if not include_conditional:
                 continue
         elif include_conditional:
@@ -256,7 +264,8 @@ def write_host_artifacts(payload: dict[str, Any], out_dir: Path | None) -> None:
         encoding="utf-8",
     )
     (out_dir / "forge.settings.yaml").write_text(
-        yaml.safe_dump(policy["forge"], default_flow_style=False, sort_keys=False) + "\n",
+        yaml.safe_dump(policy["forge"], default_flow_style=False, sort_keys=False)
+        + "\n",
         encoding="utf-8",
     )
     (out_dir / "factory-droid.settings.json").write_text(
@@ -285,9 +294,7 @@ def _write_wrapper_manifest(out_dir: Path, wrapper_payload: dict[str, Any]) -> N
         "schema_version": wrapper_payload.get("schema_version"),
         "bundle_path": str(out_dir / "policy-wrapper-rules.json"),
         "bundle_relative": "policy-wrapper-rules.json",
-        "dispatch_script": str(
-            repo_root / "wrappers" / "policy-wrapper-dispatch.sh"
-        ),
+        "dispatch_script": str(repo_root / "wrappers" / "policy-wrapper-dispatch.sh"),
         "dispatch_command": [
             str(repo_root / "wrappers" / "policy-wrapper-dispatch.sh"),
             "--json",
@@ -360,8 +367,12 @@ def _apply_cursor_rules(path: Path, payload: dict[str, Any]) -> tuple[int, int]:
     old_allow = _read_list_field(permissions, "allow", path)
     old_deny = _read_list_field(permissions, "deny", path)
     old_ask = _read_list_field(permissions, "ask", path)
-    permissions["allow"] = replace_managed_entries(old_allow, payload["allow"], path, "allow")
-    permissions["deny"] = replace_managed_entries(old_deny, payload["deny"], path, "deny")
+    permissions["allow"] = replace_managed_entries(
+        old_allow, payload["allow"], path, "allow"
+    )
+    permissions["deny"] = replace_managed_entries(
+        old_deny, payload["deny"], path, "deny"
+    )
     permissions["ask"] = replace_managed_entries(old_ask, payload["ask"], path, "ask")
     data["permissions"] = permissions
     _write_json(path, data)
@@ -388,8 +399,12 @@ def _apply_claude_rules(path: Path, payload: dict[str, Any]) -> tuple[int, int]:
     old_allow = _read_list_field(permissions, "allow", path)
     old_deny = _read_list_field(permissions, "deny", path)
     old_ask = _read_list_field(permissions, "ask", path)
-    permissions["allow"] = replace_managed_entries(old_allow, payload["allow"], path, "allow")
-    permissions["deny"] = replace_managed_entries(old_deny, payload["deny"], path, "deny")
+    permissions["allow"] = replace_managed_entries(
+        old_allow, payload["allow"], path, "allow"
+    )
+    permissions["deny"] = replace_managed_entries(
+        old_deny, payload["deny"], path, "deny"
+    )
     permissions["ask"] = replace_managed_entries(old_ask, payload["ask"], path, "ask")
     data["permissions"] = permissions
     _write_json(path, data)
@@ -450,23 +465,43 @@ def apply_host_artifacts(
 
     if codex_path is not None:
         before, after = _apply_codex_rules(codex_path, policy["codex"]["rules"])
-        result["applied"]["codex"] = {"path": str(codex_path), "before": before, "after": after}
+        result["applied"]["codex"] = {
+            "path": str(codex_path),
+            "before": before,
+            "after": after,
+        }
 
     if cursor_path is not None:
         before, after = _apply_cursor_rules(cursor_path, policy["cursor"])
-        result["applied"]["cursor"] = {"path": str(cursor_path), "before": before, "after": after}
+        result["applied"]["cursor"] = {
+            "path": str(cursor_path),
+            "before": before,
+            "after": after,
+        }
 
     if claude_path is not None:
         before, after = _apply_claude_rules(claude_path, policy["claude"])
-        result["applied"]["claude"] = {"path": str(claude_path), "before": before, "after": after}
+        result["applied"]["claude"] = {
+            "path": str(claude_path),
+            "before": before,
+            "after": after,
+        }
 
     if droid_path is not None:
         before, after = _apply_droid_rules(droid_path, policy["droid"])
-        result["applied"]["droid"] = {"path": str(droid_path), "before": before, "after": after}
+        result["applied"]["droid"] = {
+            "path": str(droid_path),
+            "before": before,
+            "after": after,
+        }
 
     if forge_path is not None:
         before, after = _apply_forge_rules(forge_path, policy["forge"])
-        result["applied"]["forge"] = {"path": str(forge_path), "before": before, "after": after}
+        result["applied"]["forge"] = {
+            "path": str(forge_path),
+            "before": before,
+            "after": after,
+        }
 
     return result
 
@@ -577,7 +612,9 @@ def _build_success_entries(
             "rule_count": _count_platform_rules(policy, platform),
             "mode": mode,
             "had_managed_segment_before": _had_managed_segment_before(platform, path),
-            "managed_segment_length_after": _managed_segment_length_after(policy, platform),
+            "managed_segment_length_after": _managed_segment_length_after(
+                policy, platform
+            ),
         }
         for platform, path in entries
     ]
@@ -680,7 +717,9 @@ def _had_managed_segment_before(platform: str, path: Path) -> bool:
             deny = _read_list_field(forge_data, "commandDenylist", path)
             return (
                 _has_json_managed_segment(allow, path=path, key="commandAllowlist")
-                or _has_json_managed_segment(request, path=path, key="commandRequestlist")
+                or _has_json_managed_segment(
+                    request, path=path, key="commandRequestlist"
+                )
                 or _has_json_managed_segment(deny, path=path, key="commandDenylist")
             )
         if platform == "droid":
@@ -689,7 +728,9 @@ def _had_managed_segment_before(platform: str, path: Path) -> bool:
             deny = _read_list_field(data, "commandDenylist", path)
             return (
                 _has_json_managed_segment(allow, path=path, key="commandAllowlist")
-                or _has_json_managed_segment(request, path=path, key="commandRequestlist")
+                or _has_json_managed_segment(
+                    request, path=path, key="commandRequestlist"
+                )
                 or _has_json_managed_segment(deny, path=path, key="commandDenylist")
             )
         raise ValueError(f"unknown platform: {platform}")
@@ -723,7 +764,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description="Emit host-specific command policy snippets from a resolved policy JSON."
     )
-    parser.add_argument("--policy-json", required=True, help="Resolved policy JSON file")
+    parser.add_argument(
+        "--policy-json", required=True, help="Resolved policy JSON file"
+    )
     parser.add_argument(
         "--cwd",
         default=None,
@@ -852,7 +895,7 @@ def main() -> int:
             cursor_path=cursor_target,
             claude_path=claude_target,
             droid_path=droid_target,
-                forge_path=forge_target,
+            forge_path=forge_target,
         )
         text_summary = _build_text_summary(
             mode=mode,
@@ -906,6 +949,7 @@ def main() -> int:
 if __name__ == "__main__":
     raise SystemExit(main())
 
+
 def _apply_forge_rules(path: Path, payload: dict[str, Any]) -> tuple[int, int]:
     path.parent.mkdir(parents=True, exist_ok=True)
     old_allow = []
@@ -914,6 +958,7 @@ def _apply_forge_rules(path: Path, payload: dict[str, Any]) -> tuple[int, int]:
     if path.exists():
         try:
             import yaml as forge_yaml
+
             data = forge_yaml.safe_load(path.read_text(encoding="utf-8"))
             if data and isinstance(data, dict):
                 old_allow = data.get("commandAllowlist", []) or []
@@ -921,16 +966,29 @@ def _apply_forge_rules(path: Path, payload: dict[str, Any]) -> tuple[int, int]:
                 old_deny = data.get("commandDenylist", []) or []
         except Exception:
             pass
-    allow = replace_managed_entries(old_allow, payload.get("commandAllowlist", []), path, "commandAllowlist")
-    request = replace_managed_entries(old_request, payload.get("commandRequestlist", []), path, "commandRequestlist")
-    deny = replace_managed_entries(old_deny, payload.get("commandDenylist", []), path, "commandDenylist")
+    allow = replace_managed_entries(
+        old_allow, payload.get("commandAllowlist", []), path, "commandAllowlist"
+    )
+    request = replace_managed_entries(
+        old_request, payload.get("commandRequestlist", []), path, "commandRequestlist"
+    )
+    deny = replace_managed_entries(
+        old_deny, payload.get("commandDenylist", []), path, "commandDenylist"
+    )
     data = {
         "commandAllowlist": allow,
         "commandRequestlist": request,
         "commandDenylist": deny,
     }
-    path.write_text(forge_yaml.safe_dump(data, default_flow_style=False, sort_keys=False), encoding="utf-8")
+    path.write_text(
+        forge_yaml.safe_dump(data, default_flow_style=False, sort_keys=False),
+        encoding="utf-8",
+    )
     return (
-        count_policy_entries(old_allow) + count_policy_entries(old_request) + count_policy_entries(old_deny),
-        count_policy_entries(allow) + count_policy_entries(request) + count_policy_entries(deny),
+        count_policy_entries(old_allow)
+        + count_policy_entries(old_request)
+        + count_policy_entries(old_deny),
+        count_policy_entries(allow)
+        + count_policy_entries(request)
+        + count_policy_entries(deny),
     )

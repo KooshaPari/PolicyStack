@@ -44,7 +44,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("kpi payload must be a JSON object or non-empty list of objects")
 
@@ -52,9 +56,15 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--kpi", required=True)
-    parser.add_argument("--regression-budget-window-score-field", default="regression_budget_window_score")
+    parser.add_argument(
+        "--regression-budget-window-score-field",
+        default="regression_budget_window_score",
+    )
     parser.add_argument("--max-regression-budget-window-score", type=float, default=0.0)
-    parser.add_argument("--regression-budget-window-count-field", default="regression_budget_window_count")
+    parser.add_argument(
+        "--regression-budget-window-count-field",
+        default="regression_budget_window_count",
+    )
     parser.add_argument("--max-regression-budget-window-count", type=int, default=0)
     args = parser.parse_args()
 

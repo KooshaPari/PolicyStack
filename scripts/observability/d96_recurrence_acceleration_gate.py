@@ -24,8 +24,11 @@ def _read_csv(path: pathlib.Path, required: set[str]) -> list[dict[str, str]]:
     except Exception as exc:
         _fail(f"invalid recurrence CSV {path}: {exc}")
     if rows and required and not required.issubset(set(rows[0].keys())):
-        _fail(f"recurrence CSV missing headers: {sorted(required - set(rows[0].keys()))}")
+        _fail(
+            f"recurrence CSV missing headers: {sorted(required - set(rows[0].keys()))}"
+        )
     return rows
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--report", required=True)
@@ -36,7 +39,11 @@ parser.add_argument("--max-positive-deltas", type=int, default=0)
 parser.add_argument("--max-accumulated", type=float, default=0.0)
 args = parser.parse_args()
 
-payload = json.loads(pathlib.Path(args.report).read_text()) if pathlib.Path(args.report).is_file() else {}
+payload = (
+    json.loads(pathlib.Path(args.report).read_text())
+    if pathlib.Path(args.report).is_file()
+    else {}
+)
 if not isinstance(payload, dict):
     _fail("invalid report JSON")
 
@@ -56,4 +63,3 @@ if positive_steps > args.max_positive_deltas:
     _fail(f"positive_steps={positive_steps}")
 if accum > args.max_accumulated:
     _fail(f"accumulated_acceleration={accum}")
-

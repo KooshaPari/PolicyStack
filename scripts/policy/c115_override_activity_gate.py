@@ -42,7 +42,10 @@ def main() -> int:
     if args.max_active_overrides and active > args.max_active_overrides:
         fail(f"active_overrides={active}")
 
-    if args.max_expiring_soon_overrides and expiring_soon > args.max_expiring_soon_overrides:
+    if (
+        args.max_expiring_soon_overrides
+        and expiring_soon > args.max_expiring_soon_overrides
+    ):
         fail(f"expiring_soon_overrides={expiring_soon}")
 
     return 0

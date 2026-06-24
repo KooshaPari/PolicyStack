@@ -43,9 +43,7 @@ def main() -> int:
     )
     drop = previous - current
     if drop > args.max_drop:
-        fail(
-            f"stability_drop={drop} > max_allowed={args.max_drop}"
-        )
+        fail(f"stability_drop={drop} > max_allowed={args.max_drop}")
 
     return 0
 

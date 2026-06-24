@@ -7,7 +7,10 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E140 succession transition budget window gate failed: {message}", file=sys.stderr)
+    print(
+        f"E140 succession transition budget window gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -44,7 +47,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("succession payload must be a JSON object or non-empty list of objects")
 
@@ -52,12 +59,18 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--succession", required=True)
-    parser.add_argument("--transition-budget-window-spent-field", default="transition_budget_window_spent")
+    parser.add_argument(
+        "--transition-budget-window-spent-field",
+        default="transition_budget_window_spent",
+    )
     parser.add_argument("--max-transition-budget-window-spent", type=float, default=1.0)
     parser.add_argument(
-        "--over-transition-budget-window-count-field", default="over_transition_budget_window_count"
+        "--over-transition-budget-window-count-field",
+        default="over_transition_budget_window_count",
     )
-    parser.add_argument("--max-over-transition-budget-window-count", type=int, default=0)
+    parser.add_argument(
+        "--max-over-transition-budget-window-count", type=int, default=0
+    )
     args = parser.parse_args()
 
     records = load_records(pathlib.Path(args.succession))
@@ -78,7 +91,10 @@ def main() -> int:
             args.over_transition_budget_window_count_field,
             index,
         )
-        if over_transition_budget_window_count > args.max_over_transition_budget_window_count:
+        if (
+            over_transition_budget_window_count
+            > args.max_over_transition_budget_window_count
+        ):
             fail(
                 f"{args.over_transition_budget_window_count_field}="
                 f"{over_transition_budget_window_count} > "

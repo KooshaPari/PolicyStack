@@ -33,7 +33,9 @@ def _read_json(path: pathlib.Path, label: str) -> list[dict]:
     return _to_records(payload, path, label)
 
 
-def _read_csv(path: pathlib.Path, required: set[str], label: str) -> list[dict[str, str]]:
+def _read_csv(
+    path: pathlib.Path, required: set[str], label: str
+) -> list[dict[str, str]]:
     try:
         with path.open(newline="") as handle:
             reader = csv.DictReader(handle)
@@ -88,25 +90,42 @@ def main() -> int:
     report_rows = _read_json(report_path, "report")
     report = report_rows[0] if report_rows else {}
 
-    rows = _load_records(suppression_path, {args.time_field, args.entropy_field}, "suppression")
+    rows = _load_records(
+        suppression_path, {args.time_field, args.entropy_field}, "suppression"
+    )
     if not rows:
         fail("E119 empty suppression data")
 
-    ordered = sorted(rows, key=lambda row: str(row.get(args.time-field, "")))
-    entropies = [_to_float(row[args.entropy_field], suppression_path, args.entropy_field) for row in ordered]
+    ordered = sorted(rows, key=lambda row: str(row.get(args.time - field, "")))
+    entropies = [
+        _to_float(row[args.entropy_field], suppression_path, args.entropy_field)
+        for row in ordered
+    ]
     max_entropy = max(entropies)
-    step_rate = max((abs(curr - prev) for prev, curr in zip(entropies, entropies[1:])), default=0.0)
+    step_rate = max(
+        (abs(curr - prev) for prev, curr in zip(entropies, entropies[1:])), default=0.0
+    )
     breach_count = sum(1 for value in entropies if value > args.max_entropy)
 
-    report_entropy = _to_float(report.get("suppression_entropy_max", 0.0), report_path, "suppression_entropy_max")
-    report_step = _to_float(
-        report.get("suppression_entropy_step_rate_max", 0.0), report_path, "suppression_entropy_step_rate_max"
-    )
-    report_breach = int(round(_to_float(
-        report.get("suppression_entropy_budget_breach_count", 0),
+    report_entropy = _to_float(
+        report.get("suppression_entropy_max", 0.0),
         report_path,
-        "suppression_entropy_budget_breach_count",
-    )))
+        "suppression_entropy_max",
+    )
+    report_step = _to_float(
+        report.get("suppression_entropy_step_rate_max", 0.0),
+        report_path,
+        "suppression_entropy_step_rate_max",
+    )
+    report_breach = int(
+        round(
+            _to_float(
+                report.get("suppression_entropy_budget_breach_count", 0),
+                report_path,
+                "suppression_entropy_budget_breach_count",
+            )
+        )
+    )
 
     if max_entropy < report_entropy:
         max_entropy = report_entropy

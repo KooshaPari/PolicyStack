@@ -36,7 +36,9 @@ def load_rows(path: pathlib.Path) -> list[dict]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows
-    fail("transitions payload must be list or object with transitions/records/items/entries/attestations")
+    fail(
+        "transitions payload must be list or object with transitions/records/items/entries/attestations"
+    )
 
 
 def is_regression_row(
@@ -83,9 +85,13 @@ def main() -> int:
     for index, row in enumerate(rows):
         if not isinstance(row, dict):
             continue
-        previous = rows[index - 1] if index > 0 and isinstance(rows[index - 1], dict) else None
+        previous = (
+            rows[index - 1] if index > 0 and isinstance(rows[index - 1], dict) else None
+        )
         regression_flags.append(
-            is_regression_row(row, previous, args.trust_col, args.status_col, args.drop_threshold)
+            is_regression_row(
+                row, previous, args.trust_col, args.status_col, args.drop_threshold
+            )
         )
 
     if not regression_flags:

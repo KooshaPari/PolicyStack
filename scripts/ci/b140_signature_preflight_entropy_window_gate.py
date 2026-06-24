@@ -83,7 +83,9 @@ def main() -> int:
     parser.add_argument("--samples-key", default="samples")
     parser.add_argument("--entropy-score-key", default="entropy_score")
     parser.add_argument("--entropy-regressions-key", default="entropy_regressions")
-    parser.add_argument("--invalid-signature-events-key", default="invalid_signature_events")
+    parser.add_argument(
+        "--invalid-signature-events-key", default="invalid_signature_events"
+    )
     parser.add_argument("--min-total-samples", type=float, default=1.0)
     parser.add_argument("--min-average-entropy-score", type=float, default=0.0)
     parser.add_argument("--min-window-average-entropy-score", type=float, default=0.0)
@@ -105,7 +107,9 @@ def main() -> int:
 
     for row in records:
         samples = parse_float(row.get(args.samples_key), args.samples_key)
-        entropy_score = parse_float(row.get(args.entropy_score_key), args.entropy_score_key)
+        entropy_score = parse_float(
+            row.get(args.entropy_score_key), args.entropy_score_key
+        )
         entropy_regressions = parse_int(
             row.get(args.entropy_regressions_key, 0),
             args.entropy_regressions_key,
@@ -133,7 +137,9 @@ def main() -> int:
                 f"got {invalid_signature_events}"
             )
         if entropy_regressions > samples:
-            fail(f"entropy_regressions={entropy_regressions} cannot exceed samples={samples}")
+            fail(
+                f"entropy_regressions={entropy_regressions} cannot exceed samples={samples}"
+            )
 
         total_samples += samples
         weighted_entropy_sum += entropy_score * samples
@@ -150,7 +156,9 @@ def main() -> int:
         )
 
     if total_samples < args.min_total_samples:
-        fail(f"total_samples={total_samples} < min_total_samples={args.min_total_samples}")
+        fail(
+            f"total_samples={total_samples} < min_total_samples={args.min_total_samples}"
+        )
 
     average_entropy_score = weighted_entropy_sum / total_samples
     if average_entropy_score < args.min_average_entropy_score:

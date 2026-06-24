@@ -33,7 +33,9 @@ def load_rows(path: pathlib.Path) -> list[dict]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows
-    fail("custody payload must be list or object with records/items/entries/transitions/attestations")
+    fail(
+        "custody payload must be list or object with records/items/entries/transitions/attestations"
+    )
 
 
 def main() -> int:
@@ -71,7 +73,9 @@ def main() -> int:
     if total_gap > args.max_total_gap:
         fail(f"total_gap={total_gap:.6f} exceeds max_total_gap={args.max_total_gap}")
     if average_gap > args.max_average_gap:
-        fail(f"average_gap={average_gap:.6f} exceeds max_average_gap={args.max_average_gap}")
+        fail(
+            f"average_gap={average_gap:.6f} exceeds max_average_gap={args.max_average_gap}"
+        )
     if peak_gap > args.max_gap:
         fail(f"max_gap={peak_gap:.6f} exceeds max_gap_budget={args.max_gap}")
 

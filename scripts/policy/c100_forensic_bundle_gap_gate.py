@@ -18,7 +18,9 @@ def _num(v, default=0.0):
 
 
 def _oid(r):
-    return str(r.get("id") or r.get("artifact_id") or r.get("artifact") or r.get("path") or "?").strip()
+    return str(
+        r.get("id") or r.get("artifact_id") or r.get("artifact") or r.get("path") or "?"
+    ).strip()
 
 
 def _read_json(path, label):
@@ -90,7 +92,7 @@ for row in rows:
     if status in {"open", "pending", "unresolved"} or _truthy(row.get("open", False)):
         open_count += 1
         if not _truthy(row.get("resolved", row.get("closed", False))):
-
+            pass
 for artifact in sorted(required):
     if artifact not in seen:
         missing.add(artifact)

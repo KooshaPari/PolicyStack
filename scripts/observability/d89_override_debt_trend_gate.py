@@ -75,9 +75,13 @@ def main() -> int:
     ]
 
     trend_delta = values[-1] - values[0]
-    worsen_count = sum(current > previous for previous, current in zip(values, values[1:]))
+    worsen_count = sum(
+        current > previous for previous, current in zip(values, values[1:])
+    )
 
-    effective_delta = max(trend_delta, float(report.get("override_debt_trend_delta", trend_delta)))
+    effective_delta = max(
+        trend_delta, float(report.get("override_debt_trend_delta", trend_delta))
+    )
     effective_worsen = max(
         worsen_count,
         int(report.get("override_debt_trend_worsen_count", worsen_count)),

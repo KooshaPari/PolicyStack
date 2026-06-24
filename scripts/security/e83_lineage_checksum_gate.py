@@ -21,7 +21,10 @@ def _load_rows(path: pathlib.Path) -> tuple[list[dict], str | None]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows, None
-    return [], "E83 invalid input: expected list or dict with lineage/items/records/entries/chains"
+    return (
+        [],
+        "E83 invalid input: expected list or dict with lineage/items/records/entries/chains",
+    )
 
 
 def _pick(row: dict, keys: tuple[str, ...]) -> str:
@@ -36,7 +39,13 @@ def _pick(row: dict, keys: tuple[str, ...]) -> str:
 
 
 def _normalized_payload(row: dict) -> str:
-    payload = row.get("payload") or row.get("content") or row.get("data") or row.get("evidence") or {}
+    payload = (
+        row.get("payload")
+        or row.get("content")
+        or row.get("data")
+        or row.get("evidence")
+        or {}
+    )
     if isinstance(payload, (dict, list)):
         payload = json.dumps(payload, sort_keys=True, separators=(",", ":"))
     return str(payload)
@@ -51,7 +60,12 @@ def _checksum_matches(row: dict) -> bool:
     expected_checksum = _pick(row, ("calculated_checksum", "expected_checksum"))
     if expected_checksum:
         return checksum.lower() == expected_checksum.lower()
-    payload = row.get("payload") or row.get("content") or row.get("data") or row.get("evidence")
+    payload = (
+        row.get("payload")
+        or row.get("content")
+        or row.get("data")
+        or row.get("evidence")
+    )
     if payload is None:
         return False
     expected = hashlib.sha256(_normalized_payload(row).encode("utf-8")).hexdigest()

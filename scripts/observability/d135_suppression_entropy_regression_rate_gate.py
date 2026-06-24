@@ -7,7 +7,10 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E135 suppression entropy regression rate gate failed: {message}", file=sys.stderr)
+    print(
+        f"E135 suppression entropy regression rate gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -33,7 +36,9 @@ def _read_json(path: pathlib.Path, label: str) -> list[dict]:
     return _to_records(payload, path, label)
 
 
-def _read_csv(path: pathlib.Path, required: set[str], label: str) -> list[dict[str, str]]:
+def _read_csv(
+    path: pathlib.Path, required: set[str], label: str
+) -> list[dict[str, str]]:
     try:
         with path.open(newline="") as handle:
             reader = csv.DictReader(handle)
@@ -72,13 +77,17 @@ def _to_float(value: object, path: pathlib.Path, field: str) -> float:
 def _max_abs_step(values: list[float]) -> float:
     if len(values) < 2:
         return 0.0
-    return max((abs(curr - prev) for prev, curr in zip(values, values[1:])), default=0.0)
+    return max(
+        (abs(curr - prev) for prev, curr in zip(values, values[1:])), default=0.0
+    )
 
 
 def _max_positive_step(values: list[float]) -> float:
     if len(values) < 2:
         return 0.0
-    return max((max(0.0, curr - prev) for prev, curr in zip(values, values[1:])), default=0.0)
+    return max(
+        (max(0.0, curr - prev) for prev, curr in zip(values, values[1:])), default=0.0
+    )
 
 
 def main() -> int:
@@ -111,9 +120,16 @@ def main() -> int:
         fail("E135 empty suppression data")
 
     ordered = sorted(rows, key=lambda row: str(row.get(args.time_field, "")))
-    entropies = [_to_float(row[args.entropy_field], suppression_path, args.entropy_field) for row in ordered]
+    entropies = [
+        _to_float(row[args.entropy_field], suppression_path, args.entropy_field)
+        for row in ordered
+    ]
     regression_rates = [
-        _to_float(row[args.regression_rate_field], suppression_path, args.regression_rate_field)
+        _to_float(
+            row[args.regression_rate_field],
+            suppression_path,
+            args.regression_rate_field,
+        )
         for row in ordered
     ]
 
@@ -153,9 +169,13 @@ def main() -> int:
         regression_rate_step = report_regression_rate_step
 
     if entropy_span > args.max_entropy_span:
-        fail(f"E135 entropy_span={entropy_span} > max_entropy_span={args.max_entropy_span}")
+        fail(
+            f"E135 entropy_span={entropy_span} > max_entropy_span={args.max_entropy_span}"
+        )
     if entropy_step > args.max_entropy_step:
-        fail(f"E135 entropy_step={entropy_step} > max_entropy_step={args.max_entropy_step}")
+        fail(
+            f"E135 entropy_step={entropy_step} > max_entropy_step={args.max_entropy_step}"
+        )
     if regression_rate > args.max_regression_rate:
         fail(
             f"E135 regression_rate={regression_rate} > "

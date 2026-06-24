@@ -33,7 +33,9 @@ def _read_json(path: pathlib.Path, label: str) -> list[dict]:
     return _to_records(payload, path, label)
 
 
-def _read_csv(path: pathlib.Path, required: set[str], label: str) -> list[dict[str, str]]:
+def _read_csv(
+    path: pathlib.Path, required: set[str], label: str
+) -> list[dict[str, str]]:
     try:
         with path.open(newline="") as handle:
             reader = csv.DictReader(handle)
@@ -88,20 +90,37 @@ def main() -> int:
     report_rows = _read_json(report_path, "report")
     report = report_rows[0] if report_rows else {}
 
-    rows = _load_records(recurrence_path, {args.time_field, args.rate_field}, "recurrence")
+    rows = _load_records(
+        recurrence_path, {args.time_field, args.rate_field}, "recurrence"
+    )
     if not rows:
         fail("E118 empty recurrence data")
     if len(rows) < 2:
         fail("E118 insufficient recurrence points")
 
     ordered = sorted(rows, key=lambda row: str(row.get(args.time_field, "")))
-    rates = [_to_float(row[args.rate_field], recurrence_path, args.rate_field) for row in ordered]
+    rates = [
+        _to_float(row[args.rate_field], recurrence_path, args.rate_field)
+        for row in ordered
+    ]
     deltas = [max(0.0, curr - prev) for prev, curr in zip(rates, rates[1:])]
     spike_count = sum(1 for delta in deltas if delta > args.spike_threshold)
     spike_rate = max(deltas) if deltas else 0.0
 
-    report_count = int(round(_to_float(report.get("recurrence_spike_count", 0), report_path, "recurrence_spike_count")))
-    report_rate = _to_float(report.get("recurrence_spike_rate_max", 0.0), report_path, "recurrence_spike_rate_max")
+    report_count = int(
+        round(
+            _to_float(
+                report.get("recurrence_spike_count", 0),
+                report_path,
+                "recurrence_spike_count",
+            )
+        )
+    )
+    report_rate = _to_float(
+        report.get("recurrence_spike_rate_max", 0.0),
+        report_path,
+        "recurrence_spike_rate_max",
+    )
     if spike_count < report_count:
         spike_count = report_count
     if spike_rate < report_rate:

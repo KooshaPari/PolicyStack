@@ -62,7 +62,8 @@ def main() -> int:
             continue
         total += 1
         override_rate = to_float(
-            row.get("override_rate", row.get("window_rate", row.get("rate", 0.0))), "override_rate"
+            row.get("override_rate", row.get("window_rate", row.get("rate", 0.0))),
+            "override_rate",
         )
         if args.max_window_rate and override_rate > args.max_window_rate:
             breaches += 1

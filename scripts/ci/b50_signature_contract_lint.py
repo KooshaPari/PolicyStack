@@ -4,6 +4,7 @@ import json
 import pathlib
 import sys
 
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--rules", required=True)
@@ -17,6 +18,7 @@ def main() -> int:
         print("B50 missing fields: " + ",".join(miss), file=sys.stderr)
         return 2
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

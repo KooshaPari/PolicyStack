@@ -67,19 +67,23 @@ def main() -> int:
         if not isinstance(row, dict):
             continue
         age = to_int(
-            row.get("age_hours", row.get("override_age_hours", row.get("window_age_hours", 0))),
+            row.get(
+                "age_hours",
+                row.get("override_age_hours", row.get("window_age_hours", 0)),
+            ),
             "age_hours",
         )
-        in_window = to_bool(
-            row.get("in_window", age <= args.window_hours)
-        )
+        in_window = to_bool(row.get("in_window", age <= args.window_hours))
         if not in_window:
             continue
         total += 1
         window_activity = to_float(
             row.get(
                 "override_activity_window",
-                row.get("activity_window", row.get("activity", row.get("override_activity", 0.0))),
+                row.get(
+                    "activity_window",
+                    row.get("activity", row.get("override_activity", 0.0)),
+                ),
             ),
             "override_activity_window",
         )
@@ -98,13 +102,13 @@ def main() -> int:
     if total == 0:
         fail("no override entries found in window")
     breach_rate = breaches / total
-    if args.max_window_activity_breaches and breaches > args.max_window_activity_breaches:
-        fail(f"window_activity_breaches={breaches}")
     if (
-        args.max_window_activity_breach_rate
-        and breach_rate > to_float(
-            args.max_window_activity_breach_rate, "max_window_activity_breach_rate"
-        )
+        args.max_window_activity_breaches
+        and breaches > args.max_window_activity_breaches
+    ):
+        fail(f"window_activity_breaches={breaches}")
+    if args.max_window_activity_breach_rate and breach_rate > to_float(
+        args.max_window_activity_breach_rate, "max_window_activity_breach_rate"
     ):
         fail(f"window_activity_breach_rate={breach_rate:.6f}")
     return 0

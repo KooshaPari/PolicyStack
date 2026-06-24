@@ -83,7 +83,9 @@ def main() -> int:
     parser.add_argument("--operations-key", default="operations")
     parser.add_argument("--entropy-score-key", default="entropy_score")
     parser.add_argument("--entropy-regressions-key", default="entropy_regressions")
-    parser.add_argument("--invalid-entropy-events-key", default="invalid_entropy_events")
+    parser.add_argument(
+        "--invalid-entropy-events-key", default="invalid_entropy_events"
+    )
     parser.add_argument("--capa-failures-key", default="capa_failures")
     parser.add_argument("--budget-used-key", default="budget_used")
     parser.add_argument("--budget-total-key", default="budget_total")
@@ -117,7 +119,9 @@ def main() -> int:
 
     for row in records:
         operations = parse_float(row.get(args.operations_key), args.operations_key)
-        entropy_score = parse_float(row.get(args.entropy_score_key), args.entropy_score_key)
+        entropy_score = parse_float(
+            row.get(args.entropy_score_key), args.entropy_score_key
+        )
         entropy_regressions = parse_int(
             row.get(args.entropy_regressions_key, 0),
             args.entropy_regressions_key,
@@ -126,9 +130,13 @@ def main() -> int:
             row.get(args.invalid_entropy_events_key, 0),
             args.invalid_entropy_events_key,
         )
-        capa_failures = parse_int(row.get(args.capa_failures_key, 0), args.capa_failures_key)
+        capa_failures = parse_int(
+            row.get(args.capa_failures_key, 0), args.capa_failures_key
+        )
         budget_used = parse_float(row.get(args.budget_used_key), args.budget_used_key)
-        budget_total = parse_float(row.get(args.budget_total_key), args.budget_total_key)
+        budget_total = parse_float(
+            row.get(args.budget_total_key), args.budget_total_key
+        )
 
         if operations < 0:
             fail(f"operations for {args.operations_key} must be >= 0; got {operations}")
@@ -143,7 +151,9 @@ def main() -> int:
                 f"got {entropy_regressions}"
             )
         if entropy_regressions > operations:
-            fail(f"entropy_regressions={entropy_regressions} cannot exceed operations={operations}")
+            fail(
+                f"entropy_regressions={entropy_regressions} cannot exceed operations={operations}"
+            )
         if invalid_entropy_events < 0:
             fail(
                 f"invalid_entropy_events for {args.invalid_entropy_events_key} must be >= 0; "
@@ -156,9 +166,13 @@ def main() -> int:
         if capa_failures > operations:
             fail(f"capa_failures={capa_failures} cannot exceed operations={operations}")
         if budget_used < 0:
-            fail(f"budget_used for {args.budget_used_key} must be >= 0; got {budget_used}")
+            fail(
+                f"budget_used for {args.budget_used_key} must be >= 0; got {budget_used}"
+            )
         if budget_total <= 0:
-            fail(f"budget_total for {args.budget_total_key} must be > 0; got {budget_total}")
+            fail(
+                f"budget_total for {args.budget_total_key} must be > 0; got {budget_total}"
+            )
         if budget_used > budget_total:
             fail(f"budget_used={budget_used} cannot exceed budget_total={budget_total}")
 
@@ -172,17 +186,21 @@ def main() -> int:
 
         window = str(row.get(args.window_key, "default"))
         window_operations[window] = window_operations.get(window, 0.0) + operations
-        window_weighted_entropy[window] = (
-            window_weighted_entropy.get(window, 0.0) + (entropy_score * operations)
+        window_weighted_entropy[window] = window_weighted_entropy.get(window, 0.0) + (
+            entropy_score * operations
         )
         window_entropy_regressions[window] = (
             window_entropy_regressions.get(window, 0) + entropy_regressions
         )
         window_budget_used[window] = window_budget_used.get(window, 0.0) + budget_used
-        window_budget_total[window] = window_budget_total.get(window, 0.0) + budget_total
+        window_budget_total[window] = (
+            window_budget_total.get(window, 0.0) + budget_total
+        )
 
     if total_operations < args.min_total_operations:
-        fail(f"total_operations={total_operations} < min_total_operations={args.min_total_operations}")
+        fail(
+            f"total_operations={total_operations} < min_total_operations={args.min_total_operations}"
+        )
 
     if total_budget_total <= 0:
         fail(f"total_budget_total={total_budget_total} must be > 0")
@@ -247,8 +265,12 @@ def main() -> int:
 
         window_budget_total_value = window_budget_total[window]
         if window_budget_total_value <= 0:
-            fail(f"window={window} budget_total={window_budget_total_value} must be > 0")
-        window_budget_usage_ratio = window_budget_used[window] / window_budget_total_value
+            fail(
+                f"window={window} budget_total={window_budget_total_value} must be > 0"
+            )
+        window_budget_usage_ratio = (
+            window_budget_used[window] / window_budget_total_value
+        )
         if window_budget_usage_ratio > args.max_window_budget_usage_ratio:
             fail(
                 f"window={window} budget_usage_ratio={window_budget_usage_ratio} > "

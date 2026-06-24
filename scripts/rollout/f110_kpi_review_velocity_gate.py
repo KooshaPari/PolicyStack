@@ -29,8 +29,7 @@ def main() -> int:
         fail("no KPI rows")
 
     velocities = [
-        _to_float(row.get(args.velocity_column), args.velocity_column)
-        for row in rows
+        _to_float(row.get(args.velocity_column), args.velocity_column) for row in rows
     ]
     below = [x for x in velocities if x < args.min_velocity]
     if below:

@@ -20,6 +20,10 @@ jobs:
     name: cargo-deny
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # PolicyStack is a Python project; cargo-deny only applies when a Cargo.toml
+    # is present (i.e. when this repo contains a Rust crate). Skip otherwise so
+    # the workflow stays green for non-Rust pushes.
+    if: hashFiles('**/Cargo.toml') != ''
     steps:
       - name: Checkout repository
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4

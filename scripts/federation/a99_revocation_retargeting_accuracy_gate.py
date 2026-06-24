@@ -67,10 +67,14 @@ elif isinstance(data, list):
         mis_targets = 0
         for row in rows:
             total += 1
-            is_correct = str(row.get("correct", row.get("is_correct", "true"))).strip().lower()
+            is_correct = (
+                str(row.get("correct", row.get("is_correct", "true"))).strip().lower()
+            )
             if is_correct in {"1", "true", "yes", "ok", "pass", "passed"}:
                 correct += 1
-            mis_targets += _to_int(row.get("mis_target", row.get("mismatch", 0)), "mis_target")
+            mis_targets += _to_int(
+                row.get("mis_target", row.get("mismatch", 0)), "mis_target"
+            )
             if row.get("precision_error_rate") is not None:
                 precision_rates.append(
                     _to_float(row.get("precision_error_rate"), "precision_error_rate"),

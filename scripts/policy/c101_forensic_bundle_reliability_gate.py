@@ -30,10 +30,14 @@ def main() -> int:
         bundle = json.loads(pathlib.Path(args.bundle).read_text())
     except Exception as exc:
         fail(f"invalid bundle JSON: {exc}")
-    rows = list(csv.DictReader(pathlib.Path(args.reliability_csv).read_text().splitlines()))
+    rows = list(
+        csv.DictReader(pathlib.Path(args.reliability_csv).read_text().splitlines())
+    )
 
     total = len(rows)
-    low = sum(1 for r in rows if num(r.get("reliability", 1.0)) < args.max_failing_ratio)
+    low = sum(
+        1 for r in rows if num(r.get("reliability", 1.0)) < args.max_failing_ratio
+    )
     if total > 0 and low > args.max_low_reliability:
         fail(f"low_reliability={low}")
     ratio = low / max(total, 1)
@@ -45,5 +49,5 @@ def main() -> int:
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     raise SystemExit(main())

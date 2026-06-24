@@ -6,6 +6,7 @@ import pathlib
 import sys
 from datetime import datetime, timezone
 
+
 def _rows(path: pathlib.Path) -> list[dict]:
     if path.suffix.lower() == ".csv":
         return list(csv.DictReader(path.open()))
@@ -21,6 +22,7 @@ def _rows(path: pathlib.Path) -> list[dict]:
             return data["items"]
     return []
 
+
 def _dt(v: object) -> datetime | None:
     if v is None:
         return None
@@ -32,17 +34,30 @@ def _dt(v: object) -> datetime | None:
     except ValueError:
         return None
 
+
 def _late(r: dict, max_minutes: int) -> bool:
-    needs = bool(r.get("escalation_required") or r.get("sla_breached") or str(r.get("status", "")).strip().lower() in {"breached", "open_breach"})
+    needs = bool(
+        r.get("escalation_required")
+        or r.get("sla_breached")
+        or str(r.get("status", "")).strip().lower() in {"breached", "open_breach"}
+    )
     if not needs:
         return False
-    start = _dt(r.get("breached_at") or r.get("detected_at") or r.get("opened_at") or r.get("created_at"))
-    escalated = _dt(r.get("escalated_at") or r.get("escalation_at") or r.get("paged_at"))
+    start = _dt(
+        r.get("breached_at")
+        or r.get("detected_at")
+        or r.get("opened_at")
+        or r.get("created_at")
+    )
+    escalated = _dt(
+        r.get("escalated_at") or r.get("escalation_at") or r.get("paged_at")
+    )
     if start is None:
         return False
     if escalated is None:
         return True
     return (escalated - start).total_seconds() > max_minutes * 60
+
 
 def main() -> int:
     p = argparse.ArgumentParser()
@@ -50,12 +65,17 @@ def main() -> int:
     p.add_argument("--max-escalation-minutes", type=int, default=60)
     p.add_argument("--max-late-escalations", type=int, default=0)
     a = p.parse_args()
-    bad = [str(r.get("id") or r.get("case_id") or r.get("artifact_id") or "") for r in _rows(pathlib.Path(a.custody)) if _late(r, a.max_escalation_minutes)]
+    bad = [
+        str(r.get("id") or r.get("case_id") or r.get("artifact_id") or "")
+        for r in _rows(pathlib.Path(a.custody))
+        if _late(r, a.max_escalation_minutes)
+    ]
     if len(bad) > a.max_late_escalations:
         bad.sort()
         print(f"E72 custody escalation timeliness breach: {len(bad)}", file=sys.stderr)
         return 2
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

@@ -44,7 +44,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("kpi payload must be a JSON object or non-empty list of objects")
 
@@ -60,16 +64,22 @@ def main() -> int:
 
     records = load_records(pathlib.Path(args.kpi))
     for index, record in enumerate(records):
-        regression_count = to_int(record.get(args.regression_count_field), args.regression_count_field, index)
+        regression_count = to_int(
+            record.get(args.regression_count_field), args.regression_count_field, index
+        )
         if regression_count > args.max_regression_count:
             fail(
                 f"{args.regression_count_field}={regression_count} > "
                 f"{args.max_regression_count} at index {index}"
             )
 
-        burst_rate = to_float(record.get(args.burst_rate_field), args.burst_rate_field, index)
+        burst_rate = to_float(
+            record.get(args.burst_rate_field), args.burst_rate_field, index
+        )
         if burst_rate > args.max_burst_rate:
-            fail(f"{args.burst_rate_field}={burst_rate} > {args.max_burst_rate} at index {index}")
+            fail(
+                f"{args.burst_rate_field}={burst_rate} > {args.max_burst_rate} at index {index}"
+            )
 
     return 0
 

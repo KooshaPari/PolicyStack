@@ -7,7 +7,11 @@ from typing import Iterable, Final
 
 POLICY_CONFIG_DIR_NAME: Final[str] = "policy-config"
 DEFAULT_POLICY_SCOPE_STEMS: Final[tuple[str, ...]] = ("system", "user", "repo")
-DISCOVERY_SCOPE_DIRS: Final[tuple[str, ...]] = ("harness", "task-domain", "task-instance")
+DISCOVERY_SCOPE_DIRS: Final[tuple[str, ...]] = (
+    "harness",
+    "task-domain",
+    "task-instance",
+)
 DISCOVERY_EXTENSIONS: Final[tuple[str, ...]] = (".yaml", ".yml", ".json")
 ALLOWED_POLICY_VERSIONS: Final[frozenset[str]] = frozenset({"v1"})
 

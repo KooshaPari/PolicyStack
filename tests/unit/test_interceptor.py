@@ -227,7 +227,10 @@ class InterceptorTest(unittest.TestCase):
         assert len(lines) == 2
         assert lines[0].startswith("permission_decision source=claude-hook")
         assert "decision=allow" in lines[0]
-        assert "command=cd /tmp && printf 'x' | tee src/tracertm/cli/performance.py" in lines[0]
+        assert (
+            "command=cd /tmp && printf 'x' | tee src/tracertm/cli/performance.py"
+            in lines[0]
+        )
         assert json.loads(lines[1]) == event
 
     def test_record_audit_event_stdout_emits_summary_and_json(self) -> None:

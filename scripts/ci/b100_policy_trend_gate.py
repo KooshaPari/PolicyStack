@@ -26,7 +26,9 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        rows = list(csv.DictReader(pathlib.Path(args.trend_csv).read_text().splitlines()))
+        rows = list(
+            csv.DictReader(pathlib.Path(args.trend_csv).read_text().splitlines())
+        )
     except Exception as exc:
         fail(f"invalid trend csv: {exc}")
     if not rows:
@@ -43,7 +45,9 @@ def main() -> int:
 
     worst_delta = min(deltas) if deltas else 0.0
     if worst_delta < -args.max_negative_delta:
-        fail(f"worst_negative_delta={worst_delta} >max_allowed_negative={-args.max_negative_delta}")
+        fail(
+            f"worst_negative_delta={worst_delta} >max_allowed_negative={-args.max_negative_delta}"
+        )
     return 0
 
 

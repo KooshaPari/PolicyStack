@@ -36,19 +36,28 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        rows = list(csv.DictReader(pathlib.Path(args.queue_csv).read_text().splitlines()))
+        rows = list(
+            csv.DictReader(pathlib.Path(args.queue_csv).read_text().splitlines())
+        )
     except Exception as exc:
         fail(f"invalid queue-csv: {exc}")
 
     if len(rows) < args.min_rows:
         fail(f"queue csv rows={len(rows)} < min_rows={args.min_rows}")
 
-    samples = [row for row in rows if args.queue_col in row and args.utilization_col in row]
+    samples = [
+        row for row in rows if args.queue_col in row and args.utilization_col in row
+    ]
     if not samples:
         fail("no usable queue rows found")
 
-    queue_sizes = [parse_int(row.get(args.queue_col, 0), args.queue_col) for row in samples]
-    utilizations = [parse_float(row.get(args.utilization_col, 0.0), args.utilization_col) for row in samples]
+    queue_sizes = [
+        parse_int(row.get(args.queue_col, 0), args.queue_col) for row in samples
+    ]
+    utilizations = [
+        parse_float(row.get(args.utilization_col, 0.0), args.utilization_col)
+        for row in samples
+    ]
 
     if args.max_samples and len(samples) > args.max_samples:
         queue_sizes = queue_sizes[: args.max_samples]

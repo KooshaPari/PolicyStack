@@ -33,7 +33,9 @@ def _read_json(path: pathlib.Path, label: str) -> list[dict]:
     return _to_records(payload, path, label)
 
 
-def _read_csv(path: pathlib.Path, required: set[str], label: str) -> list[dict[str, str]]:
+def _read_csv(
+    path: pathlib.Path, required: set[str], label: str
+) -> list[dict[str, str]]:
     try:
         with path.open(newline="") as handle:
             reader = csv.DictReader(handle)
@@ -99,23 +101,39 @@ def main() -> int:
 
     rows = _load_records(
         escalations_path,
-        {args.time_field, args.open_field, args.recovered_field, args.recovery_lag_field},
+        {
+            args.time_field,
+            args.open_field,
+            args.recovered_field,
+            args.recovery_lag_field,
+        },
         "escalations",
     )
     if not rows:
         fail("E124 empty escalation data")
 
     ordered = sorted(rows, key=lambda row: str(row.get(args.time_field, "")))
-    open_counts = [_to_int(row[args.open_field], escalations_path, args.open_field) for row in ordered]
+    open_counts = [
+        _to_int(row[args.open_field], escalations_path, args.open_field)
+        for row in ordered
+    ]
     recovered_counts = [
         _to_int(row[args.recovered_field], escalations_path, args.recovered_field)
         for row in ordered
     ]
-    lags = [_to_float(row[args.recovery_lag_field], escalations_path, args.recovery_lag_field) for row in ordered]
+    lags = [
+        _to_float(
+            row[args.recovery_lag_field], escalations_path, args.recovery_lag_field
+        )
+        for row in ordered
+    ]
 
     max_open = max(open_counts)
     max_lag = max(lags)
-    unrecovered = sum(max(0, open_n - recovered_n) for open_n, recovered_n in zip(open_counts, recovered_counts))
+    unrecovered = sum(
+        max(0, open_n - recovered_n)
+        for open_n, recovered_n in zip(open_counts, recovered_counts)
+    )
 
     report_open = _to_int(
         report.get("escalation_open_count_max", 0),

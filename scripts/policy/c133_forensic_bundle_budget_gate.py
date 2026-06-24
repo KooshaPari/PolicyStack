@@ -57,11 +57,16 @@ def main() -> int:
             continue
         total += 1
         budget = to_float(
-            row.get("forensic_bundle_budget", row.get("bundle_budget", row.get("budget", 0.0))),
+            row.get(
+                "forensic_bundle_budget",
+                row.get("bundle_budget", row.get("budget", 0.0)),
+            ),
             "forensic_bundle_budget",
         )
         actual = to_float(
-            row.get("forensic_bundle_cost", row.get("bundle_cost", row.get("cost", budget))),
+            row.get(
+                "forensic_bundle_cost", row.get("bundle_cost", row.get("cost", budget))
+            ),
             "forensic_bundle_cost",
         )
         explicit_breach = to_bool(

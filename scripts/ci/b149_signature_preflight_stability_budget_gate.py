@@ -116,15 +116,21 @@ def main() -> int:
 
     for row in records:
         samples = parse_float(row.get(args.samples_key), args.samples_key)
-        stability_score = parse_float(row.get(args.stability_score_key), args.stability_score_key)
+        stability_score = parse_float(
+            row.get(args.stability_score_key), args.stability_score_key
+        )
         variance = parse_float(row.get(args.variance_key, 0), args.variance_key)
         instability_events = parse_int(
             row.get(args.instability_events_key, 0),
             args.instability_events_key,
         )
         budget_used = parse_float(row.get(args.budget_used_key), args.budget_used_key)
-        budget_total = parse_float(row.get(args.budget_total_key), args.budget_total_key)
-        stability_breach = parse_int(row.get(args.stability_breach_flag_key, 0), args.stability_breach_flag_key)
+        budget_total = parse_float(
+            row.get(args.budget_total_key), args.budget_total_key
+        )
+        stability_breach = parse_int(
+            row.get(args.stability_breach_flag_key, 0), args.stability_breach_flag_key
+        )
 
         if samples < 0:
             fail(f"samples for {args.samples_key} must be >= 0; got {samples}")
@@ -146,9 +152,13 @@ def main() -> int:
                 f"samples={samples}"
             )
         if budget_used < 0:
-            fail(f"budget_used for {args.budget_used_key} must be >= 0; got {budget_used}")
+            fail(
+                f"budget_used for {args.budget_used_key} must be >= 0; got {budget_used}"
+            )
         if budget_total <= 0:
-            fail(f"budget_total for {args.budget_total_key} must be > 0; got {budget_total}")
+            fail(
+                f"budget_total for {args.budget_total_key} must be > 0; got {budget_total}"
+            )
         if budget_used > budget_total:
             fail(f"budget_used={budget_used} cannot exceed budget_total={budget_total}")
         if stability_breach < 0:
@@ -167,17 +177,21 @@ def main() -> int:
 
         window = str(row.get(args.window_key, "default"))
         window_samples[window] = window_samples.get(window, 0.0) + samples
-        window_weighted_stability[window] = (
-            window_weighted_stability.get(window, 0.0) + (stability_score * samples)
-        )
+        window_weighted_stability[window] = window_weighted_stability.get(
+            window, 0.0
+        ) + (stability_score * samples)
         window_instability_events[window] = (
             window_instability_events.get(window, 0) + instability_events
         )
         window_budget_used[window] = window_budget_used.get(window, 0.0) + budget_used
-        window_budget_total[window] = window_budget_total.get(window, 0.0) + budget_total
+        window_budget_total[window] = (
+            window_budget_total.get(window, 0.0) + budget_total
+        )
 
     if total_samples < args.min_total_samples:
-        fail(f"total_samples={total_samples} < min_total_samples={args.min_total_samples}")
+        fail(
+            f"total_samples={total_samples} < min_total_samples={args.min_total_samples}"
+        )
 
     if total_budget_total <= 0:
         fail(f"total_budget_total={total_budget_total} must be > 0")
@@ -190,7 +204,9 @@ def main() -> int:
         )
 
     if total_variance > args.max_total_variance:
-        fail(f"total_variance={total_variance} > max_total_variance={args.max_total_variance}")
+        fail(
+            f"total_variance={total_variance} > max_total_variance={args.max_total_variance}"
+        )
 
     total_instability_rate = total_instability_events / total_samples
     if total_instability_rate > args.max_total_instability_rate:

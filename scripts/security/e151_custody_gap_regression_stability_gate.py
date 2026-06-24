@@ -7,7 +7,9 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E151 custody gap regression stability gate failed: {message}", file=sys.stderr)
+    print(
+        f"E151 custody gap regression stability gate failed: {message}", file=sys.stderr
+    )
     raise SystemExit(2)
 
 
@@ -33,7 +35,9 @@ def load_rows(path: pathlib.Path) -> list[dict]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows
-    fail("custody payload must be list or object with records/items/entries/transitions/attestations")
+    fail(
+        "custody payload must be list or object with records/items/entries/transitions/attestations"
+    )
 
 
 def is_regression_row(
@@ -83,7 +87,9 @@ def main() -> int:
             f"{args.max_regressions_per_window}"
         )
     if args.max_window_violations < 0:
-        fail(f"max-window-violations must be non-negative: {args.max_window_violations}")
+        fail(
+            f"max-window-violations must be non-negative: {args.max_window_violations}"
+        )
     if args.min_stable_window_ratio < 0 or args.min_stable_window_ratio > 1:
         fail(
             "min-stable-window-ratio must be between 0 and 1: "
@@ -101,7 +107,9 @@ def main() -> int:
             continue
 
         dict_rows_seen += 1
-        previous = rows[index - 1] if index > 0 and isinstance(rows[index - 1], dict) else None
+        previous = (
+            rows[index - 1] if index > 0 and isinstance(rows[index - 1], dict) else None
+        )
         regression_flags.append(
             is_regression_row(
                 row,
@@ -118,7 +126,9 @@ def main() -> int:
     regressions = sum(regression_flags)
     regression_rate = regressions / len(regression_flags)
     if regressions > args.max_regressions:
-        fail(f"regressions={regressions} exceeds max_regressions={args.max_regressions}")
+        fail(
+            f"regressions={regressions} exceeds max_regressions={args.max_regressions}"
+        )
     if regression_rate > args.max_regression_rate:
         fail(
             f"regression_rate={regression_rate:.6f} exceeds max_regression_rate={args.max_regression_rate}"

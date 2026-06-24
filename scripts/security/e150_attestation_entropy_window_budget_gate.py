@@ -36,7 +36,9 @@ def load_rows(path: pathlib.Path) -> list[dict]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows
-    fail("attestations payload must be list or object with attestations/records/items/entries/transitions")
+    fail(
+        "attestations payload must be list or object with attestations/records/items/entries/transitions"
+    )
 
 
 def main() -> int:
@@ -58,7 +60,9 @@ def main() -> int:
             f"{args.max_regressions_per_window}"
         )
     if args.max_window_violations < 0:
-        fail(f"max-window-violations must be non-negative: {args.max_window_violations}")
+        fail(
+            f"max-window-violations must be non-negative: {args.max_window_violations}"
+        )
 
     rows = load_rows(pathlib.Path(args.attestations))
     if not rows:

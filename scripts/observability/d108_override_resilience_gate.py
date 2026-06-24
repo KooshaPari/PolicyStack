@@ -75,12 +75,20 @@ def main() -> int:
     if not rows:
         fail("D108 override resilience gate failed: no override rows")
 
-    ordered = sorted(rows, key=lambda row: (row.get(args.time_field) or ""))
-    resilience = [_to_float(row.get(args.value_field, ""), csv_path, args.value_field) for row in ordered]
-    open_counts = [_to_int(row.get(args.count_field, ""), csv_path, args.count_field) for row in ordered]
+    ordered = sorted(rows, key=lambda row: row.get(args.time_field) or "")
+    resilience = [
+        _to_float(row.get(args.value_field, ""), csv_path, args.value_field)
+        for row in ordered
+    ]
+    open_counts = [
+        _to_int(row.get(args.count_field, ""), csv_path, args.count_field)
+        for row in ordered
+    ]
 
     max_open = max(open_counts)
-    report_open = _to_int(str(report.get("override_open_count", 0)), report_path, "override_open_count")
+    report_open = _to_int(
+        str(report.get("override_open_count", 0)), report_path, "override_open_count"
+    )
     if max_open < report_open:
         max_open = report_open
 
@@ -90,7 +98,9 @@ def main() -> int:
     if max_open > args.max_open_overrides:
         fail(f"D108 max_open_overrides={max_open} > limit={args.max_open_overrides}")
     if max_drop > args.max_resilience_drop:
-        fail(f"D108 max_resilience_drop={max_drop} > max_resilience_drop={args.max_resilience_drop}")
+        fail(
+            f"D108 max_resilience_drop={max_drop} > max_resilience_drop={args.max_resilience_drop}"
+        )
 
     return 0
 

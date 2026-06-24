@@ -18,7 +18,8 @@ def import_wrapper(wrapper_dir: str, class_name: str):
     """Import a wrapper class from a specific directory."""
     wrapper_path = _wrapper_base / wrapper_dir / "wrapper.py"
     spec = importlib.util.spec_from_file_location(
-        f"{wrapper_dir}_wrapper", wrapper_path,
+        f"{wrapper_dir}_wrapper",
+        wrapper_path,
     )
     module = importlib.util.module_from_spec(spec)
     sys.modules[f"{wrapper_dir}_wrapper"] = module
@@ -67,7 +68,11 @@ class TestOpenCodeWrapper:
         mock_run.return_value = MagicMock(
             returncode=0,
             stdout=json.dumps(
-                {"decision": "allow", "reasoning": "Safe operation", "confidence": 0.95},
+                {
+                    "decision": "allow",
+                    "reasoning": "Safe operation",
+                    "confidence": 0.95,
+                },
             ),
         )
 

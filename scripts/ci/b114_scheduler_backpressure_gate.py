@@ -36,7 +36,9 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        rows = list(csv.DictReader(pathlib.Path(args.backpressure_csv).read_text().splitlines()))
+        rows = list(
+            csv.DictReader(pathlib.Path(args.backpressure_csv).read_text().splitlines())
+        )
     except Exception as exc:
         fail(f"invalid backpressure csv: {exc}")
 
@@ -63,7 +65,9 @@ def main() -> int:
             )
 
     if total_rejects > args.max_total_rejections:
-        fail(f"total_rejects={total_rejects} > max_total_rejections={args.max_total_rejections}")
+        fail(
+            f"total_rejects={total_rejects} > max_total_rejections={args.max_total_rejections}"
+        )
 
     return 0
 

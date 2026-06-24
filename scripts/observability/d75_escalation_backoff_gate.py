@@ -66,7 +66,7 @@ def main() -> int:
 
     max_backoff = 0.0
     for row in rows:
-        if (value := (row.get("backoff_seconds") or "").strip()):
+        if value := (row.get("backoff_seconds") or "").strip():
             max_backoff = max(max_backoff, float(value))
     breaches = sum(
         1
@@ -80,8 +80,7 @@ def main() -> int:
 
     if effective_backoff > args.max_backoff_level:
         _fail(
-            f"D75 escalation backoff gate failed: "
-            f"backoff_seconds={effective_backoff}"
+            f"D75 escalation backoff gate failed: backoff_seconds={effective_backoff}"
         )
     if breaches > args.max_backoff_breaches:
         _fail(f"D75 escalation backoff gate failed: breaches={breaches}")

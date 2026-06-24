@@ -205,7 +205,8 @@ class FilterAuditEventsTest(unittest.TestCase):
     def test_filter_by_actor_regex(self) -> None:
         """Should filter by actor regex pattern."""
         filtered = filter_audit_events(
-            self.events, actor_pattern="^[ab]",
+            self.events,
+            actor_pattern="^[ab]",
         )  # alice or bob
         assert len(filtered) == 3
 

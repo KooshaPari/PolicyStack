@@ -7,7 +7,9 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E131 recert exception regression rate gate failed: {message}", file=sys.stderr)
+    print(
+        f"E131 recert exception regression rate gate failed: {message}", file=sys.stderr
+    )
     raise SystemExit(2)
 
 
@@ -44,7 +46,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("recert payload must be a JSON object or non-empty list of objects")
 
@@ -52,9 +58,13 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--recert", required=True)
-    parser.add_argument("--exception-regression-rate-field", default="exception_regression_rate")
+    parser.add_argument(
+        "--exception-regression-rate-field", default="exception_regression_rate"
+    )
     parser.add_argument("--max-exception-regression-rate", type=float, default=0.0)
-    parser.add_argument("--exception-regression-count-field", default="exception_regression_count")
+    parser.add_argument(
+        "--exception-regression-count-field", default="exception_regression_count"
+    )
     parser.add_argument("--max-exception-regression-count", type=int, default=0)
     args = parser.parse_args()
 

@@ -114,10 +114,9 @@ def _sequence_breaches(rows: list[dict]) -> set[str]:
         seq_map: dict[int, str] = {}
         ordered = sorted(
             group,
-            key=lambda r: _to_int(
-                r.get("sequence") or r.get("step") or r.get("index")
-            )
-            or 0,
+            key=lambda r: (
+                _to_int(r.get("sequence") or r.get("step") or r.get("index")) or 0
+            ),
         )
         for index, row in enumerate(ordered):
             cid = _pick(row, ("chain_id", "custody_chain_id", "segment_id", "id"))

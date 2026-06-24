@@ -6,6 +6,7 @@ import pathlib
 import sys
 from datetime import datetime, timezone
 
+
 def _rows(path: pathlib.Path) -> list[dict]:
     if path.suffix.lower() == ".csv":
         return list(csv.DictReader(path.open()))
@@ -19,6 +20,7 @@ def _rows(path: pathlib.Path) -> list[dict]:
             return data["inventory"]
     return []
 
+
 def _dt(v: object) -> datetime | None:
     if v is None:
         return None
@@ -29,6 +31,7 @@ def _dt(v: object) -> datetime | None:
         return datetime.fromisoformat(s.replace("Z", "+00:00")).astimezone(timezone.utc)
     except ValueError:
         return None
+
 
 def main() -> int:
     p = argparse.ArgumentParser()
@@ -44,9 +47,12 @@ def main() -> int:
             stale.append(key)
     if stale:
         stale.sort()
-        print(f"E65 attestation inventory freshness breach: {len(stale)}", file=sys.stderr)
+        print(
+            f"E65 attestation inventory freshness breach: {len(stale)}", file=sys.stderr
+        )
         return 2
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

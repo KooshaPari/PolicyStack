@@ -20,7 +20,10 @@ def _load_rows(path: pathlib.Path) -> tuple[list[dict], str | None]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows, None
-    return [], "E88 invalid input: expected list or dict with custody/chains/items/records/lineage"
+    return (
+        [],
+        "E88 invalid input: expected list or dict with custody/chains/items/records/lineage",
+    )
 
 
 def _pick(row: dict, keys: tuple[str, ...]) -> str:
@@ -76,8 +79,7 @@ def main() -> int:
         return 2
 
     known = {
-        _pick(r, ("chain_id", "custody_chain_id", "id", "segment_id"))
-        for r in rows
+        _pick(r, ("chain_id", "custody_chain_id", "id", "segment_id")) for r in rows
     }
     known.discard("")
 
@@ -89,8 +91,15 @@ def main() -> int:
             if cid:
                 breaks.add(cid)
 
-        expected = _to_int(r.get("sequence") or r.get("step") or r.get("index") or r.get("seq"))
-        if expected is None and (r.get("sequence") is not None or r.get("step") is not None or r.get("index") is not None or r.get("seq") is not None):
+        expected = _to_int(
+            r.get("sequence") or r.get("step") or r.get("index") or r.get("seq")
+        )
+        if expected is None and (
+            r.get("sequence") is not None
+            or r.get("step") is not None
+            or r.get("index") is not None
+            or r.get("seq") is not None
+        ):
             if cid:
                 breaks.add(cid)
 
@@ -98,7 +107,9 @@ def main() -> int:
         sequences: dict[int, list[str]] = {}
         for r in records:
             cid = _pick(r, ("chain_id", "custody_chain_id", "id", "segment_id"))
-            seq = _to_int(r.get("sequence") or r.get("step") or r.get("index") or r.get("seq"))
+            seq = _to_int(
+                r.get("sequence") or r.get("step") or r.get("index") or r.get("seq")
+            )
             if seq is not None:
                 sequences.setdefault(seq, []).append(cid)
         if not sequences:

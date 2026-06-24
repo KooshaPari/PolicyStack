@@ -100,8 +100,12 @@ def main() -> int:
 
     for row in records:
         entropy = parse_float(row.get(args.entropy_key), args.entropy_key)
-        coverage = parse_float(row.get(args.coverage_key, args.max_coverage), args.coverage_key)
-        collision_count = parse_int(row.get(args.collision_count_key, 0), args.collision_count_key)
+        coverage = parse_float(
+            row.get(args.coverage_key, args.max_coverage), args.coverage_key
+        )
+        collision_count = parse_int(
+            row.get(args.collision_count_key, 0), args.collision_count_key
+        )
 
         if entropy < 0:
             fail(f"entropy for {args.entropy_key} must be >= 0; got {entropy}")
@@ -125,7 +129,9 @@ def main() -> int:
 
     average_entropy = entropy_total / len(records)
     if average_entropy < args.min_average_entropy:
-        fail(f"average_entropy={average_entropy} < min_average_entropy={args.min_average_entropy}")
+        fail(
+            f"average_entropy={average_entropy} < min_average_entropy={args.min_average_entropy}"
+        )
 
     if collision_total > args.max_collision_count:
         fail(

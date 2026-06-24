@@ -273,7 +273,9 @@ class AppendAuditEventTest(unittest.TestCase):
             append_audit_event(audit_log_path=audit_log_path, event=event)
             content = audit_log_path.read_text().strip()
             # Keys should be sorted in JSON
-            assert content.index("a_field") < content.index("z_field"), "Keys should be sorted in JSON output"
+            assert content.index("a_field") < content.index("z_field"), (
+                "Keys should be sorted in JSON output"
+            )
 
 
 if __name__ == "__main__":

@@ -10,7 +10,10 @@ REGRESSION_STATUSES = {"regression", "degradation", "drop", "error", "fail", "ro
 
 
 def fail(message: str) -> None:
-    print(f"E140 trust transition regression budget gate failed: {message}", file=sys.stderr)
+    print(
+        f"E140 trust transition regression budget gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -36,7 +39,9 @@ def load_rows(path: pathlib.Path) -> list[dict]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows
-    fail("transitions payload must be list or object with transitions/records/items/entries/attestations")
+    fail(
+        "transitions payload must be list or object with transitions/records/items/entries/attestations"
+    )
 
 
 def is_regression_transition(
@@ -93,7 +98,9 @@ def main() -> int:
     regressions = sum(regression_flags)
     regression_rate = regressions / len(regression_flags)
     if regressions > args.max_regressions:
-        fail(f"regressions={regressions} exceeds max_regressions={args.max_regressions}")
+        fail(
+            f"regressions={regressions} exceeds max_regressions={args.max_regressions}"
+        )
     if regression_rate > args.max_regression_rate:
         fail(
             f"regression_rate={regression_rate:.6f} exceeds max_regression_rate={args.max_regression_rate}"

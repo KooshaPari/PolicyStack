@@ -33,7 +33,9 @@ def load_rows(path: pathlib.Path) -> list[dict]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows
-    fail("custody payload must be list or object with records/items/entries/transitions/attestations")
+    fail(
+        "custody payload must be list or object with records/items/entries/transitions/attestations"
+    )
 
 
 def main() -> int:
@@ -61,7 +63,8 @@ def main() -> int:
         regression_value = row.get(args.regression_col)
         if regression_value is not None and str(regression_value).strip() != "":
             regression_flags.append(
-                parse_float(regression_value, args.regression_col) > args.regression_threshold
+                parse_float(regression_value, args.regression_col)
+                > args.regression_threshold
             )
             continue
 
@@ -69,7 +72,9 @@ def main() -> int:
         if previous_gap is None:
             regression_flags.append(False)
         else:
-            regression_flags.append((gap_value - previous_gap) > args.regression_threshold)
+            regression_flags.append(
+                (gap_value - previous_gap) > args.regression_threshold
+            )
         previous_gap = gap_value
 
     if not regression_flags:

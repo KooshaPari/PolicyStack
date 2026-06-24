@@ -27,7 +27,9 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        rows = list(csv.DictReader(pathlib.Path(args.checks_csv).read_text().splitlines()))
+        rows = list(
+            csv.DictReader(pathlib.Path(args.checks_csv).read_text().splitlines())
+        )
     except Exception as exc:
         fail(f"invalid checks csv: {exc}")
     if not rows:

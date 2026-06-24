@@ -10,7 +10,10 @@ from typing import Any
 
 
 def fail(message: str) -> None:
-    print(f"E206 consistency rollforward stability budget gate failed: {message}", file=sys.stderr)
+    print(
+        f"E206 consistency rollforward stability budget gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -29,8 +32,11 @@ def extract_rows(
 ) -> list[dict[str, Any]]:
     if isinstance(payload, list):
         return [row for row in payload if isinstance(row, dict)]
-    rows = payload.get("items") or payload.get("records") or payload.get("entries") or payload.get(
-        lane_key
+    rows = (
+        payload.get("items")
+        or payload.get("records")
+        or payload.get("entries")
+        or payload.get(lane_key)
     )
     if isinstance(rows, list):
         return [row for row in rows if isinstance(row, dict)]
@@ -55,10 +61,18 @@ def parse_int(value: object, label: str) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--consistency-rollforward-stability-budget-report", required=True)
-    parser.add_argument("--max-consistency-rollforward-seconds", type=float, default=312.0)
-    parser.add_argument("--min-consistency-rollforward-stability-rate", type=float, default=0.97)
-    parser.add_argument("--max-consistency-rollforward-stability-breach-count", type=int, default=0)
+    parser.add_argument(
+        "--consistency-rollforward-stability-budget-report", required=True
+    )
+    parser.add_argument(
+        "--max-consistency-rollforward-seconds", type=float, default=312.0
+    )
+    parser.add_argument(
+        "--min-consistency-rollforward-stability-rate", type=float, default=0.97
+    )
+    parser.add_argument(
+        "--max-consistency-rollforward-stability-breach-count", type=int, default=0
+    )
     args = parser.parse_args()
 
     payload = load_report(
@@ -89,7 +103,9 @@ def main() -> int:
             parse_float(
                 row.get(
                     "consistency_rollforward_stability_rate",
-                    row.get("rollforward_stability_rate", row.get("stability_rate", 1.0)),
+                    row.get(
+                        "rollforward_stability_rate", row.get("stability_rate", 1.0)
+                    ),
                 ),
                 "consistency_rollforward_stability_rate",
             ),
@@ -103,8 +119,7 @@ def main() -> int:
         )
 
     if (
-        max_consistency_rollforward_seconds
-        > args.max_consistency_rollforward_seconds
+        max_consistency_rollforward_seconds > args.max_consistency_rollforward_seconds
         or consistency_rollforward_stability_rate
         < args.min_consistency_rollforward_stability_rate
         or consistency_rollforward_stability_breach_count

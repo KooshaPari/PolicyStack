@@ -7,7 +7,10 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E147 recert exception window stability gate failed: {message}", file=sys.stderr)
+    print(
+        f"E147 recert exception window stability gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -44,7 +47,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("recert payload must be a JSON object or non-empty list of objects")
 
@@ -56,8 +63,13 @@ def main() -> int:
         "--exception-window-stability-score-field",
         default="exception_window_stability_score",
     )
-    parser.add_argument("--min-exception-window-stability-score", type=float, default=1.0)
-    parser.add_argument("--unstable-exception-window-count-field", default="unstable_exception_window_count")
+    parser.add_argument(
+        "--min-exception-window-stability-score", type=float, default=1.0
+    )
+    parser.add_argument(
+        "--unstable-exception-window-count-field",
+        default="unstable_exception_window_count",
+    )
     parser.add_argument("--max-unstable-exception-window-count", type=int, default=0)
     args = parser.parse_args()
 

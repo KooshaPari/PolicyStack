@@ -44,7 +44,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("kpi payload must be a JSON object or non-empty list of objects")
 
@@ -52,16 +56,22 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--kpi", required=True)
-    parser.add_argument("--stability-budget-spent-field", default="stability_budget_spent")
+    parser.add_argument(
+        "--stability-budget-spent-field", default="stability_budget_spent"
+    )
     parser.add_argument("--max-stability-budget-spent", type=float, default=1.0)
-    parser.add_argument("--over-budget-kpi-count-field", default="over_budget_kpi_count")
+    parser.add_argument(
+        "--over-budget-kpi-count-field", default="over_budget_kpi_count"
+    )
     parser.add_argument("--max-over-budget-kpi-count", type=int, default=0)
     args = parser.parse_args()
 
     records = load_records(pathlib.Path(args.kpi))
     for index, record in enumerate(records):
         stability_budget_spent = to_float(
-            record.get(args.stability_budget_spent_field), args.stability_budget_spent_field, index
+            record.get(args.stability_budget_spent_field),
+            args.stability_budget_spent_field,
+            index,
         )
         if stability_budget_spent > args.max_stability_budget_spent:
             fail(
@@ -70,7 +80,9 @@ def main() -> int:
             )
 
         over_budget_kpi_count = to_int(
-            record.get(args.over_budget_kpi_count_field), args.over_budget_kpi_count_field, index
+            record.get(args.over_budget_kpi_count_field),
+            args.over_budget_kpi_count_field,
+            index,
         )
         if over_budget_kpi_count > args.max_over_budget_kpi_count:
             fail(

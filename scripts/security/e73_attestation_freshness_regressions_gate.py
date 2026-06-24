@@ -6,6 +6,7 @@ import pathlib
 import sys
 from datetime import datetime, timezone
 
+
 def _load_rows(path: pathlib.Path) -> tuple[list[dict], str | None]:
     try:
         if path.suffix.lower() == ".csv":
@@ -21,7 +22,10 @@ def _load_rows(path: pathlib.Path) -> tuple[list[dict], str | None]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows, None
-    return [], "E73 invalid input: expected list or dict with attestations/items/reports/rows"
+    return (
+        [],
+        "E73 invalid input: expected list or dict with attestations/items/reports/rows",
+    )
 
 
 def _parse_datetime(value: object) -> datetime | None:
@@ -31,7 +35,9 @@ def _parse_datetime(value: object) -> datetime | None:
     if not text:
         return None
     try:
-        return datetime.fromisoformat(text.replace("Z", "+00:00")).astimezone(timezone.utc)
+        return datetime.fromisoformat(text.replace("Z", "+00:00")).astimezone(
+            timezone.utc
+        )
     except ValueError:
         return None
 
@@ -40,16 +46,24 @@ def _is_regression(row: dict, max_age_hours: int) -> bool:
     status = str(row.get("status", "")).strip().lower()
     if status in {"regressed", "failed", "degraded", "stale"}:
         return True
-    if bool(row.get("regression") or row.get("freshness_regression") or row.get("stale")):
+    if bool(
+        row.get("regression") or row.get("freshness_regression") or row.get("stale")
+    ):
         return True
-    age = row.get("age_hours") or row.get("hours_since_refresh") or row.get("staleness_hours")
+    age = (
+        row.get("age_hours")
+        or row.get("hours_since_refresh")
+        or row.get("staleness_hours")
+    )
     if age is not None:
         try:
             if float(age) > float(max_age_hours):
                 return True
         except (TypeError, ValueError):
             pass
-    observed = _parse_datetime(row.get("observed_at") or row.get("refreshed_at") or row.get("created_at"))
+    observed = _parse_datetime(
+        row.get("observed_at") or row.get("refreshed_at") or row.get("created_at")
+    )
     if observed is not None:
         age_hours = (datetime.now(timezone.utc) - observed).total_seconds() / 3600.0
         return age_hours > max_age_hours
@@ -66,7 +80,11 @@ def main() -> int:
     if err:
         print(err, file=sys.stderr)
         return 2
-    bad = [str(r.get("id") or r.get("attestation_id") or r.get("name") or "") for r in rows if _is_regression(r, args.max_age_hours)]
+    bad = [
+        str(r.get("id") or r.get("attestation_id") or r.get("name") or "")
+        for r in rows
+        if _is_regression(r, args.max_age_hours)
+    ]
     if len(bad) > args.max_regressions:
         bad.sort()
         print(f"E73 attestation freshness regressions: {len(bad)}", file=sys.stderr)

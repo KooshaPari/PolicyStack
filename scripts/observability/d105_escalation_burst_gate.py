@@ -80,11 +80,12 @@ def main() -> int:
     if not rows:
         fail("D105 escalation burst gate failed: no escalation rows")
 
-    ordered = sorted(rows, key=lambda row: (row.get(args.time_field) or ""))
+    ordered = sorted(rows, key=lambda row: row.get(args.time_field) or "")
     values = [
         _to_float(row.get(args.value_field, ""), csv_path, args.value_field)
         for row in ordered
-        if (row.get(args.status_field) or "").strip().lower() in {"open", "active", "acknowledged"}
+        if (row.get(args.status_field) or "").strip().lower()
+        in {"open", "active", "acknowledged"}
     ]
     if len(values) < 2:
         fail("D105 escalation burst gate failed: insufficient active rows")
@@ -98,7 +99,9 @@ def main() -> int:
             max_slope = max(max_slope, slope)
 
     report_bursts = _to_int(
-        str(report.get("escalation_burst_count", 0)), report_path, "escalation_burst_count"
+        str(report.get("escalation_burst_count", 0)),
+        report_path,
+        "escalation_burst_count",
     )
     report_slope = float(report.get("escalation_burst_max_delta", 0.0))
     if report_bursts > args.max_bursts:

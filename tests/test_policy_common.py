@@ -83,7 +83,8 @@ def test_required_default_policy_paths_matches_default_resolution(
 
 
 def test_normalize_input_paths_dedupes_relative_and_absolute_equivalents(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     policy_file = tmp_path / "policy-config" / "repo.yaml"
     policy_file.parent.mkdir(parents=True, exist_ok=True)

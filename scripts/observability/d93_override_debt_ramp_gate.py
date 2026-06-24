@@ -42,6 +42,7 @@ def _to_float(value: object, field: str) -> float:
     except Exception:
         _fail(f"invalid float in {field}: {value!r}")
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--report", required=True)
 parser.add_argument("--debt-csv", required=True)
@@ -79,4 +80,3 @@ if ramp_steps > args.max_step_count:
     _fail(f"ramp_steps={ramp_steps}")
 if debt_max > args.max_debt:
     _fail(f"debt_max={debt_max}")
-

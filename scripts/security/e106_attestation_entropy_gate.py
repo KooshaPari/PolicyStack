@@ -24,11 +24,15 @@ def main() -> int:
     parser.add_argument("--max-avg-entropy", type=float, default=1.0)
     args = parser.parse_args()
 
-    rows = list(csv.DictReader(pathlib.Path(args.attestations).read_text().splitlines()))
+    rows = list(
+        csv.DictReader(pathlib.Path(args.attestations).read_text().splitlines())
+    )
     if not rows:
         fail("attestations payload must contain rows")
 
-    total_entropy = sum(parse_float(row.get(args.entropy_col), args.entropy_col) for row in rows)
+    total_entropy = sum(
+        parse_float(row.get(args.entropy_col), args.entropy_col) for row in rows
+    )
     avg_entropy = total_entropy / len(rows)
     if avg_entropy > args.max_avg_entropy:
         fail(f"avg_entropy={avg_entropy}")

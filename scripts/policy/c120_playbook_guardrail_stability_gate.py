@@ -7,7 +7,10 @@ import sys
 
 
 def fail(message: str) -> None:
-    print(f"E120 C120 playbook guardrail stability gate failed: {message}", file=sys.stderr)
+    print(
+        f"E120 C120 playbook guardrail stability gate failed: {message}",
+        file=sys.stderr,
+    )
     raise SystemExit(2)
 
 
@@ -66,7 +69,9 @@ def main() -> int:
     unstable_rate = unstable / total
     if args.max_unstable_steps and unstable > args.max_unstable_steps:
         fail(f"unstable_steps={unstable}")
-    if args.max_unstable_rate and unstable_rate > to_float(args.max_unstable_rate, "max_unstable_rate"):
+    if args.max_unstable_rate and unstable_rate > to_float(
+        args.max_unstable_rate, "max_unstable_rate"
+    ):
         fail(f"unstable_rate={unstable_rate:.6f}")
     return 0
 

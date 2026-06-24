@@ -85,7 +85,9 @@ def main() -> int:
             f"{args.max_regressions_per_window}"
         )
     if args.max_window_violations < 0:
-        fail(f"max-window-violations must be non-negative: {args.max_window_violations}")
+        fail(
+            f"max-window-violations must be non-negative: {args.max_window_violations}"
+        )
 
     rows = load_rows(pathlib.Path(args.transitions))
     if not rows:
@@ -95,9 +97,13 @@ def main() -> int:
     for index, row in enumerate(rows):
         if not isinstance(row, dict):
             continue
-        previous = rows[index - 1] if index > 0 and isinstance(rows[index - 1], dict) else None
+        previous = (
+            rows[index - 1] if index > 0 and isinstance(rows[index - 1], dict) else None
+        )
         regression_flags.append(
-            is_regression_row(row, previous, args.trust_col, args.status_col, args.drop_threshold)
+            is_regression_row(
+                row, previous, args.trust_col, args.status_col, args.drop_threshold
+            )
         )
 
     if not regression_flags:

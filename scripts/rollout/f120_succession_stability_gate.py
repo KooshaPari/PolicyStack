@@ -44,7 +44,11 @@ def load_records(path: pathlib.Path) -> list[dict[str, object]]:
 
     if isinstance(payload, dict):
         return [payload]
-    if isinstance(payload, list) and payload and all(isinstance(item, dict) for item in payload):
+    if (
+        isinstance(payload, list)
+        and payload
+        and all(isinstance(item, dict) for item in payload)
+    ):
         return list(payload)
     fail("succession payload must be a JSON object or non-empty list of objects")
 
@@ -60,14 +64,18 @@ def main() -> int:
 
     records = load_records(pathlib.Path(args.succession))
     for index, record in enumerate(records):
-        stability = to_float(record.get(args.stability_score_field), args.stability_score_field, index)
+        stability = to_float(
+            record.get(args.stability_score_field), args.stability_score_field, index
+        )
         if stability < args.min_stability_score:
             fail(
                 f"{args.stability_score_field}={stability} < "
                 f"{args.min_stability_score} at index {index}"
             )
 
-        failures = to_int(record.get(args.handoff_failures_field), args.handoff_failures_field, index)
+        failures = to_int(
+            record.get(args.handoff_failures_field), args.handoff_failures_field, index
+        )
         if failures > args.max_handoff_failures:
             fail(
                 f"{args.handoff_failures_field}={failures} > "

@@ -103,7 +103,9 @@ def main() -> int:
 
     for row in records:
         operations = parse_float(row.get(args.operations_key), args.operations_key)
-        unstable_events = parse_int(row.get(args.unstable_events_key, 0), args.unstable_events_key)
+        unstable_events = parse_int(
+            row.get(args.unstable_events_key, 0), args.unstable_events_key
+        )
         reclaim_failures = parse_int(
             row.get(args.reclaim_failures_key, 0),
             args.reclaim_failures_key,
@@ -131,9 +133,13 @@ def main() -> int:
                 f"{reclaim_latency_ms}"
             )
         if unstable_events > operations:
-            fail(f"unstable_events={unstable_events} cannot exceed operations={operations}")
+            fail(
+                f"unstable_events={unstable_events} cannot exceed operations={operations}"
+            )
         if reclaim_failures > operations:
-            fail(f"reclaim_failures={reclaim_failures} cannot exceed operations={operations}")
+            fail(
+                f"reclaim_failures={reclaim_failures} cannot exceed operations={operations}"
+            )
 
         total_operations += operations
         total_unstable_events += unstable_events
@@ -142,10 +148,14 @@ def main() -> int:
 
         window = str(row.get(args.window_key, "default"))
         window_operations[window] = window_operations.get(window, 0.0) + operations
-        window_unstable_events[window] = window_unstable_events.get(window, 0) + unstable_events
+        window_unstable_events[window] = (
+            window_unstable_events.get(window, 0) + unstable_events
+        )
 
     if total_operations < args.min_total_operations:
-        fail(f"total_operations={total_operations} < min_total_operations={args.min_total_operations}")
+        fail(
+            f"total_operations={total_operations} < min_total_operations={args.min_total_operations}"
+        )
 
     total_instability_rate = total_unstable_events / total_operations
     if total_instability_rate > args.max_total_instability_rate:

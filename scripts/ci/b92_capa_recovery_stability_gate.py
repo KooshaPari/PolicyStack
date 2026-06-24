@@ -58,7 +58,10 @@ def main() -> int:
             breaches += 1
 
     if args.require_data and not rows:
-        print("B92 capa recovery stability gate failed: no recovery rows to evaluate", file=sys.stderr)
+        print(
+            "B92 capa recovery stability gate failed: no recovery rows to evaluate",
+            file=sys.stderr,
+        )
         return 2
 
     if breaches > args.max_breaches:

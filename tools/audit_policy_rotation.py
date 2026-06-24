@@ -66,8 +66,12 @@ def main() -> None:
     for repo in repos:
         repo_path = base_dir / repo
         digest, policy_time = read_digest(repo_path)
-        prev_digest = previous.get(repo, {}).get("digest") if isinstance(previous, dict) else None
-        changed = prev_digest is not None and digest is not None and prev_digest != digest
+        prev_digest = (
+            previous.get(repo, {}).get("digest") if isinstance(previous, dict) else None
+        )
+        changed = (
+            prev_digest is not None and digest is not None and prev_digest != digest
+        )
         created = prev_digest is None and digest is not None
         if changed or created:
             changes += 1

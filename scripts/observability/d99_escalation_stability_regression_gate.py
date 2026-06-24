@@ -7,7 +7,9 @@ import sys
 
 
 def _fail(message: str) -> None:
-    print(f"D99 escalation stability regression gate failed: {message}", file=sys.stderr)
+    print(
+        f"D99 escalation stability regression gate failed: {message}", file=sys.stderr
+    )
     raise SystemExit(2)
 
 
@@ -82,11 +84,14 @@ def main() -> int:
     stability = [
         _to_float(row.get(args.stability_field, ""), csv_path, args.stability_field)
         for row in ordered
-        if (row.get(args.status_field) or "").strip().lower() in {"open", "active", "in_progress"}
+        if (row.get(args.status_field) or "").strip().lower()
+        in {"open", "active", "in_progress"}
     ]
 
     if len(stability) < 2:
-        _fail("D99 escalation stability regression gate failed: insufficient stability points")
+        _fail(
+            "D99 escalation stability regression gate failed: insufficient stability points"
+        )
 
     regressions = _to_int(
         str(report.get("escalation_stability_regressions", 0)),
@@ -113,7 +118,9 @@ def main() -> int:
     if max_drop > args.max_stability_drop:
         _fail(f"D99 escalation stability regression gate failed: max_drop={max_drop}")
     if regressions > args.max_stability_regressions:
-        _fail(f"D99 escalation stability regression gate failed: regressions={regressions}")
+        _fail(
+            f"D99 escalation stability regression gate failed: regressions={regressions}"
+        )
     if variance > args.max_stability_variance:
         _fail(f"D99 escalation stability regression gate failed: variance={variance}")
 

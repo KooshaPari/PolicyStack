@@ -20,7 +20,10 @@ def _load_rows(path: pathlib.Path) -> tuple[list[dict], str | None]:
             rows = data.get(key)
             if isinstance(rows, list):
                 return rows, None
-    return [], "E84 invalid input: expected list or dict with custody/chains/items/records/lineage"
+    return (
+        [],
+        "E84 invalid input: expected list or dict with custody/chains/items/records/lineage",
+    )
 
 
 def _pick(row: dict, keys: tuple[str, ...]) -> str:
@@ -43,12 +46,26 @@ def main() -> int:
     if err:
         print(err, file=sys.stderr)
         return 2
-    ids = {_pick(r, ("chain_id", "custody_chain_id", "id")) for r in rows if _pick(r, ("chain_id", "custody_chain_id", "id"))}
+    ids = {
+        _pick(r, ("chain_id", "custody_chain_id", "id"))
+        for r in rows
+        if _pick(r, ("chain_id", "custody_chain_id", "id"))
+    }
     broken = sorted(
         {
             _pick(r, ("chain_id", "custody_chain_id", "id"))
             for r in rows
-            if (parent := _pick(r, ("parent_chain_id", "parent_id", "prev_chain_id", "previous_chain_id")))
+            if (
+                parent := _pick(
+                    r,
+                    (
+                        "parent_chain_id",
+                        "parent_id",
+                        "prev_chain_id",
+                        "previous_chain_id",
+                    ),
+                )
+            )
             and parent not in ids
         }
     )

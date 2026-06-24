@@ -33,7 +33,9 @@ def _read_json(path: pathlib.Path, label: str) -> list[dict]:
     return _to_records(payload, path, label)
 
 
-def _read_csv(path: pathlib.Path, required: set[str], label: str) -> list[dict[str, str]]:
+def _read_csv(
+    path: pathlib.Path, required: set[str], label: str
+) -> list[dict[str, str]]:
     try:
         with path.open(newline="") as handle:
             reader = csv.DictReader(handle)
@@ -74,7 +76,10 @@ def _window_pairs(values: list[float], window_size: int) -> list[list[float]]:
         return []
     if window_size <= 0 or window_size > len(values):
         return [values]
-    return [values[start : start + window_size] for start in range(0, len(values) - window_size + 1)]
+    return [
+        values[start : start + window_size]
+        for start in range(0, len(values) - window_size + 1)
+    ]
 
 
 def main() -> int:
@@ -101,7 +106,12 @@ def main() -> int:
 
     rows = _load_records(
         suppression_path,
-        {args.time_field, args.entropy_field, args.drift_entropy_field, args.drift_budget_field},
+        {
+            args.time_field,
+            args.entropy_field,
+            args.drift_entropy_field,
+            args.drift_budget_field,
+        },
         "suppression",
     )
     if len(rows) < 2:
@@ -113,17 +123,19 @@ def main() -> int:
         for row in ordered
     ]
     measured_drifts = [
-        _to_float(row[args.drift_entropy_field], suppression_path, args.drift_entropy_field)
+        _to_float(
+            row[args.drift_entropy_field], suppression_path, args.drift_entropy_field
+        )
         for row in ordered
     ]
     budgets = [
-        _to_float(row[args.drift_budget_field], suppression_path, args.drift_budget_field)
+        _to_float(
+            row[args.drift_budget_field], suppression_path, args.drift_budget_field
+        )
         for row in ordered
     ]
 
-    expected_drifts = [
-        abs(curr - prev) for prev, curr in zip(entropies, entropies[1:])
-    ]
+    expected_drifts = [abs(curr - prev) for prev, curr in zip(entropies, entropies[1:])]
     measured_drift_values = measured_drifts[1:] if len(measured_drifts) > 1 else []
     budgets_values = budgets[1:] if len(budgets) > 1 else []
 

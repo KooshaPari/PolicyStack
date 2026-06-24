@@ -98,7 +98,9 @@ def main() -> int:
     window_instability_events: dict[str, int] = {}
 
     for row in records:
-        stability_score = parse_float(row.get(args.stability_score_key), args.stability_score_key)
+        stability_score = parse_float(
+            row.get(args.stability_score_key), args.stability_score_key
+        )
         instability_events = parse_int(
             row.get(args.instability_events_key, 0),
             args.instability_events_key,
@@ -113,7 +115,9 @@ def main() -> int:
         instability_events_total += instability_events
 
         window = str(row.get(args.window_key, "default"))
-        window_stability_totals[window] = window_stability_totals.get(window, 0.0) + stability_score
+        window_stability_totals[window] = (
+            window_stability_totals.get(window, 0.0) + stability_score
+        )
         window_counts[window] = window_counts.get(window, 0) + 1
         window_instability_events[window] = (
             window_instability_events.get(window, 0) + instability_events
