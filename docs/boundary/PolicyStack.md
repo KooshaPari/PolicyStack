@@ -12,28 +12,28 @@ status: active
 last_boundary_review: 2026-06-17
 review_cadence: 30d
 in_scope:
-  - "<to be filled>"
+  - `&lt;to be filled&gt;`
 out_of_scope:
-  - "<to be filled>"
+  - `&lt;to be filled&gt;`
 ---
 
 # Boundary — PolicyStack
 
 ## In Scope
 
-<To be filled.>
+`&lt;To be filled.&gt;`
 
 ## Out of Scope
 
-| Not here | Lives in | Reason |
-| -------- | -------- | ------ |
-| <capability> | <other-repo-or-N/A> | <why> |
+| `Not here` | `Lives in` | `Reason` |
+| ---------- | ---------- | -------- |
+| `&lt;capability&gt;` | `&lt;other-repo-or-N/A&gt;` | `&lt;why&gt;` |
 
 ## Boundary Crossings
 
-| Crossing | Direction | Surface | Status |
-| -------- | --------- | ------- | ------ |
-| <capability or interface> | <this-repo→other\|other→this-repo> | <Trait / HTTP / CLI / file / event> | <green\|amber\|red> |
+| `Crossing` | `Direction` | `Surface` | `Status` |
+| ---------- | ----------- | -------- | -------- |
+| `&lt;capability or interface&gt;` | `&lt;this-repo→other\|other→this-repo&gt;` | `&lt;Trait / HTTP / CLI / file / event&gt;` | `&lt;green\|amber\|red&gt;` |
 
 ## Last Boundary Review
 
