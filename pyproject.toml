@@ -7,6 +7,19 @@ name = "policy-federation"
 version = "0.1.0"
 description = "Agent policy federation"
 
+# The actual `policy_federation` importable package lives at cli/src/policy_federation
+# (built via cli/pyproject.toml). The root pyproject.toml only carries tool
+# configuration (ruff, pytest) and ships no Python packages itself, so we
+# explicitly scope setuptools' auto-discovery to the installable subpackage
+# and exclude everything else. Without this guard, setuptools refuses to
+# build the project when it sees multiple top-level directories such as
+# `cli/`, `specs/`, `assets/`, `schemas/`, `policies/`, `wrappers/`,
+# `contracts/`, `extensions/` (see error: "Multiple top-level packages
+# discovered in a flat-layout").
+[tool.setuptools.packages.find]
+where = ["cli/src"]
+include = ["policy_federation*"]
+
 [tool.ruff]
 line-length = 88
 target-version = "py310"
