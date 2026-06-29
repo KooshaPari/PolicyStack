@@ -100,17 +100,20 @@ fn run_git(cwd: Option<&PathBuf>, args: &[&str]) -> Result<String, String> {
 
 fn eval_condition(name: &str, cwd: Option<&PathBuf>) -> Result<bool, String> {
     match name {
-        "git_is_worktree" => Ok(run_git(cwd, &["rev-parse", "--is-inside-work-tree"])?
-            .eq("true")),
-        "git_clean_worktree" => Ok(run_git(cwd, &["status", "--porcelain"])?
-            .is_empty()),
+        "git_is_worktree" => Ok(run_git(cwd, &["rev-parse", "--is-inside-work-tree"])?.eq("true")),
+        "git_clean_worktree" => Ok(run_git(cwd, &["status", "--porcelain"])?.is_empty()),
         "git_synced_to_upstream" => {
-            run_git(cwd, &["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"])
-                .map_err(|_| "git-no-upstream".to_string())?;
+            run_git(
+                cwd,
+                &["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"],
+            )
+            .map_err(|_| "git-no-upstream".to_string())?;
             let counts = run_git(cwd, &["rev-list", "--left-right", "--count", "@{u}...HEAD"])
                 .map_err(|_| "git-upstream-compare-failed".to_string())?;
             let mut it = counts.split_whitespace();
-            let behind = it.next().ok_or_else(|| "git-behind-not-found".to_string())?;
+            let behind = it
+                .next()
+                .ok_or_else(|| "git-behind-not-found".to_string())?;
             let ahead = it.next().ok_or_else(|| "git-ahead-not-found".to_string())?;
             if it.next().is_some() {
                 return Ok(false);
@@ -208,7 +211,6 @@ fn eval_condition_list(
                 pass_optional = true;
             }
         }
-
     }
 
     if mode == "any" {
@@ -626,5 +628,622 @@ mod fnmatch {
             }
         }
         Ok(rec(text.as_bytes(), pattern.as_bytes(), 0, 0))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    // -----------------------------------------------------------------------
+    // normalize_command
+    // -----------------------------------------------------------------------
+    #[test]
+    fn test_normalize_command_trims_whitespace() {
+        assert_eq!(normalize_command("git push"), "git push");
+    }
+
+    #[test]
+    fn test_normalize_command_collapses_multiple_spaces() {
+        assert_eq!(normalize_command("git   push  -f"), "git push -f");
+    }
+
+    #[test]
+    fn test_normalize_command_handles_empty() {
+        assert_eq!(normalize_command(""), "");
+    }
+
+    #[test]
+    fn test_normalize_command_preserves_order() {
+        assert_eq!(normalize_command("a b c"), "a b c");
+    }
+
+    // -----------------------------------------------------------------------
+    // decision_rank
+    // -----------------------------------------------------------------------
+    #[test]
+    fn test_decision_rank_deny_highest() {
+        assert_eq!(decision_rank("deny"), 3);
+    }
+
+    #[test]
+    fn test_decision_rank_request_second() {
+        assert_eq!(decision_rank("request"), 2);
+    }
+
+    #[test]
+    fn test_decision_rank_allow_third() {
+        assert_eq!(decision_rank("allow"), 1);
+    }
+
+    #[test]
+    fn test_decision_rank_unknown_is_zero() {
+        assert_eq!(decision_rank("bogus"), 0);
+    }
+
+    #[test]
+    fn test_decision_rank_empty_is_zero() {
+        assert_eq!(decision_rank(""), 0);
+    }
+
+    // -----------------------------------------------------------------------
+    // matches_rule
+    // -----------------------------------------------------------------------
+    fn make_rule(id: &str, matcher: &str, pattern: &str) -> Rule {
+        Rule {
+            id: id.into(),
+            source: "test".into(),
+            action: "deny".into(),
+            on_mismatch: None,
+            matcher: matcher.into(),
+            pattern: pattern.into(),
+            normalized_pattern: pattern.into(),
+            conditions: json!([]),
+            platform_action: String::new(),
+            shell_entry: String::new(),
+            bash_entry: String::new(),
+        }
+    }
+
+    #[test]
+    fn test_matches_rule_exact_hit() {
+        assert!(matches_rule(
+            &make_rule("r1", "exact", "git push"),
+            "git push"
+        ));
+    }
+
+    #[test]
+    fn test_matches_rule_exact_miss() {
+        assert!(!matches_rule(
+            &make_rule("r1", "exact", "git push"),
+            "git pull"
+        ));
+    }
+
+    #[test]
+    fn test_matches_rule_exact_normalizes_input() {
+        assert!(matches_rule(
+            &make_rule("r1", "exact", "git push"),
+            "  git   push  "
+        ));
+    }
+
+    #[test]
+    fn test_matches_rule_prefix_hit() {
+        assert!(matches_rule(
+            &make_rule("r1", "prefix", "git"),
+            "git push -f"
+        ));
+    }
+
+    #[test]
+    fn test_matches_rule_prefix_miss() {
+        assert!(!matches_rule(&make_rule("r1", "prefix", "git"), "got push"));
+    }
+
+    #[test]
+    fn test_matches_rule_prefix_empty_input() {
+        assert!(!matches_rule(&make_rule("r1", "prefix", "git"), ""));
+    }
+
+    #[test]
+    fn test_matches_rule_glob_wildcard() {
+        assert!(matches_rule(&make_rule("r1", "glob", "git *"), "git push"));
+    }
+
+    #[test]
+    fn test_matches_rule_glob_miss() {
+        assert!(!matches_rule(&make_rule("r1", "glob", "git *"), "hg push"));
+    }
+
+    #[test]
+    fn test_matches_rule_unknown_matcher_defaults_exact() {
+        let rule = make_rule("r1", "regex", "git push");
+        assert!(matches_rule(&rule, "git push"));
+    }
+
+    // -----------------------------------------------------------------------
+    // is_empty_condition_group
+    // -----------------------------------------------------------------------
+    #[test]
+    fn test_empty_group_value_not_object() {
+        assert!(!is_empty_condition_group(&json!("string")));
+    }
+
+    #[test]
+    fn test_empty_group_value_number() {
+        assert!(!is_empty_condition_group(&json!(42)));
+    }
+
+    #[test]
+    fn test_empty_group_all_empty() {
+        assert!(is_empty_condition_group(&json!({"all": []})));
+    }
+
+    #[test]
+    fn test_empty_group_all_nonempty() {
+        assert!(!is_empty_condition_group(&json!({"all": ["x"]})));
+    }
+
+    #[test]
+    fn test_empty_group_any_empty() {
+        assert!(is_empty_condition_group(&json!({"any": []})));
+    }
+
+    #[test]
+    fn test_empty_group_any_nonempty() {
+        assert!(!is_empty_condition_group(&json!({"any": ["x"]})));
+    }
+
+    #[test]
+    fn test_empty_group_mode_all_empty() {
+        assert!(is_empty_condition_group(
+            &json!({"mode": "all", "conditions": []})
+        ));
+    }
+
+    #[test]
+    fn test_empty_group_mode_any_empty() {
+        assert!(is_empty_condition_group(
+            &json!({"mode": "any", "conditions": []})
+        ));
+    }
+
+    #[test]
+    fn test_empty_group_mode_nonempty() {
+        assert!(!is_empty_condition_group(
+            &json!({"mode": "all", "conditions": ["x"]})
+        ));
+    }
+
+    #[test]
+    fn test_empty_group_mode_invalid_value() {
+        assert!(!is_empty_condition_group(
+            &json!({"mode": 42, "conditions": []})
+        ));
+    }
+
+    #[test]
+    fn test_empty_group_mode_unknown() {
+        assert!(!is_empty_condition_group(
+            &json!({"mode": "bogus", "conditions": []})
+        ));
+    }
+
+    // -----------------------------------------------------------------------
+    // eval_condition_node — depth guard
+    // -----------------------------------------------------------------------
+    #[test]
+    fn test_eval_depth_limit_string() {
+        let r = eval_condition_node(&json!("x"), None, 999);
+        assert!(!r.passed);
+        assert_eq!(r.error.unwrap(), "nesting-too-deep");
+        assert!(!r.has_required);
+    }
+
+    // -----------------------------------------------------------------------
+    // eval_condition_node — string (leaf)
+    // -----------------------------------------------------------------------
+    #[test]
+    fn test_eval_string_unknown_condition() {
+        let r = eval_condition_node(&json!("nonexistent"), None, 0);
+        assert!(!r.passed);
+        assert!(r.has_required);
+        assert!(r.error.unwrap().contains("unsupported-condition"));
+    }
+
+    // -----------------------------------------------------------------------
+    // eval_condition_node — array
+    // -----------------------------------------------------------------------
+    #[test]
+    fn test_eval_array_empty() {
+        let r = eval_condition_node(&json!([]), None, 0);
+        assert!(r.passed);
+        assert!(r.has_required);
+        assert!(r.error.is_none());
+    }
+
+    #[test]
+    fn test_eval_array_mixed() {
+        let r = eval_condition_node(&json!(["nonexistent_a"]), None, 0);
+        assert!(!r.passed);
+        assert!(r.has_required);
+    }
+
+    // -----------------------------------------------------------------------
+    // eval_condition_node — object { "all": … }
+    // -----------------------------------------------------------------------
+    #[test]
+    fn test_eval_object_all_empty() {
+        let r = eval_condition_node(&json!({"all": []}), None, 0);
+        assert!(r.passed);
+    }
+
+    #[test]
+    fn test_eval_object_all_invalid_type() {
+        let r = eval_condition_node(&json!({"all": 42}), None, 0);
+        assert!(!r.passed);
+        assert!(!r.has_required);
+        assert_eq!(r.error.unwrap(), "invalid-all-list");
+    }
+
+    // -----------------------------------------------------------------------
+    // eval_condition_node — object { "any": … }
+    // -----------------------------------------------------------------------
+    #[test]
+    fn test_eval_object_any_empty() {
+        let r = eval_condition_node(&json!({"any": []}), None, 0);
+        assert!(r.passed);
+    }
+
+    #[test]
+    fn test_eval_object_any_invalid_type() {
+        let r = eval_condition_node(&json!({"any": 42}), None, 0);
+        assert!(!r.passed);
+        assert!(!r.has_required);
+        assert_eq!(r.error.unwrap(), "invalid-any-list");
+    }
+
+    // -----------------------------------------------------------------------
+    // eval_condition_node — object { "mode": …, "conditions": … }
+    // -----------------------------------------------------------------------
+    #[test]
+    fn test_eval_object_mode_all_empty() {
+        let r = eval_condition_node(&json!({"mode": "all", "conditions": []}), None, 0);
+        assert!(r.passed);
+    }
+
+    #[test]
+    fn test_eval_object_mode_any_empty() {
+        let r = eval_condition_node(&json!({"mode": "any", "conditions": []}), None, 0);
+        assert!(r.passed);
+    }
+
+    #[test]
+    fn test_eval_object_mode_not_a_string() {
+        let r = eval_condition_node(&json!({"mode": 42, "conditions": []}), None, 0);
+        assert!(!r.passed);
+        assert!(!r.has_required);
+        assert_eq!(r.error.unwrap(), "invalid-mode-type");
+    }
+
+    #[test]
+    fn test_eval_object_mode_unsupported() {
+        let r = eval_condition_node(&json!({"mode": "maybe", "conditions": []}), None, 0);
+        assert!(!r.passed);
+        assert!(!r.has_required);
+        assert!(r.error.unwrap().contains("unsupported-mode"));
+    }
+
+    #[test]
+    fn test_eval_object_mode_missing_conditions() {
+        let r = eval_condition_node(&json!({"mode": "all"}), None, 0);
+        assert!(!r.passed);
+        assert!(!r.has_required);
+        assert_eq!(r.error.unwrap(), "missing-conditions");
+    }
+
+    #[test]
+    fn test_eval_object_mode_conditions_not_list() {
+        let r = eval_condition_node(&json!({"mode": "all", "conditions": 99}), None, 0);
+        assert!(!r.passed);
+        assert!(!r.has_required);
+        assert_eq!(r.error.unwrap(), "conditions-not-list");
+    }
+
+    // -----------------------------------------------------------------------
+    // eval_condition_node — object { "name": …, "required": … }
+    // -----------------------------------------------------------------------
+    #[test]
+    fn test_eval_object_missing_name() {
+        let r = eval_condition_node(&json!({"foo": "bar"}), None, 0);
+        assert!(!r.passed);
+        assert!(!r.has_required);
+        assert_eq!(r.error.unwrap(), "unsupported-object");
+    }
+
+    #[test]
+    fn test_eval_object_name_not_string() {
+        let r = eval_condition_node(&json!({"name": 42}), None, 0);
+        assert!(!r.passed);
+        assert!(!r.has_required);
+        assert_eq!(r.error.unwrap(), "unsupported-object");
+    }
+
+    #[test]
+    fn test_eval_object_required_not_bool() {
+        let r = eval_condition_node(&json!({"name": "x", "required": 99}), None, 0);
+        assert!(!r.passed);
+        assert!(!r.has_required);
+        assert_eq!(r.error.unwrap(), "required-not-bool");
+    }
+
+    #[test]
+    fn test_eval_object_optional_cond_unknown() {
+        let r = eval_condition_node(&json!({"name": "unknown_cond", "required": false}), None, 0);
+        assert!(!r.passed);
+        assert!(!r.has_required);
+    }
+
+    // -----------------------------------------------------------------------
+    // eval_condition_list — mode "all"
+    // -----------------------------------------------------------------------
+    #[test]
+    fn test_eval_list_all_empty() {
+        let r = eval_condition_list("all", &[], None, 0);
+        assert!(r.passed);
+        assert!(!r.has_required);
+    }
+
+    // -----------------------------------------------------------------------
+    // fnmatch — exact
+    // -----------------------------------------------------------------------
+    #[test]
+    fn test_fnmatch_exact_match() {
+        assert!(fnmatch::fnmatch("hello", "hello").unwrap());
+    }
+
+    #[test]
+    fn test_fnmatch_exact_mismatch() {
+        assert!(!fnmatch::fnmatch("hello", "world").unwrap());
+    }
+
+    // -----------------------------------------------------------------------
+    // fnmatch — *
+    // -----------------------------------------------------------------------
+    #[test]
+    fn test_fnmatch_wildcard_prefix() {
+        assert!(fnmatch::fnmatch("hello", "h*").unwrap());
+    }
+
+    #[test]
+    fn test_fnmatch_wildcard_suffix() {
+        assert!(fnmatch::fnmatch("hello", "*o").unwrap());
+    }
+
+    #[test]
+    fn test_fnmatch_wildcard_any() {
+        assert!(fnmatch::fnmatch("hello", "*").unwrap());
+    }
+
+    #[test]
+    fn test_fnmatch_wildcard_empty_string() {
+        assert!(fnmatch::fnmatch("", "*").unwrap());
+    }
+
+    #[test]
+    fn test_fnmatch_wildcard_infix() {
+        assert!(fnmatch::fnmatch("hello", "h*o").unwrap());
+    }
+
+    #[test]
+    fn test_fnmatch_wildcard_no_match() {
+        assert!(!fnmatch::fnmatch("hello", "h*x").unwrap());
+    }
+
+    // -----------------------------------------------------------------------
+    // fnmatch — ?
+    // -----------------------------------------------------------------------
+    #[test]
+    fn test_fnmatch_qmark_single() {
+        assert!(fnmatch::fnmatch("hello", "h?llo").unwrap());
+    }
+
+    #[test]
+    fn test_fnmatch_qmark_all() {
+        assert!(fnmatch::fnmatch("hello", "?????").unwrap());
+    }
+
+    #[test]
+    fn test_fnmatch_qmark_too_short() {
+        assert!(!fnmatch::fnmatch("hello", "????").unwrap());
+    }
+
+    #[test]
+    fn test_fnmatch_qmark_too_few() {
+        // 'h?' matches 2 chars, 'hi' is exactly 2 -> match
+        assert!(fnmatch::fnmatch("hi", "h?").unwrap());
+        // but 'h' alone is too short
+        assert!(!fnmatch::fnmatch("h", "h?").unwrap());
+    }
+
+    // -----------------------------------------------------------------------
+    // fnmatch — escape
+    // -----------------------------------------------------------------------
+    #[test]
+    fn test_fnmatch_escape_qmark() {
+        assert!(fnmatch::fnmatch("hello?", r"hello\?").unwrap());
+    }
+
+    #[test]
+    fn test_fnmatch_escape_star() {
+        assert!(fnmatch::fnmatch("hello*", r"hello\*").unwrap());
+    }
+
+    // -----------------------------------------------------------------------
+    // fnmatch — [...]
+    // -----------------------------------------------------------------------
+    #[test]
+    fn test_fnmatch_char_class_range() {
+        assert!(fnmatch::fnmatch("hello", "[a-z]ello").unwrap());
+    }
+
+    #[test]
+    fn test_fnmatch_char_class_upper() {
+        assert!(fnmatch::fnmatch("Hello", "[A-Z]ello").unwrap());
+    }
+
+    #[test]
+    fn test_fnmatch_char_class_no_match() {
+        assert!(!fnmatch::fnmatch("hello", "[A-Z]ello").unwrap());
+    }
+
+    #[test]
+    fn test_fnmatch_unclosed_bracket() {
+        assert!(!fnmatch::fnmatch("hello", "h[ello").unwrap());
+    }
+
+    #[test]
+    fn test_fnmatch_empty_class() {
+        assert!(!fnmatch::fnmatch("h", "h[]").unwrap());
+    }
+
+    #[test]
+    fn test_fnmatch_char_class_escaped_dash() {
+        // [a\-c] matches 'a', '-', or 'c'
+        assert!(fnmatch::fnmatch("-", "[a\\-c]").unwrap());
+        assert!(fnmatch::fnmatch("a", "[a\\-c]").unwrap());
+        assert!(fnmatch::fnmatch("c", "[a\\-c]").unwrap());
+        assert!(!fnmatch::fnmatch("b", "[a\\-c]").unwrap());
+    }
+
+    // -----------------------------------------------------------------------
+    // evaluate — no rules
+    // -----------------------------------------------------------------------
+    #[test]
+    fn test_evaluate_no_rules_allowed() {
+        let b = PolicyWrapper {
+            schema_version: 1,
+            required_conditions: vec![],
+            commands: vec![],
+        };
+        let r = evaluate(&b, "git push", None);
+        assert_eq!(r.decision, "allow");
+        assert!(!r.matched);
+    }
+
+    // -----------------------------------------------------------------------
+    // evaluate — exact allow
+    // -----------------------------------------------------------------------
+    #[test]
+    fn test_evaluate_exact_allow() {
+        let b = PolicyWrapper {
+            schema_version: 1,
+            required_conditions: vec![],
+            commands: vec![Rule {
+                id: "r1".into(),
+                source: "test".into(),
+                action: "allow".into(),
+                on_mismatch: None,
+                matcher: "exact".into(),
+                pattern: "git push".into(),
+                normalized_pattern: "git push".into(),
+                conditions: json!([]),
+                platform_action: String::new(),
+                shell_entry: String::new(),
+                bash_entry: String::new(),
+            }],
+        };
+        let r = evaluate(&b, "git push", None);
+        assert_eq!(r.decision, "allow");
+        assert!(r.matched);
+        assert_eq!(r.rule_id, "r1");
+    }
+
+    // -----------------------------------------------------------------------
+    // evaluate — deny beats allow
+    // -----------------------------------------------------------------------
+    #[test]
+    fn test_evaluate_deny_overrides_allow() {
+        let b = PolicyWrapper {
+            schema_version: 1,
+            required_conditions: vec![],
+            commands: vec![
+                Rule {
+                    id: "allow_all".into(),
+                    source: "test".into(),
+                    action: "allow".into(),
+                    on_mismatch: None,
+                    matcher: "prefix".into(),
+                    pattern: "git".into(),
+                    normalized_pattern: "git".into(),
+                    conditions: json!([]),
+                    platform_action: String::new(),
+                    shell_entry: String::new(),
+                    bash_entry: String::new(),
+                },
+                Rule {
+                    id: "deny_force".into(),
+                    source: "test".into(),
+                    action: "deny".into(),
+                    on_mismatch: None,
+                    matcher: "exact".into(),
+                    pattern: "git push -f".into(),
+                    normalized_pattern: "git push -f".into(),
+                    conditions: json!([]),
+                    platform_action: String::new(),
+                    shell_entry: String::new(),
+                    bash_entry: String::new(),
+                },
+            ],
+        };
+        let r = evaluate(&b, "git push -f", None);
+        assert_eq!(r.decision, "deny");
+        assert_eq!(r.rule_id, "deny_force");
+    }
+
+    // -----------------------------------------------------------------------
+    // evaluate — rule mismatch (no matching rule)
+    // -----------------------------------------------------------------------
+    #[test]
+    fn test_evaluate_no_matching_rule() {
+        let b = PolicyWrapper {
+            schema_version: 1,
+            required_conditions: vec![],
+            commands: vec![make_rule("r1", "exact", "git push")],
+        };
+        let r = evaluate(&b, "hg pull", None);
+        assert_eq!(r.decision, "allow");
+        assert!(!r.matched);
+    }
+
+    // -----------------------------------------------------------------------
+    // evaluate — condition error produces "request"
+    // -----------------------------------------------------------------------
+    #[test]
+    fn test_evaluate_condition_error_requests() {
+        let b = PolicyWrapper {
+            schema_version: 1,
+            required_conditions: vec![],
+            commands: vec![Rule {
+                id: "r1".into(),
+                source: "test".into(),
+                action: "allow".into(),
+                on_mismatch: Some("deny".into()),
+                matcher: "exact".into(),
+                pattern: "risky".into(),
+                normalized_pattern: "risky".into(),
+                conditions: json!("unknown_condition_xyz"),
+                platform_action: String::new(),
+                shell_entry: String::new(),
+                bash_entry: String::new(),
+            }],
+        };
+        let r = evaluate(&b, "risky", None);
+        assert_eq!(r.decision, "request");
+        assert!(r.matched);
+        assert!(r.error.contains("unsupported-condition"));
     }
 }
