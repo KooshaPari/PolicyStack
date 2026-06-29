@@ -633,13 +633,15 @@ class TestWrapperConditionSemanticsParity(TestCase):
         _validate_schema(payload, schema)
 
     def _build_go_binary(self, binary: Path) -> bool:
-        if binary.exists():
-            return True
-
-        go_source = binary.parent
+        # Always rebuild from source when `go` is available. Trusting a
+        # pre-existing binary is unsafe because it may have been built on a
+        # different OS/arch (e.g. macOS arm64 committed into the repo) and
+        # would raise OSError: [Errno 8] Exec format error on linux-amd64
+        # CI runners. The Go module has no external deps, so this is fast.
         if shutil.which("go") is None:
             return False
 
+        go_source = binary.parent
         build = subprocess.run(
             ["go", "build", "-o", str(binary), "."],
             cwd=str(go_source),
@@ -647,6 +649,8 @@ class TestWrapperConditionSemanticsParity(TestCase):
             text=True,
         )
         if build.returncode != 0:
+            print(build.stdout)
+            print(build.stderr, file=__import__("sys").stderr)
             return False
         return binary.exists()
 
