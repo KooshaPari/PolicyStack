@@ -540,7 +540,7 @@ def delegate_ask(
         result = _invoke_harness(h, prompt)
 
         # If successful (not "ask" due to failure), use it
-        if result.decision in ("allow", "deny") or result.confidence > 0:
+        if result.decision in ("allow", "deny"):
             if use_cache:
                 _cache_decision(context.command, result)
             return result
@@ -588,52 +588,64 @@ def _cli_available(cli: str) -> bool:
         return False
 
 
+def _parse_json_from_output(output: str) -> Any | None:
+    """Extract JSON payload from plain or fenced content."""
+    if not output.strip():
+        return None
+
+    try:
+        return json.loads(output.strip())
+    except json.JSONDecodeError:
+        pass
+
+    match = re.search(r"```json\s*(.*?)\s*```", output, flags=re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group(1))
+        except json.JSONDecodeError:
+            pass
+
+    match = re.search(r"```\s*(.*?)\s*```", output, flags=re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group(1))
+        except json.JSONDecodeError:
+            pass
+
+    match = re.search(r"\{[\s\S]*?\"decision\"[\s\S]*?\}", output)
+    if match:
+        try:
+            return json.loads(match.group())
+        except json.JSONDecodeError:
+            pass
+
+    return None
+
+
 def _parse_response(output: str, source: str) -> DelegateResult:
     """Parse JSON response from headless agent."""
-    if not output.strip():
+    data = _parse_json_from_output(output)
+    if data is None:
         return DelegateResult(
             decision="ask",
-            reasoning="Empty response from delegate",
+            reasoning="Could not parse delegate response",
             source=source,
             confidence=0.0,
         )
 
-    # Try to extract JSON from response (agent may include extra text)
-    # Support both {"decision":...} and {"review": {"decision":...}} formats
-    json_patterns = [
-        r'\{[^{}]*"decision"[^{}]*\}',  # Simple JSON
-        r'\{[^{}]*"review"\s*:\s*\{[^{}]*"decision"[^{}]*\}[^{}]*\}',  # Nested review
-        r'\{[\s\S]*?"decision"[\s\S]*?\}',  # Multi-line JSON
-    ]
+    # Handle nested review format
+    if "review" in data and isinstance(data["review"], dict):
+        data = data["review"]
 
-    for pattern in json_patterns:
-        json_match = re.search(pattern, output, re.DOTALL)
-        if json_match:
-            try:
-                data = json.loads(json_match.group())
-
-                # Handle nested review format
-                if "review" in data and isinstance(data["review"], dict):
-                    data = data["review"]
-
-                decision = data.get("decision", "ask")
-                if decision not in ("allow", "deny"):
-                    decision = "ask"
-
-                return DelegateResult(
-                    decision=decision,
-                    reasoning=data.get("reasoning", "no reasoning provided"),
-                    source=source,
-                    confidence=float(data.get("confidence", 0.5)),
-                )
-            except (json.JSONDecodeError, ValueError):
-                continue
+    decision = data.get("decision", "ask")
+    if decision not in ("allow", "deny"):
+        decision = "ask"
 
     return DelegateResult(
-        decision="ask",
-        reasoning="Could not parse delegate response",
+        decision=decision,
+        reasoning=data.get("reasoning", "no reasoning provided"),
         source=source,
-        confidence=0.0,
+        confidence=float(data.get("confidence", 0.5)),
     )
 
 

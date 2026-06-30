@@ -28,6 +28,8 @@ def import_wrapper(wrapper_dir: str, class_name: str):
 
 
 OpenCodeWrapper = import_wrapper("opencode", "OpenCodeWrapper")
+CursorWrapper = import_wrapper("cursor", "CursorWrapper")
+CodexWrapper = import_wrapper("codex", "CodexWrapper")
 KiloWrapper = import_wrapper("kilo", "KiloWrapper")
 ForgeCodeWrapper = import_wrapper("forgecode", "ForgeCodeWrapper")
 
@@ -141,6 +143,42 @@ class TestOpenCodeWrapper:
         assert result["confidence"] == 0.9
 
 
+class TestCodexWrapper:
+    """Tests for Codex platform wrapper."""
+
+    @patch("codex_wrapper.subprocess.run")
+    def test_codex_run_review_uses_expected_args(self, mock_run):
+        mock_run.return_value = MagicMock(
+            returncode=0,
+            stdout='{"decision": "allow", "reasoning": "ok", "confidence": 0.99}',
+        )
+        wrapper = CodexWrapper()
+        result = wrapper.review_command("git status")
+
+        called_cmd = mock_run.call_args[0][0]
+        assert called_cmd[0] == "codex"
+        assert "review" in called_cmd
+        assert "--json" in called_cmd
+        assert result["decision"] == "allow"
+
+    @patch("codex_wrapper.subprocess.run")
+    def test_codex_parse_response_with_json_block(self, mock_run):
+        mock_run.return_value = MagicMock(
+            returncode=0,
+            stdout="""
+            ```json
+            {"decision":"deny","reasoning":"blocked","confidence":0.71}
+            ```
+            """,
+        )
+        wrapper = CodexWrapper()
+        result = wrapper.review_command("rm -rf /")
+
+        assert result["decision"] == "deny"
+        assert result["reasoning"] == "blocked"
+        assert result["confidence"] == 0.71
+
+
 class TestKiloWrapper:
     """Tests for Kilo Code platform wrapper."""
 
@@ -168,6 +206,25 @@ class TestKiloWrapper:
         call_args = mock_run.call_args[0][0]
         assert "--mode" in call_args
         assert "fast" in call_args
+
+
+class TestCursorWrapper:
+    """Tests for Cursor platform wrapper."""
+
+    @patch("cursor_wrapper.subprocess.run")
+    def test_cursor_run_review_uses_expected_args(self, mock_run):
+        mock_run.return_value = MagicMock(
+            returncode=0,
+            stdout='{"decision": "allow", "reasoning": "safe", "confidence": 0.88}',
+        )
+        wrapper = CursorWrapper()
+        result = wrapper.review_command("git status")
+
+        called_cmd = mock_run.call_args[0][0]
+        assert called_cmd[0] == "cursor-agent"
+        assert "--no-interactive" in called_cmd
+        assert "-p" in called_cmd
+        assert result["decision"] == "allow"
 
 
 class TestForgeCodeWrapper:

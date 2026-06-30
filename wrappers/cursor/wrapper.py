@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 from typing import Any
@@ -19,6 +20,33 @@ class CursorWrapper:
         self.model = model
         self.cli = "cursor-agent"
         self.timeout = 20
+
+    @staticmethod
+    def _extract_json(text: str) -> dict[str, Any] | None:
+        """Extract JSON from CLI output."""
+        if not text.strip():
+            return None
+
+        try:
+            return json.loads(text.strip())
+        except json.JSONDecodeError:
+            pass
+
+        match = re.search(r"```json\s*(.*?)\s*```", text, flags=re.DOTALL)
+        if match:
+            try:
+                return json.loads(match.group(1))
+            except json.JSONDecodeError:
+                pass
+
+        match = re.search(r"```\s*(.*?)\s*```", text, flags=re.DOTALL)
+        if match:
+            try:
+                return json.loads(match.group(1))
+            except json.JSONDecodeError:
+                pass
+
+        return None
 
     def is_available(self) -> bool:
         """Check if Cursor agent CLI is available."""
@@ -37,11 +65,7 @@ class CursorWrapper:
         command: str,
         context: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Review a command using Cursor.
-
-        Returns:
-            Dict with 'decision' (allow/deny/ask), 'reasoning', 'confidence'
-        """
+        """Review a command using Cursor."""
         if not self.is_available():
             return {
                 "decision": "ask",
@@ -52,20 +76,7 @@ class CursorWrapper:
         prompt = self._build_prompt(command, context)
 
         try:
-            result = subprocess.run(
-                [
-                    self.cli,
-                    "--model",
-                    self.model,
-                    "--no-interactive",
-                    "-p",
-                    prompt,
-                ],
-                capture_output=True,
-                text=True,
-                timeout=self.timeout,
-            )
-
+            result = self._run_review(prompt)
             if result.returncode != 0:
                 return {
                     "decision": "ask",
@@ -88,6 +99,22 @@ class CursorWrapper:
                 "confidence": 0.0,
             }
 
+    def _run_review(self, prompt: str) -> subprocess.CompletedProcess:
+        """Execute the Cursor CLI."""
+        return subprocess.run(
+            [
+                self.cli,
+                "--model",
+                self.model,
+                "--no-interactive",
+                "-p",
+                prompt,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=self.timeout,
+        )
+
     def _build_prompt(self, command: str, context: dict[str, Any] | None) -> str:
         """Build review prompt for Cursor."""
         ctx = context or {}
@@ -104,34 +131,25 @@ class CursorWrapper:
 
     def _parse_response(self, output: str) -> dict[str, Any]:
         """Parse Cursor JSON response."""
-        if not output.strip():
+        data = self._extract_json(output)
+        if not data:
             return {
                 "decision": "ask",
-                "reasoning": "Empty response from Cursor",
+                "reasoning": "No parseable JSON from Cursor",
                 "confidence": 0.0,
             }
 
-        import re
+        if "review" in data and isinstance(data["review"], dict):
+            data = data["review"]
 
-        json_match = re.search(r'\{[\s\S]*?"decision"[\s\S]*?\}', output)
-        if json_match:
-            try:
-                data = json.loads(json_match.group())
-                decision = data.get("decision", "ask")
-                if decision not in ("allow", "deny"):
-                    decision = "ask"
-                return {
-                    "decision": decision,
-                    "reasoning": data.get("reasoning", "no reasoning"),
-                    "confidence": float(data.get("confidence", 0.5)),
-                }
-            except (json.JSONDecodeError, ValueError):
-                pass
+        decision = data.get("decision", "ask")
+        if decision not in ("allow", "deny"):
+            decision = "ask"
 
         return {
-            "decision": "ask",
-            "reasoning": "Could not parse Cursor response",
-            "confidence": 0.0,
+            "decision": decision,
+            "reasoning": data.get("reasoning", "no reasoning"),
+            "confidence": float(data.get("confidence", 0.5)),
         }
 
 
@@ -154,9 +172,9 @@ def main() -> None:
     )
 
     if args.json:
-        pass
+        print(json.dumps(result))
     else:
-        pass
+        print(f"{result['decision']}: {result['reasoning']}")
 
     sys.exit(
         0

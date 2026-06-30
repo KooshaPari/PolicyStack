@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 import support  # noqa: F401 -- setup sys.path
 from policy_federation.delegate import (
     DelegateContext,
+    _invoke_harness,
     _parse_response,
     clear_cache,
     delegate_ask,
@@ -112,6 +113,41 @@ class TestDelegateAsk:
         # Policy may return ask or deny depending on local-fast evaluation
         assert result.decision in ["ask", "deny"]
         assert "cursor" in result.source
+
+    @patch("policy_federation.delegate.subprocess.run")
+    def test_invoke_harness_uses_expected_kilo_args(self, mock_run: MagicMock) -> None:
+        mock_run.return_value = MagicMock(
+            stdout='{"decision": "allow", "reasoning": "ok", "confidence": 0.92}',
+            returncode=0,
+        )
+        _invoke_harness("kilo", "prompt text")
+        called_cmd = mock_run.call_args[0][0]
+        assert called_cmd[0] == "kilo"
+        assert called_cmd[1:3] == ["review", "--mode"]
+        assert "fast" in called_cmd
+        assert "--prompt" in called_cmd
+        assert "prompt text" in called_cmd
+
+    @patch("policy_federation.delegate.subprocess.run")
+    def test_invoke_harness_uses_expected_cursor_args(self, mock_run: MagicMock) -> None:
+        mock_run.return_value = MagicMock(
+            stdout='{"decision": "allow", "reasoning": "ok", "confidence": 0.92}',
+            returncode=0,
+        )
+        _invoke_harness("cursor", "prompt text")
+        called_cmd = mock_run.call_args[0][0]
+        assert called_cmd[0] == "cursor-agent"
+        assert "--model" in called_cmd
+        assert "--no-interactive" in called_cmd
+        assert "-p" in called_cmd
+        assert called_cmd[-1] == "prompt text"
+
+    @patch("policy_federation.delegate.subprocess.run")
+    def test_invoke_harness_fallback(self, mock_run: MagicMock) -> None:
+        mock_run.return_value = MagicMock(stdout="not-json", returncode=0)
+        result = _invoke_harness("codex", "prompt text")
+        assert result.decision == "ask"
+        assert "Could not parse" in result.reasoning or "No parseable" in result.reasoning
 
     @patch(
         "policy_federation.delegate.subprocess.run",
