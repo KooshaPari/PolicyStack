@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 from typing import Any
@@ -60,6 +61,7 @@ class KiloWrapper:
                     "fast",
                     "--prompt",
                     prompt,
+                    "--json",
                 ],
                 capture_output=True,
                 text=True,
@@ -110,21 +112,25 @@ class KiloWrapper:
                 "confidence": 0.0,
             }
 
-        import re
-
-        json_match = re.search(r'\{[\s\S]*?"decision"[\s\S]*?\}', output)
-        if json_match:
+        data = _extract_json_payload(output)
+        if data is not None:
             try:
-                data = json.loads(json_match.group())
-                decision = data.get("decision", "ask")
-                if decision not in ("allow", "deny"):
+                if "review" in data and isinstance(data.get("review"), dict):
+                    data = data["review"]
+
+                decision = str(data.get("decision", "ask")).lower()
+                if decision not in {"allow", "deny", "ask"}:
                     decision = "ask"
+                reasoning = data.get("reasoning", data.get("reason", "no reasoning"))
+                if not isinstance(reasoning, str):
+                    reasoning = json.dumps(reasoning)
+                confidence = float(data.get("confidence", 0.0))
                 return {
                     "decision": decision,
-                    "reasoning": data.get("reasoning", "no reasoning"),
-                    "confidence": float(data.get("confidence", 0.5)),
+                    "reasoning": reasoning,
+                    "confidence": confidence,
                 }
-            except (json.JSONDecodeError, ValueError):
+            except (TypeError, ValueError):
                 pass
 
         return {
@@ -152,9 +158,9 @@ def main() -> None:
     )
 
     if args.json:
-        pass
+        print(json.dumps(result))
     else:
-        pass
+        print(result["reasoning"])
 
     sys.exit(
         0
@@ -163,6 +169,30 @@ def main() -> None:
         if result["decision"] == "deny"
         else 2,
     )
+
+
+def _extract_json_payload(output: str) -> dict[str, Any] | None:
+    if not output.strip():
+        return None
+
+    candidates: list[str] = [output.strip()]
+    match = re.search(r"```json\\s*(.*?)\\s*```", output, re.DOTALL | re.IGNORECASE)
+    if match:
+        candidates.append(match.group(1).strip())
+
+    match = re.search(r"\{[\s\S]*?\"decision\"[\s\S]*?\}", output)
+    if match:
+        candidates.append(match.group(0))
+
+    for candidate in candidates:
+        try:
+            data = json.loads(candidate)
+        except (json.JSONDecodeError, TypeError, ValueError):
+            continue
+        if isinstance(data, dict):
+            return data
+
+    return None
 
 
 if __name__ == "__main__":

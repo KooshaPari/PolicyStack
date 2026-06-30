@@ -30,6 +30,8 @@ def import_wrapper(wrapper_dir: str, class_name: str):
 OpenCodeWrapper = import_wrapper("opencode", "OpenCodeWrapper")
 KiloWrapper = import_wrapper("kilo", "KiloWrapper")
 ForgeCodeWrapper = import_wrapper("forgecode", "ForgeCodeWrapper")
+CodexWrapper = import_wrapper("codex", "CodexWrapper")
+CursorWrapper = import_wrapper("cursor", "CursorWrapper")
 
 
 class TestOpenCodeWrapper:
@@ -168,6 +170,102 @@ class TestKiloWrapper:
         call_args = mock_run.call_args[0][0]
         assert "--mode" in call_args
         assert "fast" in call_args
+
+    @patch("kilo_wrapper.subprocess.run")
+    def test_review_command_parses_ask(self, mock_run):
+        """Kilo wrapper should parse ask decisions."""
+        mock_run.return_value = MagicMock(
+            returncode=0,
+            stdout=json.dumps(
+                {"decision": "ask", "reasoning": "Needs approval", "confidence": 0.55},
+            ),
+        )
+
+        wrapper = KiloWrapper()
+        result = wrapper.review_command("rm -rf /tmp/cache")
+
+        assert result["decision"] == "ask"
+        assert result["confidence"] == 0.55
+
+
+class TestCodexWrapper:
+    """Tests for Codex platform wrapper."""
+
+    def test_init_defaults(self):
+        """Codex wrapper should have correct defaults."""
+        wrapper = CodexWrapper()
+        assert wrapper.model == "gpt-5.3-codex"
+        assert wrapper.cli == "codex"
+        assert wrapper.timeout == 20
+
+    @patch("codex_wrapper.subprocess.run")
+    def test_review_command_contract(self, mock_run):
+        """Codex wrapper should call CLI with JSON output contract."""
+        mock_run.return_value = MagicMock(
+            returncode=0,
+            stdout=json.dumps(
+                {"decision": "allow", "reasoning": "Safe", "confidence": 0.9},
+            ),
+        )
+
+        wrapper = CodexWrapper(model="custom")
+        wrapper.review_command("git status")
+
+        call_args = mock_run.call_args[0][0]
+        assert call_args[0] == "codex"
+        assert "review" in call_args
+        assert "--model" in call_args
+        assert "--json" in call_args
+        assert "custom" in call_args
+
+
+class TestCursorWrapper:
+    """Tests for Cursor platform wrapper."""
+
+    def test_init_defaults(self):
+        """Cursor wrapper should have correct defaults."""
+        wrapper = CursorWrapper()
+        assert wrapper.model == "gemini-3-flash"
+        assert wrapper.cli == "cursor-agent"
+        assert wrapper.timeout == 20
+
+    @patch("cursor_wrapper.subprocess.run")
+    def test_review_command_contract(self, mock_run):
+        """Cursor wrapper should call CLI with expected contract arguments."""
+        mock_run.return_value = MagicMock(
+            returncode=0,
+            stdout=json.dumps(
+                {"decision": "allow", "reasoning": "Safe", "confidence": 0.8},
+            ),
+        )
+
+        wrapper = CursorWrapper(model="x")
+        wrapper.review_command("git status")
+
+        call_args = mock_run.call_args[0][0]
+        assert call_args[0] == "cursor-agent"
+        assert "review" in call_args
+        assert "--json" in call_args
+        assert "--no-interactive" in call_args
+        assert "x" in call_args
+
+    @patch("cursor_wrapper.subprocess.run")
+    def test_review_command_parses_markdown(self, mock_run):
+        """Cursor wrapper should parse JSON inside markdown block."""
+        mock_run.return_value = MagicMock(
+            returncode=0,
+            stdout="""
+            ```json
+            {"decision": "ask", "reasoning": "Need human check", "confidence": 0.7}
+            ```
+            """,
+        )
+
+        wrapper = CursorWrapper()
+        result = wrapper.review_command("git push")
+
+        assert result["decision"] == "ask"
+        assert result["reasoning"] == "Need human check"
 
 
 class TestForgeCodeWrapper:

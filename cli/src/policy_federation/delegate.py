@@ -381,10 +381,12 @@ def _invoke_harness(harness: str, prompt: str) -> DelegateResult:
         cmd = [cli, "review", "--model", model, "--non-interactive", "--prompt", prompt]
     elif harness == "codex":
         cmd = [cli, "review", "--model", model, "--json", prompt]
+    elif harness == "cursor":
+        cmd = [cli, "review", "--model", model, "--json", "--no-interactive", prompt]
     elif harness == "droid":
         cmd = [cli, "check", "--policy", model, "--input", prompt]
     elif harness == "kilo":
-        cmd = [cli, "review", "--mode", "fast", "--prompt", prompt]
+        cmd = [cli, "review", "--mode", "fast", "--prompt", prompt, "--json"]
     else:
         # Default format (forge, cursor)
         cmd = [cli, "--model", model, "--no-interactive", "-p", prompt]
@@ -539,8 +541,12 @@ def delegate_ask(
 
         result = _invoke_harness(h, prompt)
 
-        # If successful (not "ask" due to failure), use it
-        if result.decision in ("allow", "deny") or result.confidence > 0:
+        # Terminal decisions are allow/deny or explicit ask.
+        # If parsing failed we intentionally return ask with a specific
+        # message and continue fallback.
+        if result.decision in ("allow", "deny", "ask") and not result.reasoning.startswith(
+            "Could not parse",
+        ):
             if use_cache:
                 _cache_decision(context.command, result)
             return result
@@ -598,36 +604,41 @@ def _parse_response(output: str, source: str) -> DelegateResult:
             confidence=0.0,
         )
 
-    # Try to extract JSON from response (agent may include extra text)
-    # Support both {"decision":...} and {"review": {"decision":...}} formats
-    json_patterns = [
-        r'\{[^{}]*"decision"[^{}]*\}',  # Simple JSON
-        r'\{[^{}]*"review"\s*:\s*\{[^{}]*"decision"[^{}]*\}[^{}]*\}',  # Nested review
-        r'\{[\s\S]*?"decision"[\s\S]*?\}',  # Multi-line JSON
-    ]
+    # Try exact JSON first.
+    for candidate in [
+        output.strip(),
+        _extract_json_block(output),
+    ]:
+        if not candidate:
+            continue
+        try:
+            data = json.loads(candidate)
+        except (json.JSONDecodeError, TypeError, ValueError):
+            continue
 
-    for pattern in json_patterns:
-        json_match = re.search(pattern, output, re.DOTALL)
-        if json_match:
-            try:
-                data = json.loads(json_match.group())
+        # Handle nested review format
+        if "review" in data and isinstance(data.get("review"), dict):
+            data = data["review"]
 
-                # Handle nested review format
-                if "review" in data and isinstance(data["review"], dict):
-                    data = data["review"]
+        decision = str(data.get("decision", "ask")).lower()
+        if decision not in {"allow", "deny", "ask"}:
+            decision = "ask"
 
-                decision = data.get("decision", "ask")
-                if decision not in ("allow", "deny"):
-                    decision = "ask"
+        reasoning = data.get("reasoning", data.get("reason", "no reasoning provided"))
+        if not isinstance(reasoning, str):
+            reasoning = json.dumps(reasoning)
 
-                return DelegateResult(
-                    decision=decision,
-                    reasoning=data.get("reasoning", "no reasoning provided"),
-                    source=source,
-                    confidence=float(data.get("confidence", 0.5)),
-                )
-            except (json.JSONDecodeError, ValueError):
-                continue
+        try:
+            confidence = float(data.get("confidence", 0.0))
+        except (ValueError, TypeError):
+            confidence = 0.0
+
+        return DelegateResult(
+            decision=decision,
+            reasoning=reasoning,
+            source=source,
+            confidence=confidence,
+        )
 
     return DelegateResult(
         decision="ask",
@@ -635,6 +646,19 @@ def _parse_response(output: str, source: str) -> DelegateResult:
         source=source,
         confidence=0.0,
     )
+
+
+def _extract_json_block(output: str) -> str:
+    """Extract the first JSON object from mixed output."""
+    matches = re.findall(r"```json\\s*(.*?)\\s*```", output, flags=re.DOTALL | re.IGNORECASE)
+    if matches:
+        return matches[0].strip()
+
+    json_match = re.search(r"\{[\s\S]*?\"decision\"[\s\S]*?\}", output)
+    if json_match:
+        return json_match.group(0)
+
+    return ""
 
 
 def get_cache_stats() -> dict[str, Any]:
