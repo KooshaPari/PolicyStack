@@ -157,11 +157,16 @@ class TestDelegateAsk:
         assert result.decision == "ask"  # Can't parse = fallback
 
     @patch("policy_federation.delegate._invoke_harness")
-    def test_delegate_ask_uses_fallback_chain(self, mock_invoke_harness: MagicMock) -> None:
+    def test_delegate_ask_uses_fallback_chain(
+        self, mock_invoke_harness: MagicMock
+    ) -> None:
         mock_invoke_harness.side_effect = [
             _parse_response(
                 json.dumps(
-                    {"decision": "ask", "reasoning": "Could not parse delegate response"},
+                    {
+                        "decision": "ask",
+                        "reasoning": "Could not parse delegate response",
+                    },
                 ),
                 "cursor",
             ),
@@ -185,7 +190,9 @@ class TestDelegateAsk:
             scope_chain=[],
         )
 
-        with patch("policy_federation.delegate._local_fast_evaluate", return_value=None):
+        with patch(
+            "policy_federation.delegate._local_fast_evaluate", return_value=None
+        ):
             result = delegate_ask(
                 ctx,
                 harness="cursor",

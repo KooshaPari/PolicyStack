@@ -544,7 +544,11 @@ def delegate_ask(
         # Terminal decisions are allow/deny or explicit ask.
         # If parsing failed we intentionally return ask with a specific
         # message and continue fallback.
-        if result.decision in ("allow", "deny", "ask") and not result.reasoning.startswith(
+        if result.decision in (
+            "allow",
+            "deny",
+            "ask",
+        ) and not result.reasoning.startswith(
             "Could not parse",
         ):
             if use_cache:
@@ -650,7 +654,9 @@ def _parse_response(output: str, source: str) -> DelegateResult:
 
 def _extract_json_block(output: str) -> str:
     """Extract the first JSON object from mixed output."""
-    matches = re.findall(r"```json\\s*(.*?)\\s*```", output, flags=re.DOTALL | re.IGNORECASE)
+    matches = re.findall(
+        r"```json\\s*(.*?)\\s*```", output, flags=re.DOTALL | re.IGNORECASE
+    )
     if matches:
         return matches[0].strip()
 
