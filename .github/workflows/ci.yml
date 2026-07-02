@@ -15,6 +15,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  trace-gate:
+    name: FR Coverage Gate
+    uses: KooshaPari/phenotype-pm-core/.github/workflows/trace-gate.yml@main
   ci:
     name: PolicyStack CI
     runs-on: ubuntu-24.04
@@ -88,3 +91,4 @@ jobs:
           # Restrict pyright to the installable Python package so test
           # files that lack stub declarations don't dominate the report.
           python -m pyright cli/src
+
